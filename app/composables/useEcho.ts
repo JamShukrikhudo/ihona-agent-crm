@@ -35,6 +35,10 @@ export function useEcho(): Echo<'reverb'> {
     wsPath: config.public.reverbPath,
     forceTLS: config.public.reverbScheme === 'https',
     enabledTransports: ['ws', 'wss'],
+    // ihona-crm registers this specifically under api/ with auth:sanctum —
+    // the framework's own auto-registered /broadcasting/auth uses the 'web'
+    // session guard, which a Bearer-token-only app like this never
+    // authenticates against.
     authEndpoint: `${config.public.apiBase}/broadcasting/auth`,
     auth: {
       headers: auth.token ? { Authorization: `Bearer ${auth.token}` } : {},

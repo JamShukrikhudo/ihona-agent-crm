@@ -6,6 +6,11 @@ export default defineNuxtConfig({
   future: { compatibilityVersion: 4 },
   devtools: { enabled: true },
 
+  // Served at crm.ihona.tj/agent, not its own subdomain — one fewer domain
+  // to keep straight, and same-origin with the API it calls (so no CORS
+  // needed at all, unlike the separate-subdomain plan this replaced).
+  app: { baseURL: '/agent/' },
+
   // NOT extending ihona-frontend as a Nuxt layer: tried it, and Nuxt has no
   // way to inherit only assets/config while excluding a layer's pages/
   // directory — the storefront's own routes (e.g. /properties) leaked
@@ -23,12 +28,11 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     public: {
-      // ihona-crm, not the main ihona.tj host: the chessboard's actual
-      // domain model (DeveloperProject/Building/Floor/Unit, UnitStatus,
-      // UnitStatusChanged broadcasting, the stale-reservation expiry job)
-      // already lives there — see the repo's own README for how that was
-      // decided.
-      apiBase: process.env.NUXT_PUBLIC_API_BASE || 'https://crm.ihona.tj/api',
+      // Relative by default: same origin as this app now (crm.ihona.tj
+      // serves both /agent, this app, and /api) — no host/scheme needed,
+      // and no CORS config to keep in sync on the backend either. Override
+      // with a full URL only for local dev against the deployed API.
+      apiBase: process.env.NUXT_PUBLIC_API_BASE || '/api',
       reverbAppKey: process.env.NUXT_PUBLIC_REVERB_APP_KEY || '',
       reverbHost: process.env.NUXT_PUBLIC_REVERB_HOST || 'crm.ihona.tj',
       reverbPort: Number(process.env.NUXT_PUBLIC_REVERB_PORT || 443),
