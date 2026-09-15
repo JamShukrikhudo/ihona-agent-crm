@@ -85,7 +85,7 @@ onBeforeUnmount(() => {
     <div class="border-b border-line bg-card px-6 py-4">
       <div class="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <div class="text-[11px] font-medium text-ink-soft">Шахматка проекта</div>
+          <NuxtLink to="/" class="text-[11px] font-medium text-ink-soft hover:text-brand-600">← Все проекты</NuxtLink>
           <h1 class="font-display text-xl font-bold text-ink">{{ projectName ?? `Проект #${projectId}` }}</h1>
         </div>
         <div v-if="store.sections.length > 1" class="flex items-center gap-2 rounded-full bg-paper p-1">
