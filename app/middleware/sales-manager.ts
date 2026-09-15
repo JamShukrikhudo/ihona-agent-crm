@@ -4,6 +4,13 @@
  * shouldn't manage.
  */
 export default defineNuxtRouteMiddleware(() => {
+  // See agent.ts's comment: the token only exists in localStorage, so SSR
+  // (including a Playwright page.goto or a real agent's refresh/direct
+  // link) always looks logged-out here. Enforced client-side only.
+  if (import.meta.server) {
+    return
+  }
+
   const auth = useAuthStore()
 
   if (!auth.isAuthenticated) {
