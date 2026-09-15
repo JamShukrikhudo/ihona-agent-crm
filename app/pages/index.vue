@@ -31,12 +31,11 @@ onBeforeUnmount(() => disconnectEcho())
         <span class="text-sm text-slate-600 dark:text-slate-400">Echo/Reverb: {{ echoState }}</span>
       </div>
 
-      <p class="text-sm text-slate-500">
-        Шахматка появится в Спринте 1. Это Спринт 0 — фундамент: логин работает,
-        сокет подключается.
-      </p>
+      <NuxtLink to="/projects/1" class="inline-block rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700">
+        Открыть шахматку
+      </NuxtLink>
 
-      <button class="rounded-lg border border-slate-300 px-4 py-2 text-sm dark:border-slate-700" @click="auth.logout().then(() => navigateTo('/login'))">
+      <button class="ml-2 rounded-lg border border-slate-300 px-4 py-2 text-sm dark:border-slate-700" @click="auth.logout().then(() => navigateTo('/login'))">
         Выйти
       </button>
     </div>

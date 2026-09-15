@@ -7,6 +7,7 @@ interface User {
   name: string
   email: string
   roles: string[]
+  teamId: number | string | null
 }
 
 /**
