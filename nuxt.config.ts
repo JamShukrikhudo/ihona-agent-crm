@@ -23,11 +23,20 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     public: {
-      apiBase: process.env.NUXT_PUBLIC_API_BASE || 'https://ihona.tj/api',
+      // ihona-crm, not the main ihona.tj host: the chessboard's actual
+      // domain model (DeveloperProject/Building/Floor/Unit, UnitStatus,
+      // UnitStatusChanged broadcasting, the stale-reservation expiry job)
+      // already lives there — see the repo's own README for how that was
+      // decided.
+      apiBase: process.env.NUXT_PUBLIC_API_BASE || 'https://crm.ihona.tj/api',
       reverbAppKey: process.env.NUXT_PUBLIC_REVERB_APP_KEY || '',
-      reverbHost: process.env.NUXT_PUBLIC_REVERB_HOST || 'ihona.tj',
+      reverbHost: process.env.NUXT_PUBLIC_REVERB_HOST || 'crm.ihona.tj',
       reverbPort: Number(process.env.NUXT_PUBLIC_REVERB_PORT || 443),
       reverbScheme: process.env.NUXT_PUBLIC_REVERB_SCHEME || 'https',
+      // ihona-crm has no Filament panel at /app (only /admin), so Reverb's
+      // default path works unmodified there — unlike the main ihona.tj
+      // host, which needed /reverb to avoid colliding with its /app panel.
+      reverbPath: process.env.NUXT_PUBLIC_REVERB_PATH || '/app',
     },
   },
 })
