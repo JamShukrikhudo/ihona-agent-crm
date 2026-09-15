@@ -1,0 +1,55 @@
+@import "tailwindcss";
+
+/* Same dark: variant fix as ihona-frontend (Tailwind v4's dark: defaults to
+   @media(prefers-color-scheme) — this makes it follow the .dark class a
+   theme toggle sets instead). Duplicated here rather than shared via a
+   Nuxt layer: extending ihona-frontend as a layer pulled its public pages/
+   directory (e.g. /properties) straight into this app's routing, with no
+   way to inherit only assets/config — see nuxt.config.ts. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  /* Brand ramp copied verbatim from ihona-frontend's assets/css/main.css
+     (docs/brand/README.txt Изумруд #2E7D5C at 600) — keep both files in
+     sync if the brand kit ever changes; it's static enough that a build
+     step for one CSS partial isn't worth the cross-repo coupling. */
+  --color-brand-50: #eef9f4;
+  --color-brand-100: #d4efe4;
+  --color-brand-200: #ade1cb;
+  --color-brand-300: #77cda9;
+  --color-brand-400: #43b786;
+  --color-brand-500: #37956e;
+  --color-brand-600: #2e7d5c;
+  --color-brand-700: #246349;
+  --color-brand-800: #1c4c38;
+  --color-brand-900: #153a2b;
+  /* Sprint-0 spec named this exact value separately from the generated
+     ramp's own 800 step (#1c4c38, one hex digit off) — kept as its own
+     token rather than silently reusing 800 so a future brandbook diff
+     doesn't have to guess which one was intentional. */
+  --color-brand-dark: #1c4a38;
+
+  --color-status-free: #2faf6e;
+  --color-status-reserved: #f0b429;
+  --color-status-deposit: #e8833a;
+  --color-status-sold: #64748b;
+
+  --font-sans: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --font-display: 'Poppins', 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply bg-slate-50 text-slate-900 antialiased;
+}
+
+html.dark {
+  color-scheme: dark;
+}
+
+html.dark body {
+  @apply bg-slate-950 text-slate-100;
+}
