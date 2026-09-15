@@ -9,9 +9,25 @@ const projectId = computed(() => Number(route.params.id))
 const store = useUnitsStore()
 const auth = useAuthStore()
 const selectedUnitId = ref<number | null>(null)
+const section = ref<string | null>(null)
+const statusFilter = ref<UnitStatus | null>(null)
+
+const STATUS_LABEL: Record<UnitStatus, string> = {
+  free: 'Свободно',
+  reserved: 'В брони',
+  deposit: 'Задаток внесён',
+  sold: 'Продано',
+}
+
+const visibleUnits = computed(() =>
+  store.units
+    .filter((u) => section.value === null || u.section === section.value)
+    .filter((u) => statusFilter.value === null || u.status === statusFilter.value),
+)
 
 onMounted(async () => {
   await store.fetchUnits(projectId.value)
+  section.value = store.sections[0] ?? null
 
   if (auth.user?.teamId == null) {
     return
@@ -22,7 +38,8 @@ onMounted(async () => {
   // grid without a reload. Scoped to the team, not the project, because
   // that's the real channel UnitStatusChanged broadcasts on — every
   // project a team owns shares one channel, so units belonging to a
-  // different project are simply ignored below.
+  // different project are simply ignored here (fetchUnits already scoped
+  // the list to this project; a patch for a unit not in it is a no-op).
   useEcho().private(`team.${auth.user.teamId}.units`).listen('.unit.status-changed', (payload: {
     unitId: number
     to: string
@@ -45,10 +62,50 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-slate-50 p-6 dark:bg-slate-950">
-    <div class="mx-auto max-w-5xl">
-      <h1 class="mb-6 font-display text-2xl font-semibold text-brand-800">Шахматка проекта #{{ projectId }}</h1>
-      <ShahmatkaGrid @select="selectedUnitId = $event" />
+  <div class="min-h-screen bg-paper">
+    <div class="border-b border-line bg-card px-6 py-4">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <div class="text-[11px] font-medium text-ink-soft">Шахматка проекта</div>
+          <h1 class="font-display text-xl font-bold text-ink">Проект #{{ projectId }}</h1>
+        </div>
+        <div v-if="store.sections.length > 1" class="flex items-center gap-2 rounded-full bg-paper p-1">
+          <button
+            v-for="sec in store.sections"
+            :key="sec"
+            type="button"
+            class="rounded-full px-4 py-1.5 text-sm font-semibold transition-colors"
+            :class="section === sec ? 'bg-brand-600 text-white' : 'text-ink-soft'"
+            @click="section = sec"
+          >
+            {{ sec }}
+          </button>
+        </div>
+      </div>
+
+      <div class="mt-4 flex flex-wrap gap-2">
+        <button
+          v-for="(label, key) in STATUS_LABEL"
+          :key="key"
+          type="button"
+          class="flex items-center gap-2 rounded-full border px-3 py-1.5 text-[12px] font-medium text-ink transition-colors"
+          :style="statusFilter === key
+            ? { borderColor: `var(--color-status-${key})`, background: `var(--color-status-${key}-soft)` }
+            : { borderColor: 'var(--color-line)' }"
+          @click="statusFilter = statusFilter === key ? null : (key as UnitStatus)"
+        >
+          <span class="h-2 w-2 rounded-full" :style="{ background: `var(--color-status-${key})` }" />
+          {{ label }} <b>{{ store.counts[key] }}</b>
+        </button>
+
+        <div class="ml-auto rounded-full bg-brand-dark px-3 py-1.5 text-[12px] font-medium text-white">
+          Продано на {{ store.revenue.toLocaleString('ru-RU') }} TJS
+        </div>
+      </div>
+    </div>
+
+    <div class="px-6 py-6">
+      <ShahmatkaGrid :units="visibleUnits" :loading="store.loading" @select="selectedUnitId = $event" />
     </div>
 
     <UnitPanel :unit-id="selectedUnitId" @close="selectedUnitId = null" />

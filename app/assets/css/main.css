@@ -30,12 +30,28 @@
   --color-brand-dark: #1c4a38;
 
   --color-status-free: #2faf6e;
+  --color-status-free-soft: #e4f5ec;
   --color-status-reserved: #f0b429;
+  --color-status-reserved-soft: #fcf1d6;
   --color-status-deposit: #e8833a;
+  --color-status-deposit-soft: #fbe6d6;
   --color-status-sold: #64748b;
+  --color-status-sold-soft: #e7eaed;
+
+  /* Matches the approved chessboard prototype's own palette exactly
+     (ink/ink-soft/paper/card/line) — not part of the storefront's brand
+     kit, specific to this cabinet's UI. */
+  --color-ink: #16241d;
+  --color-ink-soft: #5b6b62;
+  --color-paper: #f5f3ee;
+  --color-card: #ffffff;
+  --color-line: rgba(22, 36, 29, 0.1);
 
   --font-sans: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
-  --font-display: 'Poppins', 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  /* Unbounded, not Poppins — the prototype uses it for the project title,
+     unit code and price; Poppins was a guess made before this reference
+     existed. */
+  --font-display: 'Unbounded', 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
 }
 
 html {

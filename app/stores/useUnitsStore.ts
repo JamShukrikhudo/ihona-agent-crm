@@ -4,6 +4,7 @@ export type UnitStatus = 'free' | 'reserved' | 'deposit' | 'sold'
 
 export interface Unit {
   id: number
+  label: string
   section: string
   floor: number
   rooms: number
@@ -38,6 +39,19 @@ export const useUnitsStore = defineStore('units', {
       }
       return floors
     },
+    // "Section" here is the building's own name (e.g. "Корпус 1") — this
+    // app doesn't model a separate section/entrance concept, unlike the
+    // prototype's A/B tabs, so the tab switcher just lists whichever
+    // building names the fetched units actually carry.
+    sections: (state) => [...new Set(state.units.map((u) => u.section))],
+    counts: (state) => {
+      const c: Record<UnitStatus, number> = { free: 0, reserved: 0, deposit: 0, sold: 0 }
+      for (const unit of state.units) {
+        c[unit.status]++
+      }
+      return c
+    },
+    revenue: (state) => state.units.filter((u) => u.status === 'sold').reduce((sum, u) => sum + u.price, 0),
   },
 
   actions: {
@@ -69,10 +83,10 @@ export const useUnitsStore = defineStore('units', {
      * surfaces via the toast store. Reused by the CRM funnel's drag-to-
      * reserve in Sprint 4 as well, not just this panel's buttons.
      */
-    async optimisticUpdate(id: number, patch: Partial<Unit>, apiCall: () => Promise<unknown>) {
+    async optimisticUpdate(id: number, patch: Partial<Unit>, apiCall: () => Promise<unknown>): Promise<boolean> {
       const unit = this.units.find((u) => u.id === id)
       if (!unit) {
-        return
+        return false
       }
 
       const before = { ...unit }
@@ -80,10 +94,14 @@ export const useUnitsStore = defineStore('units', {
 
       try {
         await apiCall()
+
+        return true
       } catch (error) {
         this.patchUnit(id, before)
         const message = (error as { data?: { message?: string } })?.data?.message ?? 'Не удалось выполнить действие.'
         useToastStore().push(message, 'error')
+
+        return false
       }
     },
   },

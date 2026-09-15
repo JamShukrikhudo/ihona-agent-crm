@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import { AlertTriangle, Clock, Layers, Ruler, Users, X } from '@lucide/vue'
+import type { Unit } from '~/stores/useUnitsStore'
+
 const props = defineProps<{ unitId: number | null }>()
 const emit = defineEmits<{ close: [] }>()
 
@@ -10,17 +13,50 @@ const releasing = ref(false)
 const releaseReason = ref('')
 const busy = ref(false)
 
+const STATUS_LABEL: Record<Unit['status'], string> = {
+  free: 'Свободно',
+  reserved: 'В брони',
+  deposit: 'Задаток внесён',
+  sold: 'Продано',
+}
+
+const pricePerSqm = computed(() => (unit.value?.price && unit.value.area ? Math.round(unit.value.price / unit.value.area) : null))
+
+interface HistoryEntry {
+  at: string
+  who: string
+  what: string
+}
+
+const history = ref<HistoryEntry[]>([])
+
+async function loadHistory(id: number) {
+  try {
+    const res = await apiFetch<{ data: HistoryEntry[] }>(`/units/${id}/history`)
+    history.value = res.data
+  } catch {
+    // Best-effort — the panel is still useful without a history list.
+    history.value = []
+  }
+}
+
 async function reserve() {
   if (!unit.value) {
     return
   }
   busy.value = true
-  await store.optimisticUpdate(
-    unit.value.id,
+  const id = unit.value.id
+  const label = unit.value.label
+  const ok = await store.optimisticUpdate(
+    id,
     { status: 'reserved', agent: auth.user?.name ?? null, expiresInHours: 24 },
-    () => apiFetch(`/units/${unit.value!.id}/reserve`, { method: 'POST', body: { hours: 24 } }),
+    () => apiFetch(`/units/${id}/reserve`, { method: 'POST', body: { hours: 24 } }),
   )
   busy.value = false
+  if (ok) {
+    useToastStore().push(`${label} успешно забронирована`, 'success')
+  }
+  await loadHistory(id)
 }
 
 async function confirmRelease() {
@@ -29,126 +65,141 @@ async function confirmRelease() {
   }
   busy.value = true
   const id = unit.value.id
+  const label = unit.value.label
   const reason = releaseReason.value
-  await store.optimisticUpdate(id, { status: 'free', agent: null, expiresInHours: null }, () =>
+  const ok = await store.optimisticUpdate(id, { status: 'free', agent: null, expiresInHours: null }, () =>
     apiFetch(`/units/${id}/release`, { method: 'POST', body: { reason } }))
   busy.value = false
   releasing.value = false
   releaseReason.value = ''
+  if (ok) {
+    useToastStore().push(`${label} снова свободна`, 'success')
+  }
+  await loadHistory(id)
 }
 
-watch(() => props.unitId, () => {
+watch(() => props.unitId, (id) => {
   releasing.value = false
   releaseReason.value = ''
-})
-
-const statusLabel: Record<string, string> = {
-  free: 'Свободна',
-  reserved: 'Забронирована',
-  deposit: 'Внесён задаток',
-  sold: 'Продана',
-}
-
-// Tailwind's JIT scanner can't see a class name built from a template
-// string (`text-status-${status}`) — it never generates the CSS for it.
-// Reading the same --color-status-* CSS variable UnitCell uses, inline,
-// sidesteps that instead of needing a literal class per status here too.
-const statusColor = computed(() => (unit.value ? `var(--color-status-${unit.value.status})` : undefined))
+  history.value = []
+  if (id !== null) {
+    loadHistory(id)
+  }
+}, { immediate: true })
 </script>
 
 <template>
-  <Transition name="slide">
-    <aside v-if="unit" class="fixed inset-y-0 right-0 z-30 flex w-full max-w-sm flex-col border-l border-slate-200 bg-white p-6 shadow-xl dark:border-slate-800 dark:bg-slate-900">
-      <div class="flex items-start justify-between">
-        <h2 class="font-display text-lg font-semibold text-brand-800">{{ unit.section }}, {{ unit.floor }} этаж</h2>
-        <button type="button" class="text-slate-400 hover:text-slate-600" @click="emit('close')">✕</button>
+  <div v-if="unit" class="fixed inset-0 z-40 flex justify-end bg-black/25" @click="emit('close')">
+    <aside class="h-full w-full max-w-sm overflow-y-auto bg-card shadow-2xl" @click.stop>
+      <div class="flex items-center justify-between border-b border-line px-5 py-4">
+        <div>
+          <div class="text-[11px] text-ink-soft">Секция {{ unit.section }} · Этаж {{ unit.floor }}</div>
+          <div class="font-display text-lg font-bold text-ink">{{ unit.label }}</div>
+        </div>
+        <button type="button" class="rounded-full p-1.5 hover:bg-slate-100" @click="emit('close')">
+          <X :size="18" class="text-ink-soft" />
+        </button>
       </div>
 
-      <dl class="mt-6 space-y-3 text-sm">
-        <div class="flex justify-between">
-          <dt class="text-slate-500">Статус</dt>
-          <dd class="font-medium" :style="{ color: statusColor }">{{ statusLabel[unit.status] ?? unit.status }}</dd>
-        </div>
-        <div class="flex justify-between">
-          <dt class="text-slate-500">Комнат</dt>
-          <dd>{{ unit.rooms === 0 ? 'студия' : unit.rooms }}</dd>
-        </div>
-        <div class="flex justify-between">
-          <dt class="text-slate-500">Площадь</dt>
-          <dd>{{ unit.area ?? '—' }} м²</dd>
-        </div>
-        <div class="flex justify-between">
-          <dt class="text-slate-500">Цена</dt>
-          <dd>{{ unit.price?.toLocaleString('ru-RU') ?? '—' }}</dd>
-        </div>
-        <div v-if="unit.agent" class="flex justify-between">
-          <dt class="text-slate-500">Забронировал</dt>
-          <dd>{{ unit.agent }}</dd>
-        </div>
-        <div v-if="unit.expiresInHours !== null" class="flex justify-between">
-          <dt class="text-slate-500">Истекает через</dt>
-          <dd>{{ unit.expiresInHours }} ч</dd>
-        </div>
-      </dl>
-
-      <div class="mt-6 space-y-3">
-        <button
-          v-if="unit.status === 'free'"
-          type="button"
-          :disabled="busy"
-          class="w-full rounded-lg bg-brand-600 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-60"
-          @click="reserve"
+      <div class="px-5 py-4">
+        <span
+          class="inline-block rounded-full px-2.5 py-1 text-xs font-semibold text-white"
+          :style="{ background: `var(--color-status-${unit.status})` }"
         >
-          Забронировать на 24ч
-        </button>
+          {{ STATUS_LABEL[unit.status] }}
+        </span>
 
-        <template v-else-if="unit.status === 'reserved'">
+        <div class="mt-4 grid grid-cols-2 gap-3">
+          <div class="rounded-xl bg-paper p-3">
+            <Ruler :size="15" class="text-brand-600" />
+            <div class="mt-1 text-sm font-semibold text-ink">{{ unit.area }} м²</div>
+            <div class="text-[11px] text-ink-soft">{{ unit.rooms === 0 ? 'Студия' : `${unit.rooms}-комнатная` }}</div>
+          </div>
+          <div class="rounded-xl bg-paper p-3">
+            <Layers :size="15" class="text-brand-600" />
+            <div class="mt-1 text-sm font-semibold text-ink">Этаж {{ unit.floor }}</div>
+            <div class="text-[11px] text-ink-soft">Секция {{ unit.section }}</div>
+          </div>
+        </div>
+
+        <div class="mt-3 rounded-xl bg-paper p-3">
+          <div class="text-[11px] text-ink-soft">Стоимость</div>
+          <div class="font-display text-xl font-bold text-brand-dark">{{ unit.price.toLocaleString('ru-RU') }} TJS</div>
+          <div v-if="pricePerSqm" class="text-[11px] text-ink-soft">~{{ pricePerSqm.toLocaleString('ru-RU') }} TJS / м²</div>
+        </div>
+
+        <div v-if="unit.agent" class="mt-3 flex items-center gap-2 rounded-xl bg-paper p-3">
+          <Users :size="15" class="text-brand-600" />
+          <div>
+            <div class="text-[11px] text-ink-soft">Закреплено за</div>
+            <div class="text-sm font-medium text-ink">{{ unit.agent }}</div>
+          </div>
+        </div>
+
+        <div v-if="unit.status === 'reserved' && unit.expiresInHours !== null" class="mt-3 flex items-center gap-2 rounded-xl p-3" style="background: var(--color-status-reserved-soft)">
+          <Clock :size="15" style="color: var(--color-status-reserved)" />
+          <div class="text-[12px] text-ink">
+            Бронь снимается автоматически через <b>{{ unit.expiresInHours }} ч</b>, если не внесён задаток
+          </div>
+        </div>
+
+        <div class="mt-5 space-y-2">
           <button
-            v-if="!releasing"
+            v-if="unit.status === 'free'"
             type="button"
             :disabled="busy"
-            class="w-full rounded-lg border border-red-300 py-2 text-sm font-medium text-red-600 hover:bg-red-50 disabled:opacity-60 dark:border-red-800 dark:hover:bg-red-950"
-            @click="releasing = true"
+            class="w-full rounded-xl bg-brand-600 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
+            @click="reserve"
           >
-            Снять бронь
+            Забронировать
           </button>
-          <div v-else class="space-y-2">
-            <textarea
-              v-model="releaseReason"
-              placeholder="Причина снятия брони"
-              rows="2"
-              class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800"
-            />
-            <div class="flex gap-2">
-              <button
-                type="button"
-                :disabled="busy || releaseReason.trim() === ''"
-                class="flex-1 rounded-lg bg-red-600 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-60"
-                @click="confirmRelease"
-              >
-                Подтвердить
-              </button>
-              <button type="button" class="rounded-lg border border-slate-300 px-3 py-2 text-sm dark:border-slate-700" @click="releasing = false">
-                Отмена
-              </button>
+
+          <template v-else-if="unit.status === 'reserved'">
+            <button
+              v-if="!releasing"
+              type="button"
+              :disabled="busy"
+              class="flex w-full items-center justify-center gap-1.5 rounded-xl border border-line py-2.5 text-sm font-semibold text-ink transition-colors hover:bg-slate-50 disabled:opacity-60"
+              @click="releasing = true"
+            >
+              <AlertTriangle :size="14" /> Снять бронь
+            </button>
+            <div v-else class="space-y-2">
+              <textarea
+                v-model="releaseReason"
+                placeholder="Причина снятия брони"
+                rows="2"
+                class="w-full rounded-xl border border-line px-3 py-2 text-sm"
+              />
+              <div class="flex gap-2">
+                <button
+                  type="button"
+                  :disabled="busy || releaseReason.trim() === ''"
+                  class="flex-1 rounded-xl bg-red-600 py-2 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-60"
+                  @click="confirmRelease"
+                >
+                  Подтвердить
+                </button>
+                <button type="button" class="rounded-xl border border-line px-3 py-2 text-sm" @click="releasing = false">
+                  Отмена
+                </button>
+              </div>
+            </div>
+          </template>
+
+          <p v-else class="text-[12px] text-ink-soft">Действия для этого статуса появятся в следующих спринтах.</p>
+        </div>
+
+        <div v-if="history.length > 0" class="mt-6">
+          <div class="mb-2 text-[11px] font-semibold uppercase tracking-wide text-ink-soft">История</div>
+          <div class="space-y-2">
+            <div v-for="(h, i) in history" :key="i" class="flex justify-between border-b border-line pb-2 text-[12px]">
+              <span class="text-ink">{{ h.what }}</span>
+              <span class="text-ink-soft">{{ h.at }}</span>
             </div>
           </div>
-        </template>
-
-        <p v-else class="text-xs text-slate-400">Действия для этого статуса появятся в следующих спринтах.</p>
+        </div>
       </div>
     </aside>
-  </Transition>
+  </div>
 </template>
-
-<style scoped>
-.slide-enter-active,
-.slide-leave-active {
-  transition: transform 0.2s ease;
-}
-
-.slide-enter-from,
-.slide-leave-to {
-  transform: translateX(100%);
-}
-</style>

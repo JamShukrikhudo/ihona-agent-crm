@@ -9,7 +9,17 @@ export default defineNuxtConfig({
   // Served at crm.ihona.tj/agent, not its own subdomain — one fewer domain
   // to keep straight, and same-origin with the API it calls (so no CORS
   // needed at all, unlike the separate-subdomain plan this replaced).
-  app: { baseURL: '/agent/' },
+  app: {
+    baseURL: '/agent/',
+    head: {
+      link: [
+        {
+          rel: 'stylesheet',
+          href: 'https://fonts.googleapis.com/css2?family=Unbounded:wght@600;700&family=Inter:wght@400;500;600;700&display=swap',
+        },
+      ],
+    },
+  },
 
   // NOT extending ihona-frontend as a Nuxt layer: tried it, and Nuxt has no
   // way to inherit only assets/config while excluding a layer's pages/
