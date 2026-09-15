@@ -11,13 +11,7 @@ const auth = useAuthStore()
 const selectedUnitId = ref<number | null>(null)
 const section = ref<string | null>(null)
 const statusFilter = ref<UnitStatus | null>(null)
-
-const STATUS_LABEL: Record<UnitStatus, string> = {
-  free: 'Свободно',
-  reserved: 'В брони',
-  deposit: 'Задаток внесён',
-  sold: 'Продано',
-}
+const projectName = ref<string | null>(null)
 
 const visibleUnits = computed(() =>
   store.units
@@ -26,7 +20,11 @@ const visibleUnits = computed(() =>
 )
 
 onMounted(async () => {
-  await store.fetchUnits(projectId.value)
+  const [project] = await Promise.all([
+    apiFetch<{ data: { name: string } }>(`/projects/${projectId.value}`).catch(() => null),
+    store.fetchUnits(projectId.value),
+  ])
+  projectName.value = project?.data.name ?? null
   section.value = store.sections[0] ?? null
 
   if (auth.user?.teamId == null) {
@@ -67,7 +65,7 @@ onBeforeUnmount(() => {
       <div class="flex flex-wrap items-center justify-between gap-3">
         <div>
           <div class="text-[11px] font-medium text-ink-soft">Шахматка проекта</div>
-          <h1 class="font-display text-xl font-bold text-ink">Проект #{{ projectId }}</h1>
+          <h1 class="font-display text-xl font-bold text-ink">{{ projectName ?? `Проект #${projectId}` }}</h1>
         </div>
         <div v-if="store.sections.length > 1" class="flex items-center gap-2 rounded-full bg-paper p-1">
           <button
@@ -89,12 +87,10 @@ onBeforeUnmount(() => {
           :key="key"
           type="button"
           class="flex items-center gap-2 rounded-full border px-3 py-1.5 text-[12px] font-medium text-ink transition-colors"
-          :style="statusFilter === key
-            ? { borderColor: `var(--color-status-${key})`, background: `var(--color-status-${key}-soft)` }
-            : { borderColor: 'var(--color-line)' }"
+          :class="statusFilter === key ? [STATUS_BORDER[key], STATUS_BG_SOFT[key]] : 'border-line'"
           @click="statusFilter = statusFilter === key ? null : (key as UnitStatus)"
         >
-          <span class="h-2 w-2 rounded-full" :style="{ background: `var(--color-status-${key})` }" />
+          <span class="h-2 w-2 rounded-full" :class="STATUS_BG[key]" />
           {{ label }} <b>{{ store.counts[key] }}</b>
         </button>
 

@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { AlertTriangle, Clock, Layers, Ruler, Users, X } from '@lucide/vue'
-import type { Unit } from '~/stores/useUnitsStore'
 
 const props = defineProps<{ unitId: number | null }>()
 const emit = defineEmits<{ close: [] }>()
@@ -12,13 +11,6 @@ const unit = computed(() => (props.unitId === null ? null : store.byId(props.uni
 const releasing = ref(false)
 const releaseReason = ref('')
 const busy = ref(false)
-
-const STATUS_LABEL: Record<Unit['status'], string> = {
-  free: 'Свободно',
-  reserved: 'В брони',
-  deposit: 'Задаток внесён',
-  sold: 'Продано',
-}
 
 const pricePerSqm = computed(() => (unit.value?.price && unit.value.area ? Math.round(unit.value.price / unit.value.area) : null))
 
@@ -102,10 +94,7 @@ watch(() => props.unitId, (id) => {
       </div>
 
       <div class="px-5 py-4">
-        <span
-          class="inline-block rounded-full px-2.5 py-1 text-xs font-semibold text-white"
-          :style="{ background: `var(--color-status-${unit.status})` }"
-        >
+        <span class="inline-block rounded-full px-2.5 py-1 text-xs font-semibold text-white" :class="STATUS_BG[unit.status]">
           {{ STATUS_LABEL[unit.status] }}
         </span>
 
@@ -136,8 +125,8 @@ watch(() => props.unitId, (id) => {
           </div>
         </div>
 
-        <div v-if="unit.status === 'reserved' && unit.expiresInHours !== null" class="mt-3 flex items-center gap-2 rounded-xl p-3" style="background: var(--color-status-reserved-soft)">
-          <Clock :size="15" style="color: var(--color-status-reserved)" />
+        <div v-if="unit.status === 'reserved' && unit.expiresInHours !== null" class="mt-3 flex items-center gap-2 rounded-xl p-3 bg-status-reserved-soft">
+          <Clock :size="15" class="text-status-reserved" />
           <div class="text-[12px] text-ink">
             Бронь снимается автоматически через <b>{{ unit.expiresInHours }} ч</b>, если не внесён задаток
           </div>
