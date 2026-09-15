@@ -35,6 +35,14 @@ onBeforeUnmount(() => disconnectEcho())
         Открыть шахматку
       </NuxtLink>
 
+      <NuxtLink
+        v-if="auth.hasRole('sales-manager') || auth.hasRole('developer-admin')"
+        to="/deals"
+        class="ml-2 inline-block rounded-lg border border-brand-600 px-4 py-2 text-sm font-medium text-brand-600 hover:bg-brand-50"
+      >
+        Воронка сделок
+      </NuxtLink>
+
       <button class="ml-2 rounded-lg border border-slate-300 px-4 py-2 text-sm dark:border-slate-700" @click="auth.logout().then(() => navigateTo('/login'))">
         Выйти
       </button>
