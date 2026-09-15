@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { SlidersHorizontal } from '@lucide/vue'
 import type { UnitStatus } from '~/stores/useUnitsStore'
 
 definePageMeta({ middleware: 'agent' })
@@ -13,11 +14,31 @@ const section = ref<string | null>(null)
 const statusFilter = ref<UnitStatus | null>(null)
 const projectName = ref<string | null>(null)
 
+const searchQuery = ref('')
+const priceMin = ref<number | null>(null)
+const priceMax = ref<number | null>(null)
+const areaMin = ref<number | null>(null)
+const areaMax = ref<number | null>(null)
+const filtersOpen = ref(false)
+
 const visibleUnits = computed(() =>
   store.units
     .filter((u) => section.value === null || u.section === section.value)
-    .filter((u) => statusFilter.value === null || u.status === statusFilter.value),
+    .filter((u) => statusFilter.value === null || u.status === statusFilter.value)
+    .filter((u) => searchQuery.value.trim() === '' || u.label.toLowerCase().includes(searchQuery.value.trim().toLowerCase()))
+    .filter((u) => priceMin.value === null || u.price >= priceMin.value)
+    .filter((u) => priceMax.value === null || u.price <= priceMax.value)
+    .filter((u) => areaMin.value === null || u.area >= areaMin.value)
+    .filter((u) => areaMax.value === null || u.area <= areaMax.value),
 )
+
+function resetRangeFilters() {
+  searchQuery.value = ''
+  priceMin.value = null
+  priceMax.value = null
+  areaMin.value = null
+  areaMax.value = null
+}
 
 onMounted(async () => {
   const [project] = await Promise.all([
@@ -94,9 +115,44 @@ onBeforeUnmount(() => {
           {{ label }} <b>{{ store.counts[key] }}</b>
         </button>
 
+        <button
+          type="button"
+          class="flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[12px] font-medium text-ink transition-colors"
+          :class="filtersOpen ? [STATUS_BORDER.reserved, STATUS_BG_SOFT.reserved] : 'border-line'"
+          @click="filtersOpen = !filtersOpen"
+        >
+          <SlidersHorizontal :size="13" /> Ещё фильтры
+        </button>
+
         <div class="ml-auto rounded-full bg-brand-dark px-3 py-1.5 text-[12px] font-medium text-white">
           Продано на {{ store.revenue.toLocaleString('ru-RU') }} TJS
         </div>
+      </div>
+
+      <div v-if="filtersOpen" class="mt-3 flex flex-wrap items-end gap-3 rounded-xl bg-paper p-3">
+        <label class="flex flex-col gap-1 text-[11px] text-ink-soft">
+          Поиск по номеру
+          <input v-model="searchQuery" type="text" placeholder="A-9C" class="w-32 rounded-lg border border-line px-2 py-1 text-sm text-ink" />
+        </label>
+        <label class="flex flex-col gap-1 text-[11px] text-ink-soft">
+          Цена от
+          <input v-model.number="priceMin" type="number" min="0" class="w-28 rounded-lg border border-line px-2 py-1 text-sm text-ink" />
+        </label>
+        <label class="flex flex-col gap-1 text-[11px] text-ink-soft">
+          Цена до
+          <input v-model.number="priceMax" type="number" min="0" class="w-28 rounded-lg border border-line px-2 py-1 text-sm text-ink" />
+        </label>
+        <label class="flex flex-col gap-1 text-[11px] text-ink-soft">
+          Площадь от, м²
+          <input v-model.number="areaMin" type="number" min="0" class="w-24 rounded-lg border border-line px-2 py-1 text-sm text-ink" />
+        </label>
+        <label class="flex flex-col gap-1 text-[11px] text-ink-soft">
+          Площадь до, м²
+          <input v-model.number="areaMax" type="number" min="0" class="w-24 rounded-lg border border-line px-2 py-1 text-sm text-ink" />
+        </label>
+        <button type="button" class="rounded-lg border border-line px-3 py-1.5 text-[12px] text-ink-soft hover:bg-slate-50" @click="resetRangeFilters">
+          Сбросить
+        </button>
       </div>
     </div>
 
