@@ -58,5 +58,33 @@ export const useUnitsStore = defineStore('units', {
         Object.assign(unit, patch)
       }
     },
+
+    /**
+     * Applies `patch` immediately (a reservation click should repaint the
+     * cell before the network round-trip finishes, not after), then runs
+     * `apiCall`. On failure — a 409 from the exact race Sprint 2 exists to
+     * catch, most often — the optimistic patch is rolled back to what the
+     * unit actually looked like before, and the server's message (already
+     * written in the "Не удалось: юнит X уже забронировал агент Y" shape)
+     * surfaces via the toast store. Reused by the CRM funnel's drag-to-
+     * reserve in Sprint 4 as well, not just this panel's buttons.
+     */
+    async optimisticUpdate(id: number, patch: Partial<Unit>, apiCall: () => Promise<unknown>) {
+      const unit = this.units.find((u) => u.id === id)
+      if (!unit) {
+        return
+      }
+
+      const before = { ...unit }
+      this.patchUnit(id, patch)
+
+      try {
+        await apiCall()
+      } catch (error) {
+        this.patchUnit(id, before)
+        const message = (error as { data?: { message?: string } })?.data?.message ?? 'Не удалось выполнить действие.'
+        useToastStore().push(message, 'error')
+      }
+    },
   },
 })

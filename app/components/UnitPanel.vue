@@ -3,7 +3,44 @@ const props = defineProps<{ unitId: number | null }>()
 const emit = defineEmits<{ close: [] }>()
 
 const store = useUnitsStore()
+const auth = useAuthStore()
 const unit = computed(() => (props.unitId === null ? null : store.byId(props.unitId)))
+
+const releasing = ref(false)
+const releaseReason = ref('')
+const busy = ref(false)
+
+async function reserve() {
+  if (!unit.value) {
+    return
+  }
+  busy.value = true
+  await store.optimisticUpdate(
+    unit.value.id,
+    { status: 'reserved', agent: auth.user?.name ?? null, expiresInHours: 24 },
+    () => apiFetch(`/units/${unit.value!.id}/reserve`, { method: 'POST', body: { hours: 24 } }),
+  )
+  busy.value = false
+}
+
+async function confirmRelease() {
+  if (!unit.value || releaseReason.value.trim() === '') {
+    return
+  }
+  busy.value = true
+  const id = unit.value.id
+  const reason = releaseReason.value
+  await store.optimisticUpdate(id, { status: 'free', agent: null, expiresInHours: null }, () =>
+    apiFetch(`/units/${id}/release`, { method: 'POST', body: { reason } }))
+  busy.value = false
+  releasing.value = false
+  releaseReason.value = ''
+}
+
+watch(() => props.unitId, () => {
+  releasing.value = false
+  releaseReason.value = ''
+})
 
 const statusLabel: Record<string, string> = {
   free: 'Свободна',
@@ -54,10 +91,52 @@ const statusColor = computed(() => (unit.value ? `var(--color-status-${unit.valu
         </div>
       </dl>
 
-      <p class="mt-6 text-xs text-slate-400">
-        Бронирование и снятие брони появятся в Спринте 2 — сейчас карточка
-        только для просмотра.
-      </p>
+      <div class="mt-6 space-y-3">
+        <button
+          v-if="unit.status === 'free'"
+          type="button"
+          :disabled="busy"
+          class="w-full rounded-lg bg-brand-600 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-60"
+          @click="reserve"
+        >
+          Забронировать на 24ч
+        </button>
+
+        <template v-else-if="unit.status === 'reserved'">
+          <button
+            v-if="!releasing"
+            type="button"
+            :disabled="busy"
+            class="w-full rounded-lg border border-red-300 py-2 text-sm font-medium text-red-600 hover:bg-red-50 disabled:opacity-60 dark:border-red-800 dark:hover:bg-red-950"
+            @click="releasing = true"
+          >
+            Снять бронь
+          </button>
+          <div v-else class="space-y-2">
+            <textarea
+              v-model="releaseReason"
+              placeholder="Причина снятия брони"
+              rows="2"
+              class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800"
+            />
+            <div class="flex gap-2">
+              <button
+                type="button"
+                :disabled="busy || releaseReason.trim() === ''"
+                class="flex-1 rounded-lg bg-red-600 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-60"
+                @click="confirmRelease"
+              >
+                Подтвердить
+              </button>
+              <button type="button" class="rounded-lg border border-slate-300 px-3 py-2 text-sm dark:border-slate-700" @click="releasing = false">
+                Отмена
+              </button>
+            </div>
+          </div>
+        </template>
+
+        <p v-else class="text-xs text-slate-400">Действия для этого статуса появятся в следующих спринтах.</p>
+      </div>
     </aside>
   </Transition>
 </template>
