@@ -2,6 +2,7 @@
 import { LogOut, Building2 } from '@lucide/vue'
 import type { Unit } from '~/stores/useUnitsStore'
 import { LEAD_STAGES, LEAD_STAGE_LABEL } from '~/stores/useLeadsStore'
+import { STAGE_ICON } from '~/utils/leadStageIcons'
 
 definePageMeta({ middleware: 'agent' })
 
@@ -106,7 +107,12 @@ onBeforeUnmount(() => disconnectEcho())
       <section>
         <h2 class="mb-3 font-display text-sm font-bold text-ink">Проекты</h2>
 
-        <div v-if="loadingProjects" class="text-sm text-ink-soft">Загрузка…</div>
+        <div v-if="loadingProjects" class="grid gap-3 sm:grid-cols-2">
+          <div v-for="n in 2" :key="n" class="h-[86px] animate-pulse rounded-xl border border-line bg-card p-4">
+            <div class="h-4 w-1/2 rounded bg-paper" />
+            <div class="mt-3 h-2 w-full rounded bg-paper" />
+          </div>
+        </div>
         <div v-else-if="projects.length === 0" class="text-sm text-ink-soft">Пока нет ни одного проекта.</div>
 
         <div v-else class="grid gap-3 sm:grid-cols-2">
@@ -137,7 +143,10 @@ onBeforeUnmount(() => disconnectEcho())
         <h2 class="mb-3 font-display text-sm font-bold text-ink">Воронка по всем сделкам</h2>
         <div class="space-y-2 rounded-xl border border-line bg-card p-4">
           <div v-for="stage in LEAD_STAGES" :key="stage" class="flex items-center gap-3">
-            <span class="w-32 shrink-0 text-[12px] text-ink-soft">{{ LEAD_STAGE_LABEL[stage] }}</span>
+            <span class="flex w-36 shrink-0 items-center gap-1.5 text-[12px] text-ink-soft">
+              <component :is="STAGE_ICON[stage]" :size="12" />
+              {{ LEAD_STAGE_LABEL[stage] }}
+            </span>
             <div class="h-2 flex-1 overflow-hidden rounded-full bg-paper">
               <div
                 class="h-full rounded-full"

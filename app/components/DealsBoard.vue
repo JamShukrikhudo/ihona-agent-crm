@@ -2,6 +2,14 @@
 import { VueDraggable } from 'vue-draggable-plus'
 import { LEAD_STAGES, LEAD_STAGE_LABEL } from '~/stores/useLeadsStore'
 import type { Lead, LeadStage } from '~/stores/useLeadsStore'
+import type { LostReason } from '~/components/LostReasonModal.vue'
+import { STAGE_ICON } from '~/utils/leadStageIcons'
+
+// Contracted and Lost are terminal on the backend (Lead::canTransitionTo)
+// — locking `pull` here means the UI reflects that instead of letting an
+// agent drag a won/lost card back out, watch it snap back a beat later
+// when the API rejects it.
+const TERMINAL_STAGES: LeadStage[] = ['contracted', 'lost']
 
 const store = useLeadsStore()
 
@@ -26,6 +34,8 @@ onMounted(async () => {
   syncFromStore()
 })
 
+const pendingLostLead = ref<Lead | null>(null)
+
 /**
  * Fires once after any drag completes, regardless of which column moved.
  * Whichever lead is now sitting in a column that doesn't match its own
@@ -41,16 +51,15 @@ async function onDragEnd() {
     }
 
     if (stage === 'lost') {
-      const reason = window.prompt('Причина отказа (price_disagreement, financing_fell_through, buyer_withdrew, unit_no_longer_available, unresponsive, other):', 'other')
-      if (!reason) {
-        syncFromStore()
-        return
-      }
-      await store.transitionLead(moved.id, stage, { lostReason: reason })
-    } else {
-      await store.transitionLead(moved.id, stage)
+      // Dropped onto Lost — the modal below asks for a reason before the
+      // API call actually fires. Snap the card back to its real column
+      // until the modal resolves, rather than showing it in Lost early.
+      pendingLostLead.value = moved
+      syncFromStore()
+      return
     }
 
+    await store.transitionLead(moved.id, stage)
     // transitionLead already patched (or rolled back) store.leads — the
     // watcher above will rebuild `columns` from it, but only on the next
     // tick, so force it now to avoid a flash of the card in the wrong
@@ -59,25 +68,49 @@ async function onDragEnd() {
     return
   }
 }
+
+async function confirmLost(reason: LostReason) {
+  const lead = pendingLostLead.value
+  pendingLostLead.value = null
+  if (!lead) {
+    return
+  }
+  await store.transitionLead(lead.id, 'lost', { lostReason: reason })
+  syncFromStore()
+}
 </script>
 
 <template>
-  <div class="flex gap-4 overflow-x-auto pb-4">
+  <div v-if="store.loading" class="flex gap-4 overflow-x-auto pb-4">
+    <div v-for="stage in LEAD_STAGES" :key="stage" class="w-72 shrink-0 space-y-2 rounded-2xl bg-paper p-3">
+      <div class="h-4 w-24 animate-pulse rounded bg-card" />
+      <div class="h-20 animate-pulse rounded-xl bg-card" />
+    </div>
+  </div>
+
+  <div v-else class="flex gap-4 overflow-x-auto pb-4">
     <div v-for="stage in LEAD_STAGES" :key="stage" class="flex w-72 shrink-0 flex-col gap-3 rounded-2xl bg-paper p-3">
       <div class="flex items-center justify-between px-1">
-        <h2 class="font-display text-sm font-bold text-ink">{{ LEAD_STAGE_LABEL[stage] }}</h2>
+        <div class="flex items-center gap-1.5 font-display text-sm font-bold text-ink">
+          <component :is="STAGE_ICON[stage]" :size="14" />
+          {{ LEAD_STAGE_LABEL[stage] }}
+        </div>
         <span class="rounded-full bg-card px-2 py-0.5 text-[11px] font-semibold text-ink-soft">{{ columns[stage].length }}</span>
       </div>
 
       <VueDraggable
         v-model="columns[stage]"
         :animation="150"
-        group="leads-board"
+        :group="{ name: 'leads-board', pull: !TERMINAL_STAGES.includes(stage) }"
         class="flex min-h-[80px] flex-col gap-2"
         @end="onDragEnd"
       >
         <LeadCard v-for="lead in columns[stage]" :key="lead.id" :lead="lead" />
       </VueDraggable>
+
+      <p v-if="columns[stage].length === 0" class="px-1 text-[11px] text-ink-soft/70">Пусто</p>
     </div>
+
+    <LostReasonModal v-if="pendingLostLead" @confirm="confirmLost" @cancel="pendingLostLead = null" />
   </div>
 </template>

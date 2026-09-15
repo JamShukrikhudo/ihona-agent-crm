@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { Building2 } from '@lucide/vue'
+
 const auth = useAuthStore()
 const email = ref('')
 const password = ref('')
@@ -20,23 +22,40 @@ async function submit() {
 </script>
 
 <template>
-  <div class="flex min-h-screen items-center justify-center bg-slate-50 dark:bg-slate-950">
-    <form class="w-full max-w-sm space-y-4 rounded-xl border border-slate-200 bg-white p-8 shadow-sm dark:border-slate-800 dark:bg-slate-900" @submit.prevent="submit">
-      <h1 class="text-xl font-display font-semibold text-brand-800">Ihona · Кабинет агента</h1>
-
-      <div class="space-y-1">
-        <label class="text-sm font-medium text-slate-700 dark:text-slate-300" for="email">Email</label>
-        <input id="email" v-model="email" type="email" required class="w-full rounded-lg border border-slate-300 px-3 py-2 dark:border-slate-700 dark:bg-slate-800" />
+  <div class="flex min-h-screen items-center justify-center bg-paper">
+    <form class="w-full max-w-sm space-y-5 rounded-2xl border border-line bg-card p-8 shadow-sm" @submit.prevent="submit">
+      <div class="flex items-center gap-2 text-brand-dark">
+        <Building2 :size="20" />
+        <h1 class="font-display text-lg font-bold text-ink">Ihona · Кабинет агента</h1>
       </div>
 
       <div class="space-y-1">
-        <label class="text-sm font-medium text-slate-700 dark:text-slate-300" for="password">Пароль</label>
-        <input id="password" v-model="password" type="password" required class="w-full rounded-lg border border-slate-300 px-3 py-2 dark:border-slate-700 dark:bg-slate-800" />
+        <label class="text-[12px] font-medium text-ink-soft" for="email">Email</label>
+        <input
+          id="email"
+          v-model="email"
+          type="email"
+          required
+          autocomplete="username"
+          class="w-full rounded-lg border border-line px-3 py-2 text-sm text-ink focus:border-brand-600 focus:outline-none"
+        />
       </div>
 
-      <p v-if="error" class="text-sm text-red-600">{{ error }}</p>
+      <div class="space-y-1">
+        <label class="text-[12px] font-medium text-ink-soft" for="password">Пароль</label>
+        <input
+          id="password"
+          v-model="password"
+          type="password"
+          required
+          autocomplete="current-password"
+          class="w-full rounded-lg border border-line px-3 py-2 text-sm text-ink focus:border-brand-600 focus:outline-none"
+        />
+      </div>
 
-      <button type="submit" :disabled="loading" class="w-full rounded-lg bg-brand-600 py-2 font-medium text-white transition hover:bg-brand-700 disabled:opacity-60">
+      <p v-if="error" class="rounded-lg bg-status-sold-soft px-3 py-2 text-[13px] text-status-sold">{{ error }}</p>
+
+      <button type="submit" :disabled="loading" class="w-full rounded-lg bg-brand-600 py-2 text-sm font-semibold text-white transition hover:bg-brand-700 disabled:opacity-60">
         {{ loading ? 'Входим…' : 'Войти' }}
       </button>
     </form>
