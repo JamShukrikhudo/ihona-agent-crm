@@ -23,6 +23,8 @@ export function useApi<T>(path: string, options: UseFetchOptions<T> = {}) {
     onResponseError({ response }) {
       if (response.status === 401) {
         handleUnauthorized()
+      } else if (response.status === 403) {
+        handleForbidden()
       }
     },
   })
@@ -43,8 +45,11 @@ export async function apiFetch<T>(path: string, options: Parameters<typeof $fetc
       },
     })
   } catch (error: unknown) {
-    if ((error as { response?: { status?: number } })?.response?.status === 401) {
+    const status = (error as { response?: { status?: number } })?.response?.status
+    if (status === 401) {
       handleUnauthorized()
+    } else if (status === 403) {
+      handleForbidden()
     }
     throw error
   }
@@ -56,6 +61,21 @@ function handleUnauthorized() {
   auth.user = null
   if (import.meta.client) {
     localStorage.removeItem('ihona_token')
+    resetCrmStores()
     navigateTo('/login')
+  }
+}
+
+/**
+ * A 403 is expected behavior (a role that genuinely can't do this), not a
+ * bug — it gets the same "нет доступа" page the role middleware already
+ * shows for a disallowed route (app/pages/403.vue), not the generic
+ * error overlay a thrown-and-uncaught fetch error would otherwise produce.
+ * Still re-thrown by both callers above so a caller doing its own
+ * optimistic-update rollback (see useUnitsStore) still sees the failure.
+ */
+function handleForbidden() {
+  if (import.meta.client) {
+    navigateTo('/403')
   }
 }

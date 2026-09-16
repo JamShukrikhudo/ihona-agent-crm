@@ -55,6 +55,11 @@ export const useAuthStore = defineStore('auth', {
       if (import.meta.client) {
         localStorage.removeItem('ihona_token')
       }
+      // A shared device (shop-floor tablet) logging into a different
+      // company's account must not still hold the previous session's
+      // units/leads/clients in memory, even for the instant before the
+      // next fetch resolves.
+      resetCrmStores()
     },
 
     async restore() {
