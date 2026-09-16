@@ -79,6 +79,12 @@ onBeforeUnmount(() => disconnectEcho())
           >
             Воронка сделок
           </NuxtLink>
+          <NuxtLink
+            to="/clients"
+            class="rounded-full border border-line px-4 py-1.5 text-[13px] font-semibold text-ink-soft hover:bg-paper"
+          >
+            Клиенты
+          </NuxtLink>
           <button
             type="button"
             class="flex items-center gap-1.5 rounded-full border border-line px-3 py-1.5 text-[13px] text-ink-soft hover:bg-paper"

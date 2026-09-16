@@ -12,12 +12,21 @@ import { expect, test, type Page } from '@playwright/test'
  * it exercises the real MySQL row lock, not a mock. Picks whichever unit is
  * currently free rather than hardcoding one, and releases it again in an
  * afterEach so a re-run always starts clean.
+ *
+ * A reservation now requires a client_id (Client/ClientInteraction, added
+ * after this test originally passed) — "Забронировать" opens ClientPicker
+ * instead of firing the API directly, so the race is now: type a phone,
+ * pick the (pre-seeded, shared) test client, then the two /reserve calls
+ * actually fire. Using the SAME client for both agents deliberately: the
+ * race is about the unit, not about client creation contending with itself.
  */
 
 const PROJECT_ID = 1
 const PASSWORD = 'AgentDemo2026!'
 const AGENT_1 = { email: 'agent1@ihona.tj', password: PASSWORD }
 const AGENT_2 = { email: 'agent2@ihona.tj', password: PASSWORD }
+const TEST_CLIENT_PHONE = '+992900000099'
+const TEST_CLIENT_NAME = 'Playwright Race Client'
 
 let targetUnitId: number | null = null
 let targetUnitLabel = ''
@@ -59,6 +68,13 @@ test.beforeAll(async ({ request }) => {
   targetUnitId = free.id
   targetUnitLabel = free.label
   targetSection = free.section
+
+  // Ensure the shared test client exists so both agents find it in the
+  // picker's search results rather than racing each other to create it.
+  await request.post('/api/clients', {
+    data: { phone: TEST_CLIENT_PHONE, name: TEST_CLIENT_NAME },
+    headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' },
+  })
 });
 
 test.afterEach(async ({ request }) => {
@@ -100,6 +116,21 @@ test('two agents booking the same unit within ~200ms: exactly one wins', async (
   await page1.getByRole('button', { name: 'Забронировать' }).waitFor()
   await page2.getByRole('button', { name: 'Забронировать' }).waitFor()
 
+  // "Забронировать" now opens ClientPicker instead of calling the API
+  // directly — both agents pick the same pre-seeded client here so the
+  // race stays about the unit, not about which agent's client-search
+  // request lands first.
+  const pickClientAndOpenPicker = async (page: Page) => {
+    await page.getByRole('button', { name: 'Забронировать' }).click()
+    await page.getByPlaceholder('Телефон или имя').fill(TEST_CLIENT_PHONE)
+    // ClientPicker debounces its search 250ms — give it room, then wait
+    // for the pre-seeded client's result button to actually render.
+    await page.getByRole('button', { name: new RegExp(TEST_CLIENT_NAME) }).waitFor({ timeout: 5000 })
+  }
+
+  await pickClientAndOpenPicker(page1)
+  await pickClientAndOpenPicker(page2)
+
   // Fired together, not awaited one at a time — this is the actual race:
   // both requests should be in flight within the same ~200ms window the
   // roadmap describes, not sequential. click() itself only waits for the
@@ -107,7 +138,7 @@ test('two agents booking the same unit within ~200ms: exactly one wins', async (
   // each branch separately waits for its own toast to actually appear
   // before reading it.
   const readToast = async (page: Page) => {
-    await page.getByRole('button', { name: 'Забронировать' }).click()
+    await page.getByRole('button', { name: new RegExp(TEST_CLIENT_NAME) }).click()
     const toast = page.locator('.pointer-events-auto').first()
     await toast.waitFor({ state: 'visible', timeout: 5000 })
 

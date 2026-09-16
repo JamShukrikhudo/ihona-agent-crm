@@ -11,6 +11,7 @@ const unit = computed(() => (props.unitId === null ? null : store.byId(props.uni
 const releasing = ref(false)
 const releaseReason = ref('')
 const busy = ref(false)
+const pickingClient = ref(false)
 
 const pricePerSqm = computed(() => (unit.value?.price && unit.value.area ? Math.round(unit.value.price / unit.value.area) : null))
 
@@ -32,7 +33,15 @@ async function loadHistory(id: number) {
   }
 }
 
-async function reserve() {
+// Product rule: no reservation without a client attached. Opens the
+// picker first; the actual /reserve call only fires once a client_id is
+// resolved (existing client found, or a new one created inline).
+function startReserve() {
+  pickingClient.value = true
+}
+
+async function reserve(clientId: number) {
+  pickingClient.value = false
   if (!unit.value) {
     return
   }
@@ -42,7 +51,7 @@ async function reserve() {
   const ok = await store.optimisticUpdate(
     id,
     { status: 'reserved', agent: auth.user?.name ?? null, expiresInHours: 24 },
-    () => apiFetch(`/units/${id}/reserve`, { method: 'POST', body: { hours: 24 } }),
+    () => apiFetch(`/units/${id}/reserve`, { method: 'POST', body: { hours: 24, client_id: clientId } }),
   )
   busy.value = false
   if (ok) {
@@ -125,6 +134,18 @@ watch(() => props.unitId, (id) => {
           </div>
         </div>
 
+        <NuxtLink
+          v-if="unit.clientId"
+          :to="`/clients/${unit.clientId}`"
+          class="mt-2 flex items-center gap-2 rounded-xl bg-paper p-3 transition-colors hover:bg-brand-50"
+        >
+          <Users :size="15" class="text-brand-600" />
+          <div>
+            <div class="text-[11px] text-ink-soft">Клиент</div>
+            <div class="text-sm font-medium text-ink">{{ unit.clientName }}</div>
+          </div>
+        </NuxtLink>
+
         <div v-if="unit.status === 'reserved' && unit.expiresInHours !== null" class="mt-3 flex items-center gap-2 rounded-xl p-3 bg-status-reserved-soft">
           <Clock :size="15" class="text-status-reserved" />
           <div class="text-[12px] text-ink">
@@ -138,7 +159,7 @@ watch(() => props.unitId, (id) => {
             type="button"
             :disabled="busy"
             class="w-full rounded-xl bg-brand-600 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
-            @click="reserve"
+            @click="startReserve"
           >
             Забронировать
           </button>
@@ -190,5 +211,7 @@ watch(() => props.unitId, (id) => {
         </div>
       </div>
     </aside>
+
+    <ClientPicker v-if="pickingClient" @select="(client) => reserve(client.id)" @cancel="pickingClient = false" />
   </div>
 </template>

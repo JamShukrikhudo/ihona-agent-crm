@@ -1,0 +1,59 @@
+import { defineStore } from 'pinia'
+
+export interface Client {
+  id: number
+  name: string
+  phone: string
+  email: string | null
+  notes: string | null
+  createdAt: string
+}
+
+export interface ClientInteraction {
+  id: number
+  type: 'note' | 'call' | 'whatsapp' | 'telegram' | 'reserved' | 'released' | 'deposit' | 'sold'
+  message: string | null
+  unitLabel: string | null
+  createdBy: string | null
+  createdAt: string
+}
+
+export const useClientsStore = defineStore('clients', {
+  actions: {
+    /** ClientPicker's debounced search — by phone or name, whichever the
+     * agent typed. Doesn't touch state; the picker owns its own result list
+     * locally rather than everyone sharing one global "search results". */
+    async search(query: string): Promise<Client[]> {
+      if (query.trim() === '') {
+        return []
+      }
+      const isPhoneLike = /\d/.test(query)
+      const params = isPhoneLike ? { phone: query } : { q: query }
+      const res = await apiFetch<{ data: Client[] }>('/clients', { params })
+      return res.data
+    },
+
+    /** Resolves a client_id for the reserve flow: existing client if the
+     * phone matches, a new row otherwise. Never a silent duplicate — the
+     * backend enforces uniqueness on (team, phone) too. */
+    async findOrCreateByPhone(phone: string, name?: string): Promise<Client> {
+      const res = await apiFetch<{ data: Client }>('/clients', {
+        method: 'POST',
+        body: { phone, name },
+      })
+      return res.data
+    },
+
+    async fetchHistory(clientId: number): Promise<{ client: Client; units: unknown[]; interactions: ClientInteraction[] }> {
+      const res = await apiFetch<{ data: Client; units: unknown[]; interactions: ClientInteraction[] }>(`/clients/${clientId}`)
+      return { client: res.data, units: res.units, interactions: res.interactions }
+    },
+
+    async addInteraction(clientId: number, type: 'note' | 'call' | 'whatsapp' | 'telegram', message: string, unitId?: number) {
+      await apiFetch(`/clients/${clientId}/interactions`, {
+        method: 'POST',
+        body: { type, message, unit_id: unitId },
+      })
+    },
+  },
+})

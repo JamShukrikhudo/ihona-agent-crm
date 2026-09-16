@@ -12,6 +12,8 @@ export interface Unit {
   price: number
   status: UnitStatus
   agent: string | null
+  clientId: number | null
+  clientName: string | null
   expiresInHours: number | null
 }
 
