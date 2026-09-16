@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { LogOut, Building2 } from '@lucide/vue'
-import type { Unit } from '~/stores/useUnitsStore'
 import { LEAD_STAGES, LEAD_STAGE_LABEL } from '~/stores/useLeadsStore'
 import { STAGE_ICON } from '~/utils/leadStageIcons'
 
@@ -30,6 +29,7 @@ const funnelCounts = computed(() => {
   return counts
 })
 const funnelMax = computed(() => Math.max(1, ...funnelCounts.value.values()))
+const totalRevenue = computed(() => projects.value.reduce((sum, p) => sum + p.revenue, 0))
 
 onMounted(async () => {
   const echo = useEcho()
@@ -40,26 +40,13 @@ onMounted(async () => {
   })
   echoState.value = pusher.connection.state
 
-  // A team's project list doubles as the switcher (below) and the source
-  // for these per-project mini stats — fetched in parallel rather than
-  // through useUnitsStore, which only ever holds one active project at a
-  // time (the chessboard page's own concern).
+  // Sold count and revenue come pre-aggregated from the API (grouped SQL,
+  // not a client-side reduce over every unit of every project) — see
+  // ProjectController::index.
   loadingProjects.value = true
   try {
-    const list = await apiFetch<{ data: { id: number; name: string }[] }>('/projects')
-    projects.value = await Promise.all(
-      list.data.map(async (project) => {
-        const units = await apiFetch<{ data: Unit[] }>(`/projects/${project.id}/units`).catch(() => ({ data: [] as Unit[] }))
-        const sold = units.data.filter((u) => u.status === 'sold')
-        return {
-          id: project.id,
-          name: project.name,
-          total: units.data.length,
-          sold: sold.length,
-          revenue: sold.reduce((sum, u) => sum + u.price, 0),
-        }
-      }),
-    )
+    const res = await apiFetch<{ data: ProjectSummary[] }>('/projects')
+    projects.value = res.data
   } finally {
     loadingProjects.value = false
   }
@@ -104,6 +91,11 @@ onBeforeUnmount(() => disconnectEcho())
     </div>
 
     <div class="mx-auto max-w-5xl space-y-6 px-6 py-6">
+      <section v-if="isManager && !loadingProjects" class="rounded-xl border border-line bg-card p-4">
+        <div class="text-[11px] font-medium text-ink-soft">Общая выручка по проданным юнитам</div>
+        <div class="font-display text-2xl font-bold text-ink">{{ totalRevenue.toLocaleString('ru-RU') }} TJS</div>
+      </section>
+
       <section>
         <h2 class="mb-3 font-display text-sm font-bold text-ink">Проекты</h2>
 
@@ -120,22 +112,24 @@ onBeforeUnmount(() => disconnectEcho())
             v-for="project in projects"
             :key="project.id"
             :to="`/projects/${project.id}`"
-            class="block rounded-xl border border-line bg-card p-4 transition-shadow hover:shadow-md"
+            class="flex items-center gap-4 rounded-xl border border-line bg-card p-4 transition-shadow hover:shadow-md"
           >
-            <div class="flex items-center gap-2 font-display text-sm font-bold text-ink">
-              <Building2 :size="14" /> {{ project.name }}
-            </div>
-            <div class="mt-2 flex items-center justify-between text-[12px] text-ink-soft">
-              <span>Продано {{ project.sold }} из {{ project.total }}</span>
-              <span>{{ project.revenue.toLocaleString('ru-RU') }} TJS</span>
-            </div>
-            <div class="mt-1.5 h-1.5 overflow-hidden rounded-full bg-paper">
-              <div
-                class="h-full rounded-full bg-brand-600"
-                :style="{ width: `${project.total > 0 ? (project.sold / project.total) * 100 : 0}%` }"
-              />
+            <DonutChart :value="project.sold" :total="project.total" />
+            <div class="min-w-0 flex-1">
+              <div class="flex items-center gap-2 font-display text-sm font-bold text-ink">
+                <Building2 :size="14" /> {{ project.name }}
+              </div>
+              <div class="mt-1 text-[12px] text-ink-soft">Продано {{ project.sold }} из {{ project.total }}</div>
+              <div class="text-[12px] font-semibold text-ink">{{ project.revenue.toLocaleString('ru-RU') }} TJS</div>
             </div>
           </NuxtLink>
+        </div>
+      </section>
+
+      <section v-if="isManager">
+        <h2 class="mb-3 font-display text-sm font-bold text-ink">Лиды за последние 14 дней</h2>
+        <div class="rounded-xl border border-line bg-card p-4">
+          <LeadsTrendChart :leads="leadsStore.leads" />
         </div>
       </section>
 
