@@ -13,6 +13,12 @@ export const LEAD_STAGE_LABEL: Record<LeadStage, string> = {
   lost: 'Отказ',
 }
 
+export interface LeadNextTask {
+  title: string
+  dueAt: string | null
+  overdue: boolean
+}
+
 export interface Lead {
   id: number
   contactName: string
@@ -20,10 +26,14 @@ export interface Lead {
   contactEmail: string | null
   stage: LeadStage
   lostReason: string | null
+  clientId: number | null
   unitId: number | null
   unitLabel: string | null
+  unitPrice: number | null
   buildingName: string | null
   agent: string | null
+  source: string | null
+  nextTask: LeadNextTask | null
   notes: string | null
   createdAt: string
   openTasksCount: number
@@ -80,7 +90,7 @@ export const useLeadsStore = defineStore('leads', {
       }
     },
 
-    async createLead(attributes: { contact_name: string; contact_phone?: string; contact_email?: string; source?: string }) {
+    async createLead(attributes: { client_id?: number; contact_name?: string; contact_phone?: string; contact_email?: string; source?: string }) {
       const res = await apiFetch<{ data: Lead }>('/leads', { method: 'POST', body: attributes })
       this.leads.unshift(res.data)
       return res.data
@@ -106,7 +116,10 @@ export const useLeadsStore = defineStore('leads', {
 
       try {
         if (stage === 'reserved' && lead.unitId) {
-          await apiFetch(`/units/${lead.unitId}/reserve`)
+          if (!lead.clientId) {
+            throw { data: { message: 'У сделки нет привязанного клиента — сначала откройте карточку и укажите клиента.' } }
+          }
+          await apiFetch(`/units/${lead.unitId}/reserve`, { method: 'POST', body: { client_id: lead.clientId } })
         }
         await apiFetch(`/leads/${id}/transition`, {
           method: 'POST',

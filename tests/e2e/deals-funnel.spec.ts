@@ -63,7 +63,7 @@ test('create a lead, drag it to Contacted, reload, stage persisted', async ({ pa
   // draggable-plus/SortableJS both react to native HTML5 drag events,
   // which Playwright's dragTo() drives correctly (unlike a bare
   // mouse.move sequence, which SortableJS's own event listeners ignore).
-  const contactedColumn = page.locator('h2', { hasText: 'Контакт' }).locator('..').locator('..')
+  const contactedColumn = page.locator('[data-stage="contacted"]')
   await card.dragTo(contactedColumn)
 
   // Confirm the drop actually reached the API, not just the local array —
@@ -85,5 +85,5 @@ test('create a lead, drag it to Contacted, reload, stage persisted', async ({ pa
 
   // Reload to rule out the stage only living in Pinia's in-memory state.
   await page.reload()
-  await expect(page.locator('h2', { hasText: 'Контакт' }).locator('..').locator('..').getByText(contactName)).toBeVisible()
+  await expect(page.locator('[data-stage="contacted"]').getByText(contactName)).toBeVisible()
 })

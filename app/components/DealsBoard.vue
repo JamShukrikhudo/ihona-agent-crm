@@ -35,6 +35,11 @@ onMounted(async () => {
 })
 
 const pendingLostLead = ref<Lead | null>(null)
+const openedLead = ref<Lead | null>(null)
+
+function columnValue(stage: LeadStage): number {
+  return columns[stage].reduce((sum, lead) => sum + (lead.unitPrice ?? 0), 0)
+}
 
 /**
  * Fires once after any drag completes, regardless of which column moved.
@@ -89,7 +94,7 @@ async function confirmLost(reason: LostReason) {
   </div>
 
   <div v-else class="flex gap-4 overflow-x-auto pb-4">
-    <div v-for="stage in LEAD_STAGES" :key="stage" class="flex w-72 shrink-0 flex-col gap-3 rounded-2xl bg-paper p-3">
+    <div v-for="stage in LEAD_STAGES" :key="stage" :data-stage="stage" class="flex w-72 shrink-0 flex-col gap-3 rounded-2xl bg-paper p-3">
       <div class="flex items-center justify-between px-1">
         <div class="flex items-center gap-1.5 font-display text-sm font-bold text-ink">
           <component :is="STAGE_ICON[stage]" :size="14" />
@@ -97,6 +102,7 @@ async function confirmLost(reason: LostReason) {
         </div>
         <span class="rounded-full bg-card px-2 py-0.5 text-[11px] font-semibold text-ink-soft">{{ columns[stage].length }}</span>
       </div>
+      <div v-if="columns[stage].length > 0" class="px-1 text-[10.5px] text-ink-soft">{{ columnValue(stage).toLocaleString('ru-RU') }} TJS</div>
 
       <VueDraggable
         v-model="columns[stage]"
@@ -105,12 +111,13 @@ async function confirmLost(reason: LostReason) {
         class="flex min-h-[80px] flex-col gap-2"
         @end="onDragEnd"
       >
-        <LeadCard v-for="lead in columns[stage]" :key="lead.id" :lead="lead" />
+        <LeadCard v-for="lead in columns[stage]" :key="lead.id" :lead="lead" @open="openedLead = $event" />
       </VueDraggable>
 
       <p v-if="columns[stage].length === 0" class="px-1 text-[11px] text-ink-soft/70">Пусто</p>
     </div>
 
     <LostReasonModal v-if="pendingLostLead" @confirm="confirmLost" @cancel="pendingLostLead = null" />
+    <LeadDrawer :lead="openedLead" @close="openedLead = null" />
   </div>
 </template>
