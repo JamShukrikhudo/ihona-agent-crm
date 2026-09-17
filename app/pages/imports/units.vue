@@ -3,7 +3,7 @@ import { ArrowRight, X } from '@lucide/vue'
 import { autoDetectMapping, buildResult } from '~/utils/importFields'
 import type { ColumnMapping, ImportRow, ParsedSheet, SkippedRow } from '~/utils/importFields'
 
-definePageMeta({ middleware: 'sales-manager' })
+definePageMeta({ middleware: 'permission', permission: 'imports.units' })
 
 const STEP_LABELS = ['Файл', 'Сопоставление', 'Результат']
 

@@ -154,17 +154,18 @@ watch(() => props.unitId, (id) => {
         </div>
 
         <div class="mt-5 space-y-2">
-          <button
-            v-if="unit.status === 'free'"
-            type="button"
-            :disabled="busy"
-            class="w-full rounded-xl bg-brand-600 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
-            @click="startReserve"
-          >
-            Забронировать
-          </button>
+          <CanAccess v-if="unit.status === 'free'" permission="units.reserve">
+            <button
+              type="button"
+              :disabled="busy"
+              class="w-full rounded-xl bg-brand-600 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
+              @click="startReserve"
+            >
+              Забронировать
+            </button>
+          </CanAccess>
 
-          <template v-else-if="unit.status === 'reserved'">
+          <CanAccess v-else-if="unit.status === 'reserved'" permission="units.release">
             <button
               v-if="!releasing"
               type="button"
@@ -195,7 +196,7 @@ watch(() => props.unitId, (id) => {
                 </button>
               </div>
             </div>
-          </template>
+          </CanAccess>
 
           <p v-else class="text-[12px] text-ink-soft">Действия для этого статуса появятся в следующих спринтах.</p>
         </div>

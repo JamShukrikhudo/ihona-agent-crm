@@ -2,11 +2,14 @@ import { defineStore } from 'pinia'
 
 export type CrmRole = 'agent' | 'sales-manager' | 'developer-admin'
 
+export type Permission = 'units.reserve' | 'units.release' | 'units.edit-price' | 'leads.manage' | 'clients.manage' | 'imports.units'
+
 interface User {
   id: number
   name: string
   email: string
   roles: string[]
+  permissions: string[]
   teamId: number | string | null
 }
 
@@ -27,6 +30,7 @@ export const useAuthStore = defineStore('auth', {
   getters: {
     isAuthenticated: (state) => Boolean(state.token),
     hasRole: (state) => (role: CrmRole) => state.user?.roles.includes(role) ?? false,
+    can: (state) => (permission: Permission) => state.user?.permissions.includes(permission) ?? false,
   },
 
   actions: {
