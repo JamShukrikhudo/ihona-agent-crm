@@ -87,6 +87,13 @@ onBeforeUnmount(() => disconnectEcho())
           </NuxtLink>
           <NuxtLink
             v-if="isManager"
+            to="/contracts"
+            class="rounded-full border border-line px-4 py-1.5 text-[13px] font-semibold text-ink-soft hover:bg-paper"
+          >
+            Договоры
+          </NuxtLink>
+          <NuxtLink
+            v-if="isManager"
             to="/imports/units"
             class="rounded-full border border-line px-4 py-1.5 text-[13px] font-semibold text-ink-soft hover:bg-paper"
           >

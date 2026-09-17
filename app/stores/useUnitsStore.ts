@@ -14,6 +14,8 @@ export interface Unit {
   agent: string | null
   clientId: number | null
   clientName: string | null
+  hasOverdueInstallment: boolean
+  contractId: number | null
   expiresInHours: number | null
 }
 

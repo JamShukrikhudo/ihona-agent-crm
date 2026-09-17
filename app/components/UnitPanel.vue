@@ -60,6 +60,49 @@ async function reserve(clientId: number) {
   await loadHistory(id)
 }
 
+async function markDeposit() {
+  if (!unit.value) {
+    return
+  }
+  busy.value = true
+  const id = unit.value.id
+  const ok = await store.optimisticUpdate(id, { status: 'deposit' }, () => apiFetch(`/units/${id}/deposit`, { method: 'POST' }))
+  busy.value = false
+  if (ok) {
+    useToastStore().push('Задаток отмечен внесённым', 'success')
+  }
+  await loadHistory(id)
+}
+
+const creatingContract = ref(false)
+const contractAmount = ref<number | null>(null)
+const contractInstallments = ref(1)
+const contractFirstDueAt = ref('')
+const savingContract = ref(false)
+
+async function submitContract() {
+  if (!unit.value || !contractAmount.value) {
+    return
+  }
+  savingContract.value = true
+  try {
+    await useContractsStore().createForUnit(unit.value.id, {
+      amount: contractAmount.value,
+      installments_count: contractInstallments.value > 1 ? contractInstallments.value : undefined,
+      first_installment_due_at: contractFirstDueAt.value || undefined,
+    })
+    store.patchUnit(unit.value.id, { status: 'sold' })
+    creatingContract.value = false
+    useToastStore().push('Договор оформлен', 'success')
+    await loadHistory(unit.value.id)
+  } catch (error) {
+    const message = (error as { data?: { message?: string } })?.data?.message ?? 'Не удалось оформить договор.'
+    useToastStore().push(message, 'error')
+  } finally {
+    savingContract.value = false
+  }
+}
+
 async function confirmRelease() {
   if (!unit.value || releaseReason.value.trim() === '') {
     return
@@ -165,38 +208,94 @@ watch(() => props.unitId, (id) => {
             </button>
           </CanAccess>
 
-          <CanAccess v-else-if="unit.status === 'reserved'" permission="units.release">
+          <template v-else-if="unit.status === 'reserved'">
             <button
-              v-if="!releasing"
               type="button"
               :disabled="busy"
-              class="flex w-full items-center justify-center gap-1.5 rounded-xl border border-line py-2.5 text-sm font-semibold text-ink transition-colors hover:bg-slate-50 disabled:opacity-60"
-              @click="releasing = true"
+              class="w-full rounded-xl bg-brand-600 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
+              @click="markDeposit"
             >
-              <AlertTriangle :size="14" /> Снять бронь
+              Внести задаток
+            </button>
+            <CanAccess permission="units.release">
+              <button
+                v-if="!releasing"
+                type="button"
+                :disabled="busy"
+                class="flex w-full items-center justify-center gap-1.5 rounded-xl border border-line py-2.5 text-sm font-semibold text-ink transition-colors hover:bg-slate-50 disabled:opacity-60"
+                @click="releasing = true"
+              >
+                <AlertTriangle :size="14" /> Снять бронь
+              </button>
+              <div v-else class="space-y-2">
+                <textarea
+                  v-model="releaseReason"
+                  placeholder="Причина снятия брони"
+                  rows="2"
+                  class="w-full rounded-xl border border-line px-3 py-2 text-sm"
+                />
+                <div class="flex gap-2">
+                  <button
+                    type="button"
+                    :disabled="busy || releaseReason.trim() === ''"
+                    class="flex-1 rounded-xl bg-red-600 py-2 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-60"
+                    @click="confirmRelease"
+                  >
+                    Подтвердить
+                  </button>
+                  <button type="button" class="rounded-xl border border-line px-3 py-2 text-sm" @click="releasing = false">
+                    Отмена
+                  </button>
+                </div>
+              </div>
+            </CanAccess>
+          </template>
+
+          <template v-else-if="unit.status === 'deposit'">
+            <button
+              v-if="!creatingContract"
+              type="button"
+              class="w-full rounded-xl bg-brand-600 py-2.5 text-sm font-semibold text-white hover:opacity-90"
+              @click="creatingContract = true; contractAmount = unit.price"
+            >
+              Оформить договор
             </button>
             <div v-else class="space-y-2">
-              <textarea
-                v-model="releaseReason"
-                placeholder="Причина снятия брони"
-                rows="2"
-                class="w-full rounded-xl border border-line px-3 py-2 text-sm"
-              />
+              <label class="block text-[11px] text-ink-soft">
+                Сумма договора
+                <input v-model.number="contractAmount" type="number" min="1" class="mt-1 w-full rounded-lg border border-line px-3 py-2 text-sm" />
+              </label>
+              <label class="block text-[11px] text-ink-soft">
+                Рассрочка на, мес. (1 — единовременно)
+                <input v-model.number="contractInstallments" type="number" min="1" max="60" class="mt-1 w-full rounded-lg border border-line px-3 py-2 text-sm" />
+              </label>
+              <label v-if="contractInstallments > 1" class="block text-[11px] text-ink-soft">
+                Дата первого платежа
+                <input v-model="contractFirstDueAt" type="date" class="mt-1 w-full rounded-lg border border-line px-3 py-2 text-sm" />
+              </label>
               <div class="flex gap-2">
                 <button
                   type="button"
-                  :disabled="busy || releaseReason.trim() === ''"
-                  class="flex-1 rounded-xl bg-red-600 py-2 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-60"
-                  @click="confirmRelease"
+                  :disabled="savingContract || !contractAmount"
+                  class="flex-1 rounded-xl bg-brand-600 py-2 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-60"
+                  @click="submitContract"
                 >
-                  Подтвердить
+                  {{ savingContract ? 'Оформляю…' : 'Подтвердить' }}
                 </button>
-                <button type="button" class="rounded-xl border border-line px-3 py-2 text-sm" @click="releasing = false">
+                <button type="button" class="rounded-xl border border-line px-3 py-2 text-sm" @click="creatingContract = false">
                   Отмена
                 </button>
               </div>
             </div>
-          </CanAccess>
+          </template>
+
+          <NuxtLink
+            v-else-if="unit.status === 'sold' && unit.contractId"
+            :to="`/contracts/${unit.contractId}`"
+            class="block w-full rounded-xl border border-line py-2.5 text-center text-sm font-semibold text-ink hover:bg-paper"
+          >
+            Открыть договор
+          </NuxtLink>
 
           <p v-else class="text-[12px] text-ink-soft">Действия для этого статуса появятся в следующих спринтах.</p>
         </div>
