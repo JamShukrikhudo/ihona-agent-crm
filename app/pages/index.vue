@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { LogOut, Building2 } from '@lucide/vue'
+import { Building2 } from '@lucide/vue'
 import { LEAD_STAGES, LEAD_STAGE_LABEL } from '~/stores/useLeadsStore'
 import { STAGE_ICON } from '~/utils/leadStageIcons'
 
@@ -67,45 +67,9 @@ onBeforeUnmount(() => disconnectEcho())
           <div class="text-[11px] font-medium text-ink-soft">Кабинет агента</div>
           <h1 class="font-display text-xl font-bold text-ink">Здравствуйте, {{ auth.user?.name }}</h1>
         </div>
-        <div class="flex items-center gap-3">
-          <div class="flex items-center gap-2 text-[12px] text-ink-soft">
-            <span class="h-2 w-2 rounded-full" :class="echoState === 'connected' ? 'bg-status-free' : 'bg-status-reserved'" />
-            Реалтайм: {{ echoState === 'connected' ? 'подключено' : echoState }}
-          </div>
-          <NuxtLink
-            v-if="isManager"
-            to="/deals"
-            class="rounded-full border border-brand-600 px-4 py-1.5 text-[13px] font-semibold text-brand-600 hover:bg-brand-50"
-          >
-            Воронка сделок
-          </NuxtLink>
-          <NuxtLink
-            to="/clients"
-            class="rounded-full border border-line px-4 py-1.5 text-[13px] font-semibold text-ink-soft hover:bg-paper"
-          >
-            Клиенты
-          </NuxtLink>
-          <NuxtLink
-            v-if="isManager"
-            to="/contracts"
-            class="rounded-full border border-line px-4 py-1.5 text-[13px] font-semibold text-ink-soft hover:bg-paper"
-          >
-            Договоры
-          </NuxtLink>
-          <NuxtLink
-            v-if="isManager"
-            to="/imports/units"
-            class="rounded-full border border-line px-4 py-1.5 text-[13px] font-semibold text-ink-soft hover:bg-paper"
-          >
-            Импорт из Excel
-          </NuxtLink>
-          <button
-            type="button"
-            class="flex items-center gap-1.5 rounded-full border border-line px-3 py-1.5 text-[13px] text-ink-soft hover:bg-paper"
-            @click="auth.logout().then(() => navigateTo('/login'))"
-          >
-            <LogOut :size="14" /> Выйти
-          </button>
+        <div class="flex items-center gap-2 text-[12px] text-ink-soft">
+          <span class="h-2 w-2 rounded-full" :class="echoState === 'connected' ? 'bg-status-free' : 'bg-status-reserved'" />
+          Реалтайм: {{ echoState === 'connected' ? 'подключено' : echoState }}
         </div>
       </div>
     </div>

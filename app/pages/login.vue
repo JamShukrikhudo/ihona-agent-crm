@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { Building2 } from '@lucide/vue'
 
+definePageMeta({ layout: false })
+
 const auth = useAuthStore()
 const email = ref('')
 const password = ref('')
