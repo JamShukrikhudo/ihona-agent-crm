@@ -4,11 +4,13 @@ import { LogOut } from '@lucide/vue'
 const route = useRoute()
 const auth = useAuthStore()
 const isManager = computed(() => auth.hasRole('sales-manager') || auth.hasRole('developer-admin'))
+const isIhonaStaff = computed(() => auth.hasRole('ihona-staff'))
 
 interface NavItem {
   to: string
   label: string
   managerOnly?: boolean
+  staffOnly?: boolean
 }
 
 const NAV_ITEMS: NavItem[] = [
@@ -18,6 +20,9 @@ const NAV_ITEMS: NavItem[] = [
   { to: '/contracts', label: 'Договоры', managerOnly: true },
   { to: '/imports/units', label: 'Импорт из Excel', managerOnly: true },
   { to: '/settings/telegram', label: 'Telegram', managerOnly: true },
+  { to: '/admin/teams', label: 'Команды', staffOnly: true },
+  { to: '/admin/users', label: 'Пользователи', staffOnly: true },
+  { to: '/admin/roles', label: 'Роли', staffOnly: true },
 ]
 
 // Every page under a given section (e.g. /clients/42) should still
@@ -33,7 +38,7 @@ function isActive(to: string): boolean {
       <nav class="flex flex-wrap items-center gap-1">
         <template v-for="item in NAV_ITEMS" :key="item.to">
           <NuxtLink
-            v-if="!item.managerOnly || isManager"
+            v-if="(!item.managerOnly || isManager) && (!item.staffOnly || isIhonaStaff)"
             :to="item.to"
             class="rounded-full px-3.5 py-1.5 text-[13px] font-semibold transition-colors"
             :class="isActive(item.to) ? 'bg-brand-600 text-white' : 'text-ink-soft hover:bg-paper'"

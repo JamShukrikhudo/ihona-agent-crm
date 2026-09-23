@@ -1,6 +1,8 @@
 import { defineStore } from 'pinia'
 
-export type CrmRole = 'agent' | 'sales-manager' | 'developer-admin'
+// 'ihona-staff' is cross-tenant (ihona's own team managing every developer
+// company), unlike the other three which are all scoped to one team.
+export type CrmRole = 'agent' | 'sales-manager' | 'developer-admin' | 'ihona-staff'
 
 export type Permission = 'units.reserve' | 'units.release' | 'units.edit-price' | 'leads.manage' | 'clients.manage' | 'imports.units'
 
