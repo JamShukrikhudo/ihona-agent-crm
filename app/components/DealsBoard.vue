@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { VueDraggable } from 'vue-draggable-plus'
-import { LEAD_STAGES, LEAD_STAGE_LABEL } from '~/stores/useLeadsStore'
+import { LEAD_STAGES, LEAD_STAGE_ACCENT, LEAD_STAGE_LABEL } from '~/stores/useLeadsStore'
 import type { Lead, LeadStage } from '~/stores/useLeadsStore'
 import type { LostReason } from '~/components/LostReasonModal.vue'
 import { STAGE_ICON } from '~/utils/leadStageIcons'
@@ -94,27 +94,28 @@ async function confirmLost(reason: LostReason) {
   </div>
 
   <div v-else class="flex gap-4 overflow-x-auto pb-4">
-    <div v-for="stage in LEAD_STAGES" :key="stage" :data-stage="stage" class="flex w-72 shrink-0 flex-col gap-3 rounded-2xl bg-paper p-3">
-      <div class="flex items-center justify-between px-1">
+    <div v-for="stage in LEAD_STAGES" :key="stage" :data-stage="stage" class="flex w-72 shrink-0 flex-col gap-3 overflow-hidden rounded-2xl bg-paper pb-3">
+      <div class="h-1 shrink-0" :class="LEAD_STAGE_ACCENT[stage]" />
+      <div class="flex items-center justify-between px-3 pt-2">
         <div class="flex items-center gap-1.5 font-display text-sm font-bold text-ink">
           <component :is="STAGE_ICON[stage]" :size="14" />
           {{ LEAD_STAGE_LABEL[stage] }}
         </div>
         <span class="rounded-full bg-card px-2 py-0.5 text-[11px] font-semibold text-ink-soft">{{ columns[stage].length }}</span>
       </div>
-      <div v-if="columns[stage].length > 0" class="px-1 text-[10.5px] text-ink-soft">{{ columnValue(stage).toLocaleString('ru-RU') }} TJS</div>
+      <div v-if="columns[stage].length > 0" class="px-3 text-[10.5px] text-ink-soft">{{ columnValue(stage).toLocaleString('ru-RU') }} TJS</div>
 
       <VueDraggable
         v-model="columns[stage]"
         :animation="150"
         :group="{ name: 'leads-board', pull: !TERMINAL_STAGES.includes(stage) }"
-        class="flex min-h-[80px] flex-col gap-2"
+        class="flex min-h-[80px] flex-col gap-2 px-3"
         @end="onDragEnd"
       >
         <LeadCard v-for="lead in columns[stage]" :key="lead.id" :lead="lead" @open="openedLead = $event" />
       </VueDraggable>
 
-      <p v-if="columns[stage].length === 0" class="px-1 text-[11px] text-ink-soft/70">Пусто</p>
+      <p v-if="columns[stage].length === 0" class="px-3 text-[11px] text-ink-soft/70">Пусто</p>
     </div>
 
     <LostReasonModal v-if="pendingLostLead" @confirm="confirmLost" @cancel="pendingLostLead = null" />

@@ -21,6 +21,17 @@ const projects = ref<ProjectSummary[]>([])
 const loadingProjects = ref(true)
 const isManager = computed(() => auth.hasRole('sales-manager') || auth.hasRole('developer-admin'))
 
+interface SalesStats {
+  total_units: number
+  sold_units: number
+  total_contract_value: number
+  collected: number
+  remaining: number
+  overdue_installments_count: number
+}
+
+const stats = ref<SalesStats | null>(null)
+
 const funnelCounts = computed(() => {
   const counts = new Map(LEAD_STAGES.map((stage) => [stage, 0]))
   for (const lead of leadsStore.leads) {
@@ -52,6 +63,7 @@ onMounted(async () => {
   }
 
   if (isManager.value) {
+    apiFetch<{ data: SalesStats }>('/sales-stats').then((res) => (stats.value = res.data))
     await leadsStore.fetchLeads()
   }
 })
@@ -78,6 +90,28 @@ onBeforeUnmount(() => disconnectEcho())
       <section v-if="isManager && !loadingProjects" class="rounded-xl border border-line bg-card p-4">
         <div class="text-[11px] font-medium text-ink-soft">Общая выручка по проданным юнитам</div>
         <div class="font-display text-2xl font-bold text-ink">{{ totalRevenue.toLocaleString('ru-RU') }} TJS</div>
+      </section>
+
+      <!-- Collected/remaining/overdue — the one summary the old Filament-only
+           SalesStatsWidget had that this dashboard didn't yet (see docs/CRM
+           spec): overdue installments were only visible one contract at a
+           time on /contracts, never as a team-wide headline number. -->
+      <section v-if="isManager && stats" class="grid gap-3 sm:grid-cols-3">
+        <div class="rounded-xl border border-line bg-card p-4">
+          <div class="text-[11px] font-medium text-ink-soft">Собрано</div>
+          <div class="font-display text-lg font-bold text-ink">{{ stats.collected.toLocaleString('ru-RU') }} TJS</div>
+          <div class="text-[11px] text-ink-soft">Остаток {{ stats.remaining.toLocaleString('ru-RU') }} TJS</div>
+        </div>
+        <div class="rounded-xl border border-line bg-card p-4">
+          <div class="text-[11px] font-medium text-ink-soft">Продано</div>
+          <div class="font-display text-lg font-bold text-ink">{{ stats.sold_units }} из {{ stats.total_units }}</div>
+        </div>
+        <div class="rounded-xl border p-4" :class="stats.overdue_installments_count > 0 ? 'border-status-deposit bg-status-deposit-soft' : 'border-line bg-card'">
+          <div class="text-[11px] font-medium text-ink-soft">Просрочено платежей</div>
+          <div class="font-display text-lg font-bold" :class="stats.overdue_installments_count > 0 ? 'text-status-deposit' : 'text-ink'">
+            {{ stats.overdue_installments_count }}
+          </div>
+        </div>
       </section>
 
       <section>

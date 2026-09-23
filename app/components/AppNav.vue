@@ -17,6 +17,7 @@ const NAV_ITEMS: NavItem[] = [
   { to: '/clients', label: 'Клиенты' },
   { to: '/contracts', label: 'Договоры', managerOnly: true },
   { to: '/imports/units', label: 'Импорт из Excel', managerOnly: true },
+  { to: '/settings/telegram', label: 'Telegram', managerOnly: true },
 ]
 
 // Every page under a given section (e.g. /clients/42) should still

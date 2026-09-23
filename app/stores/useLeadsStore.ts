@@ -13,6 +13,21 @@ export const LEAD_STAGE_LABEL: Record<LeadStage, string> = {
   lost: 'Отказ',
 }
 
+/**
+ * A thin colored bar along the top of each Kanban column so the funnel's
+ * shape reads at a glance without opening a single card — borrowed from
+ * the ShamCRM reference audit (docs), not its dark theme, just the pattern
+ * of color carrying status instead of decorating it.
+ */
+export const LEAD_STAGE_ACCENT: Record<LeadStage, string> = {
+  new: 'bg-slate-300',
+  contacted: 'bg-sky-400',
+  viewing_scheduled: 'bg-amber-400',
+  reserved: 'bg-violet-400',
+  contracted: 'bg-brand-500',
+  lost: 'bg-red-400',
+}
+
 export interface LeadNextTask {
   title: string
   dueAt: string | null
