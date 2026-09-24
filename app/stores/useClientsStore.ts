@@ -13,6 +13,9 @@ export interface ClientInteraction {
   id: number
   type: 'note' | 'call' | 'whatsapp' | 'telegram' | 'reserved' | 'released' | 'deposit' | 'sold'
   message: string | null
+  // null for every type except a real two-way channel message (telegram
+  // today) — a manually-typed note has no "direction", it's just a log.
+  direction: 'inbound' | 'outbound' | null
   unitLabel: string | null
   createdBy: string | null
   createdAt: string
@@ -44,9 +47,9 @@ export const useClientsStore = defineStore('clients', {
       return res.data
     },
 
-    async fetchHistory(clientId: number): Promise<{ client: Client; units: unknown[]; interactions: ClientInteraction[] }> {
-      const res = await apiFetch<{ data: Client; units: unknown[]; interactions: ClientInteraction[] }>(`/clients/${clientId}`)
-      return { client: res.data, units: res.units, interactions: res.interactions }
+    async fetchHistory(clientId: number): Promise<{ client: Client; units: unknown[]; interactions: ClientInteraction[]; channels: string[] }> {
+      const res = await apiFetch<{ data: Client; units: unknown[]; interactions: ClientInteraction[]; channels: string[] }>(`/clients/${clientId}`)
+      return { client: res.data, units: res.units, interactions: res.interactions, channels: res.channels }
     },
 
     async addInteraction(clientId: number, type: 'note' | 'call' | 'whatsapp' | 'telegram', message: string, unitId?: number) {
@@ -54,6 +57,16 @@ export const useClientsStore = defineStore('clients', {
         method: 'POST',
         body: { type, message, unit_id: unitId },
       })
+    },
+
+    /** A real reply sent through the client's linked Telegram bot, not a
+     * logged note — see ClientController::sendTelegramMessage. */
+    async sendTelegramMessage(clientId: number, message: string): Promise<ClientInteraction> {
+      const res = await apiFetch<{ data: ClientInteraction }>(`/clients/${clientId}/telegram-messages`, {
+        method: 'POST',
+        body: { message },
+      })
+      return res.data
     },
   },
 })

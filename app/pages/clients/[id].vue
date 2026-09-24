@@ -21,7 +21,46 @@ const clientsStore = useClientsStore()
 const client = ref<Client | null>(null)
 const units = ref<ClientUnit[]>([])
 const interactions = ref<ClientInteraction[]>([])
+const channels = ref<string[]>([])
 const loading = ref(true)
+
+const hasTelegram = computed(() => channels.value.includes('telegram'))
+const chatMessage = ref('')
+const sendingChat = ref(false)
+
+async function sendChatMessage() {
+  if (chatMessage.value.trim() === '') {
+    return
+  }
+  sendingChat.value = true
+  try {
+    await clientsStore.sendTelegramMessage(clientId.value, chatMessage.value.trim())
+    chatMessage.value = ''
+    await load(true)
+  } catch {
+    useToastStore().push('Не удалось отправить сообщение', 'error')
+  } finally {
+    sendingChat.value = false
+  }
+}
+
+// A 5s poll while this page is open — a customer's reply should show up
+// without the agent having to manually refresh. Real-time via the Reverb
+// broadcasting already used for the kanban board is a natural fast-follow,
+// deliberately not done here to keep this change scoped.
+let pollTimer: ReturnType<typeof setInterval> | null = null
+onMounted(() => {
+  pollTimer = setInterval(() => {
+    if (hasTelegram.value) {
+      load(true)
+    }
+  }, 5000)
+})
+onBeforeUnmount(() => {
+  if (pollTimer) {
+    clearInterval(pollTimer)
+  }
+})
 
 const NOTE_TYPES = [
   { value: 'note', label: 'Заметка', icon: StickyNote },
@@ -33,13 +72,18 @@ const noteType = ref<(typeof NOTE_TYPES)[number]['value']>('call')
 const noteMessage = ref('')
 const savingNote = ref(false)
 
-async function load() {
-  loading.value = true
+/** silent=true skips the full-page loading flash — used by the poll and
+ * after sending/logging a message, where the page is already visible. */
+async function load(silent = false) {
+  if (!silent) {
+    loading.value = true
+  }
   try {
     const res = await clientsStore.fetchHistory(clientId.value)
     client.value = res.client
     units.value = res.units as ClientUnit[]
     interactions.value = res.interactions
+    channels.value = res.channels
   } finally {
     loading.value = false
   }
@@ -53,7 +97,7 @@ async function submitNote() {
   try {
     await clientsStore.addInteraction(clientId.value, noteType.value, noteMessage.value.trim())
     noteMessage.value = ''
-    await load()
+    await load(true)
   } finally {
     savingNote.value = false
   }
@@ -126,9 +170,33 @@ onMounted(load)
         </form>
       </div>
 
-      <div class="rounded-xl border border-line bg-card p-4">
-        <div class="mb-3 font-display text-sm font-bold text-ink">История</div>
+      <div class="flex flex-col rounded-xl border border-line bg-card p-4">
+        <div class="mb-3 flex items-center justify-between">
+          <span class="font-display text-sm font-bold text-ink">История</span>
+          <span v-if="hasTelegram" class="flex items-center gap-1 text-[11px] font-semibold text-brand-600">
+            <span class="h-1.5 w-1.5 rounded-full bg-brand-600" /> Telegram подключён
+          </span>
+        </div>
         <ClientTimeline :interactions="interactions" />
+
+        <!-- Real send-and-deliver compose box, distinct from "Записать
+             контакт" above — only shown when this client actually has a
+             linked Telegram chat, not just a manually-typed note. -->
+        <form v-if="hasTelegram" class="mt-3 flex gap-2 border-t border-line pt-3" @submit.prevent="sendChatMessage">
+          <input
+            v-model="chatMessage"
+            type="text"
+            placeholder="Написать в Telegram…"
+            class="flex-1 rounded-lg border border-line px-3 py-2 text-[13px] text-ink"
+          />
+          <button
+            type="submit"
+            :disabled="sendingChat || chatMessage.trim() === ''"
+            class="rounded-lg bg-brand-600 px-4 py-2 text-[13px] font-semibold text-white hover:bg-brand-700 disabled:opacity-60"
+          >
+            Отправить
+          </button>
+        </form>
       </div>
     </div>
   </div>
