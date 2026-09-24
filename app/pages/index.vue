@@ -45,7 +45,7 @@ const monthlyMax = computed(() => Math.max(1, ...monthly.value.map((m) => m.coll
 const leadSourceCounts = ref<Record<string, number>>({})
 // Same hex values as utils/leadSources.ts's Tailwind classes — the donut
 // draws raw SVG strokes, which can't resolve a Tailwind class at runtime.
-const SOURCE_HEX: Record<string, string> = { site: '#2e7d5c', call: '#0284c7', visit: '#b45309', telegram: '#0891b2' }
+const SOURCE_HEX: Record<string, string> = { phone: '#0284c7', referral: '#b45309', site: '#2e7d5c', instagram: '#db2777' }
 const leadSourceSegments = computed(() =>
   LEAD_SOURCES.map((source) => ({ label: sourceLabel(source), value: leadSourceCounts.value[source] ?? 0, color: SOURCE_HEX[source]! })).filter(
     (s) => s.value > 0,
