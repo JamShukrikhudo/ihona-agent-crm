@@ -1,16 +1,33 @@
 import { defineStore } from 'pinia'
 
-export type LeadStage = 'new' | 'contacted' | 'viewing_scheduled' | 'reserved' | 'contracted' | 'lost'
+export type LeadStage = 'new' | 'needs_clarification' | 'contacted' | 'viewing_scheduled' | 'reserved' | 'contracted' | 'lost'
 
-export const LEAD_STAGES: LeadStage[] = ['new', 'contacted', 'viewing_scheduled', 'reserved', 'contracted', 'lost']
+export const LEAD_STAGES: LeadStage[] = ['new', 'needs_clarification', 'contacted', 'viewing_scheduled', 'reserved', 'contracted', 'lost']
 
 export const LEAD_STAGE_LABEL: Record<LeadStage, string> = {
   new: 'Лиды',
+  needs_clarification: 'Уточнение потребностей',
   contacted: 'Контакт',
   viewing_scheduled: 'Показ',
   reserved: 'Бронь',
   contracted: 'Договор',
   lost: 'Отказ',
+}
+
+export type LastCallType = 'incoming' | 'outgoing' | 'missed' | 'no_answer'
+
+export const LAST_CALL_LABEL: Record<LastCallType, string> = {
+  incoming: 'Входящий звонок',
+  outgoing: 'Исходящий звонок',
+  missed: 'Пропущенный',
+  no_answer: 'Без ответа',
+}
+
+export const LAST_CALL_COLOR: Record<LastCallType, string> = {
+  incoming: 'text-status-free',
+  outgoing: 'text-brand-600',
+  missed: 'text-status-deposit',
+  no_answer: 'text-ink-soft',
 }
 
 /**
@@ -21,6 +38,7 @@ export const LEAD_STAGE_LABEL: Record<LeadStage, string> = {
  */
 export const LEAD_STAGE_ACCENT: Record<LeadStage, string> = {
   new: 'bg-slate-300',
+  needs_clarification: 'bg-cyan-400',
   contacted: 'bg-sky-400',
   viewing_scheduled: 'bg-amber-400',
   reserved: 'bg-violet-400',
@@ -40,6 +58,7 @@ export interface Lead {
   contactPhone: string | null
   contactEmail: string | null
   stage: LeadStage
+  lastCallType: LastCallType | null
   lostReason: string | null
   clientId: number | null
   unitId: number | null

@@ -3,6 +3,8 @@ import { MessageCircle, Phone, Send, StickyNote } from '@lucide/vue'
 import { STATUS_BG_SOFT, STATUS_BORDER, STATUS_LABEL } from '~/utils/statusStyles'
 import type { UnitStatus } from '~/stores/useUnitsStore'
 import type { Client, ClientInteraction } from '~/stores/useClientsStore'
+import { LEAD_STAGE_LABEL } from '~/stores/useLeadsStore'
+import type { Lead } from '~/stores/useLeadsStore'
 
 definePageMeta({ middleware: 'agent' })
 
@@ -20,6 +22,7 @@ const clientsStore = useClientsStore()
 
 const client = ref<Client | null>(null)
 const units = ref<ClientUnit[]>([])
+const leads = ref<Lead[]>([])
 const interactions = ref<ClientInteraction[]>([])
 const channels = ref<string[]>([])
 const loading = ref(true)
@@ -82,6 +85,7 @@ async function load(silent = false) {
     const res = await clientsStore.fetchHistory(clientId.value)
     client.value = res.client
     units.value = res.units as ClientUnit[]
+    leads.value = res.leads
     interactions.value = res.interactions
     channels.value = res.channels
   } finally {
@@ -122,6 +126,36 @@ onMounted(load)
           <div class="text-sm font-medium text-ink">{{ client.phone }}</div>
           <div v-if="client.email" class="mt-2 text-[11px] text-ink-soft">Email</div>
           <div v-if="client.email" class="text-sm font-medium text-ink">{{ client.email }}</div>
+        </div>
+
+        <div class="rounded-xl border border-line bg-card p-4">
+          <div class="mb-2 flex items-center justify-between">
+            <span class="font-display text-sm font-bold text-ink">Сделки</span>
+            <span class="text-[11px] text-ink-soft">{{ leads.length }}</span>
+          </div>
+          <p v-if="leads.length === 0" class="text-[12px] text-ink-soft">У клиента пока нет сделок.</p>
+          <div v-else class="space-y-2">
+            <NuxtLink
+              v-for="lead in leads"
+              :key="lead.id"
+              to="/deals"
+              class="block rounded-lg border border-line px-3 py-2 text-[12px] hover:bg-paper"
+            >
+              <div class="flex items-center justify-between gap-2">
+                <span class="font-semibold text-ink">{{ lead.unitLabel ?? lead.buildingName ?? `Сделка №${lead.id}` }}</span>
+                <span
+                  class="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold"
+                  :class="lead.stage === 'lost' ? 'bg-status-deposit-soft text-status-deposit' : 'bg-brand-50 text-brand-dark'"
+                >
+                  {{ LEAD_STAGE_LABEL[lead.stage] }}
+                </span>
+              </div>
+              <div class="mt-1 flex items-center justify-between text-ink-soft">
+                <span>{{ lead.agent ?? '—' }}</span>
+                <span>{{ lead.unitPrice ? `${lead.unitPrice.toLocaleString('ru-RU')} TJS` : '—' }}</span>
+              </div>
+            </NuxtLink>
+          </div>
         </div>
 
         <div class="rounded-xl border border-line bg-card p-4">

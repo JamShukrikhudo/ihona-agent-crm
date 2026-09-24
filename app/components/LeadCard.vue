@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { AlertCircle, Building2, Clock } from '@lucide/vue'
+import { LAST_CALL_COLOR, LAST_CALL_LABEL } from '~/stores/useLeadsStore'
 import type { Lead } from '~/stores/useLeadsStore'
 import { SOURCE_BG, SOURCE_ICON, SOURCE_TEXT, sourceLabel } from '~/utils/leadSources'
 import type { LeadSource } from '~/utils/leadSources'
@@ -22,6 +23,11 @@ const source = computed(() => (props.lead.source && props.lead.source in SOURCE_
         <div v-if="lead.contactPhone" class="text-[12px] text-ink-soft">{{ lead.contactPhone }}</div>
       </div>
       <AgentAvatar v-if="lead.agent" :name="lead.agent" :size="24" :title="lead.agent" />
+    </div>
+
+    <div v-if="lead.lastCallType" class="flex items-center gap-1.5 text-[10.5px] font-semibold" :class="LAST_CALL_COLOR[lead.lastCallType]">
+      <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-current" />
+      {{ LAST_CALL_LABEL[lead.lastCallType] }}
     </div>
 
     <div class="flex flex-wrap items-center gap-1.5">

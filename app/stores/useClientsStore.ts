@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import type { Lead } from '~/stores/useLeadsStore'
 
 export interface Client {
   id: number
@@ -47,9 +48,9 @@ export const useClientsStore = defineStore('clients', {
       return res.data
     },
 
-    async fetchHistory(clientId: number): Promise<{ client: Client; units: unknown[]; interactions: ClientInteraction[]; channels: string[] }> {
-      const res = await apiFetch<{ data: Client; units: unknown[]; interactions: ClientInteraction[]; channels: string[] }>(`/clients/${clientId}`)
-      return { client: res.data, units: res.units, interactions: res.interactions, channels: res.channels }
+    async fetchHistory(clientId: number): Promise<{ client: Client; units: unknown[]; leads: Lead[]; interactions: ClientInteraction[]; channels: string[] }> {
+      const res = await apiFetch<{ data: Client; units: unknown[]; leads: Lead[]; interactions: ClientInteraction[]; channels: string[] }>(`/clients/${clientId}`)
+      return { client: res.data, units: res.units, leads: res.leads, interactions: res.interactions, channels: res.channels }
     },
 
     async addInteraction(clientId: number, type: 'note' | 'call' | 'whatsapp' | 'telegram', message: string, unitId?: number) {
