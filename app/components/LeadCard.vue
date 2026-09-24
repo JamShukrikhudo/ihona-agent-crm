@@ -16,8 +16,13 @@ const source = computed(() => (props.lead.source && props.lead.source in SOURCE_
     :class="{ 'opacity-60': lead.stage === 'lost' }"
     @click="$emit('open', lead)"
   >
-    <div class="font-semibold text-ink">{{ lead.contactName }}</div>
-    <div v-if="lead.contactPhone" class="text-[12px] text-ink-soft">{{ lead.contactPhone }}</div>
+    <div class="flex items-center justify-between gap-2">
+      <div class="min-w-0">
+        <div class="truncate font-semibold text-ink">{{ lead.contactName }}</div>
+        <div v-if="lead.contactPhone" class="text-[12px] text-ink-soft">{{ lead.contactPhone }}</div>
+      </div>
+      <AgentAvatar v-if="lead.agent" :name="lead.agent" :size="24" :title="lead.agent" />
+    </div>
 
     <div class="flex flex-wrap items-center gap-1.5">
       <span
