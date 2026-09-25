@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ChevronRight, MessageCircle, Pencil, Search, Send, Trash2 } from '@lucide/vue'
+import { ChevronRight, MessageCircle, Pencil, Plus, Search, Send, Trash2 } from '@lucide/vue'
 import type { Client } from '~/stores/useClientsStore'
 import { SOURCE_BG, SOURCE_ICON, SOURCE_TEXT, sourceLabel } from '~/utils/leadSources'
 import type { LeadSource } from '~/utils/leadSources'
@@ -61,6 +61,29 @@ async function saveEdit() {
   }
 }
 
+const creating = ref(false)
+const newName = ref('')
+const newPhone = ref('')
+const savingNew = ref(false)
+
+async function saveNewClient() {
+  if (newName.value.trim() === '' || newPhone.value.trim() === '') {
+    return
+  }
+  savingNew.value = true
+  try {
+    const created = await clientsStore.findOrCreateByPhone(newPhone.value.trim(), newName.value.trim())
+    clients.value = [created, ...clients.value.filter((c) => c.id !== created.id)]
+    creating.value = false
+    newName.value = ''
+    newPhone.value = ''
+  } catch {
+    toast.push('Не удалось создать клиента — возможно, номер уже занят', 'error')
+  } finally {
+    savingNew.value = false
+  }
+}
+
 async function removeClient(client: Client) {
   if (!confirm(`Удалить клиента ${client.name}? Это действие необратимо.`)) {
     return
@@ -108,21 +131,40 @@ onMounted(load)
           <div class="text-[11px] font-medium text-ink-soft">Клиенты</div>
           <h1 class="font-display text-xl font-bold text-ink">Все клиенты</h1>
         </div>
-        <div class="relative w-64">
-          <Search :size="14" class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-soft" />
-          <input
-            v-model="query"
-            type="text"
-            placeholder="Поиск по имени или телефону"
-            class="w-full rounded-lg border border-line py-2 pl-9 pr-3 text-sm text-ink focus:border-brand-600 focus:outline-none"
-          />
+        <div class="flex items-center gap-2">
+          <div class="relative w-64">
+            <Search :size="14" class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-soft" />
+            <input
+              v-model="query"
+              type="text"
+              placeholder="Поиск по имени или телефону"
+              class="w-full rounded-lg border border-line py-2 pl-9 pr-3 text-sm text-ink focus:border-brand-600 focus:outline-none"
+            />
+          </div>
+          <button
+            type="button"
+            class="flex items-center gap-1.5 rounded-full bg-brand-600 px-4 py-2 text-[13px] font-semibold text-white hover:bg-brand-700"
+            @click="creating = true"
+          >
+            <Plus :size="14" /> Клиент
+          </button>
         </div>
       </div>
     </div>
 
     <div class="px-6 py-6">
       <div v-if="loading" class="text-sm text-ink-soft">Загрузка…</div>
-      <div v-else-if="clients.length === 0" class="text-sm text-ink-soft">Клиенты не найдены.</div>
+      <div v-else-if="clients.length === 0" class="rounded-2xl border border-dashed border-line bg-card p-8 text-center">
+        <p class="text-sm text-ink-soft">{{ query ? 'Ничего не найдено по этому запросу.' : 'Клиентов пока нет.' }}</p>
+        <button
+          v-if="!query"
+          type="button"
+          class="mt-3 inline-flex items-center gap-1.5 rounded-full bg-brand-600 px-4 py-2 text-[13px] font-semibold text-white hover:bg-brand-700"
+          @click="creating = true"
+        >
+          <Plus :size="14" /> Добавить первого клиента
+        </button>
+      </div>
 
       <div v-else class="overflow-hidden rounded-2xl border border-line bg-card">
         <table class="w-full text-left">
@@ -201,6 +243,34 @@ onMounted(load)
             </tr>
           </tbody>
         </table>
+      </div>
+    </div>
+
+    <div v-if="creating" class="fixed inset-0 z-40 flex items-center justify-center bg-black/25 p-4" @click="creating = false">
+      <div class="w-full max-w-sm rounded-2xl bg-card p-5 shadow-2xl" @click.stop>
+        <div class="mb-4 font-display text-base font-bold text-ink">Новый клиент</div>
+        <form class="space-y-3" @submit.prevent="saveNewClient">
+          <label class="block text-[11px] text-ink-soft">
+            Имя
+            <input v-model="newName" type="text" required class="mt-1 w-full rounded-lg border border-line px-3 py-2 text-sm text-ink" />
+          </label>
+          <label class="block text-[11px] text-ink-soft">
+            Телефон
+            <input v-model="newPhone" type="text" required placeholder="+992..." class="mt-1 w-full rounded-lg border border-line px-3 py-2 text-sm text-ink" />
+          </label>
+          <div class="flex gap-2 pt-2">
+            <button type="button" class="flex-1 rounded-lg border border-line py-2 text-[13px] font-semibold text-ink-soft" @click="creating = false">
+              Отмена
+            </button>
+            <button
+              type="submit"
+              :disabled="savingNew"
+              class="flex-1 rounded-lg bg-brand-600 py-2 text-[13px] font-semibold text-white hover:bg-brand-700 disabled:opacity-60"
+            >
+              {{ savingNew ? 'Создаю…' : 'Создать' }}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
 

@@ -27,14 +27,23 @@ function formatTjs(n: number): string {
   return `${n.toLocaleString('ru-RU')} TJS`
 }
 
+const submittingLead = ref(false)
+
 async function submitLead() {
   if (contactName.value.trim() === '') {
     return
   }
-  await store.createLead({ contact_name: contactName.value.trim(), contact_phone: contactPhone.value.trim() || undefined, source: source.value })
-  contactName.value = ''
-  contactPhone.value = ''
-  formOpen.value = false
+  submittingLead.value = true
+  try {
+    await store.createLead({ contact_name: contactName.value.trim(), contact_phone: contactPhone.value.trim() || undefined, source: source.value })
+    contactName.value = ''
+    contactPhone.value = ''
+    formOpen.value = false
+  } catch {
+    useToastStore().push('Не удалось добавить лид', 'error')
+  } finally {
+    submittingLead.value = false
+  }
 }
 
 onMounted(() => {
@@ -100,8 +109,12 @@ onBeforeUnmount(() => {
             <option v-for="s in LEAD_SOURCES" :key="s" :value="s">{{ SOURCE_LABEL[s] }}</option>
           </select>
         </label>
-        <button type="submit" class="rounded-lg bg-brand-600 px-3 py-1.5 text-[12px] font-semibold text-white hover:bg-brand-700">
-          Добавить
+        <button
+          type="submit"
+          :disabled="submittingLead"
+          class="rounded-lg bg-brand-600 px-3 py-1.5 text-[12px] font-semibold text-white hover:bg-brand-700 disabled:opacity-60"
+        >
+          {{ submittingLead ? 'Добавляю…' : 'Добавить' }}
         </button>
       </form>
     </div>
@@ -124,7 +137,7 @@ onBeforeUnmount(() => {
     </div>
 
     <div class="px-6 py-6">
-      <DealsBoard />
+      <DealsBoard @add-lead="formOpen = true" />
     </div>
   </div>
 </template>

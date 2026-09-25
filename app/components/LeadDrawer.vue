@@ -32,23 +32,36 @@ watch(() => props.lead?.id, (id) => {
   }
 }, { immediate: true })
 
+const submittingTask = ref(false)
+
 async function submitTask() {
   const title = newTaskTitle.value.trim()
   if (title === '' || !props.lead) {
     return
   }
-  await store.addTask(props.lead.id, title, null)
-  newTaskTitle.value = ''
-  await loadTasks(props.lead.id)
+  submittingTask.value = true
+  try {
+    await store.addTask(props.lead.id, title, null)
+    newTaskTitle.value = ''
+    await loadTasks(props.lead.id)
+  } catch {
+    useToastStore().push('Не удалось добавить задачу', 'error')
+  } finally {
+    submittingTask.value = false
+  }
 }
 
 async function markDone(task: LeadTask) {
   if (!props.lead) {
     return
   }
-  await store.completeTask(props.lead.id, task.id)
-  task.doneAt = new Date().toISOString()
-  await loadTasks(props.lead.id)
+  try {
+    await store.completeTask(props.lead.id, task.id)
+    task.doneAt = new Date().toISOString()
+    await loadTasks(props.lead.id)
+  } catch {
+    useToastStore().push('Не удалось отметить задачу выполненной', 'error')
+  }
 }
 </script>
 
@@ -125,7 +138,7 @@ async function markDone(task: LeadTask) {
               placeholder="Например: перезвонить завтра"
               class="min-w-0 flex-1 rounded-lg border border-line bg-paper px-2.5 py-1.5 text-[12.5px] text-ink"
             />
-            <button type="submit" class="flex items-center justify-center rounded-lg bg-brand-600 px-2.5 text-white">
+            <button type="submit" :disabled="submittingTask" class="flex items-center justify-center rounded-lg bg-brand-600 px-2.5 text-white disabled:opacity-60">
               <Plus :size="14" />
             </button>
           </form>

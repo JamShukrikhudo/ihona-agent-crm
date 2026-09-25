@@ -16,7 +16,7 @@ const ACCENT_ORDER: AccentKey[] = ['emerald', 'blue', 'violet', 'teal', 'orange'
        pointed at — each agent's own device preference, not team data. -->
   <button
     type="button"
-    class="fixed bottom-5 right-5 z-40 flex h-11 w-11 items-center justify-center rounded-full bg-brand-600 text-white shadow-xl hover:bg-brand-700"
+    class="fixed bottom-20 right-4 z-40 flex h-11 w-11 items-center justify-center rounded-full bg-brand-600 text-white shadow-xl hover:bg-brand-700 sm:bottom-5 sm:right-5"
     title="Настройки интерфейса"
     @click="open = true"
   >

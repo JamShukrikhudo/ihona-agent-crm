@@ -53,10 +53,27 @@ function isActive(to: string): boolean {
 </script>
 
 <template>
+  <!-- Mobile: hover has no meaning on a touch screen, and 72px fixed rail
+       eats a third of a phone's width — a bottom tab bar instead, same
+       nav items, icon + label, horizontally scrollable if it overflows a
+       narrow screen. Hidden from sm up, where the rail (below) takes over. -->
+  <nav class="fixed inset-x-0 bottom-0 z-30 flex overflow-x-auto border-t border-line bg-card px-1 py-1.5 sm:hidden">
+    <NuxtLink
+      v-for="item in visibleItems"
+      :key="item.to"
+      :to="item.to"
+      class="flex flex-1 flex-col items-center gap-0.5 rounded-lg px-2 py-1.5 text-[10px] font-semibold"
+      :class="isActive(item.to) ? 'text-brand-600' : 'text-ink-soft'"
+    >
+      <component :is="item.icon" :size="18" />
+      <span class="max-w-[64px] truncate">{{ item.label }}</span>
+    </NuxtLink>
+  </nav>
+
   <!-- Bare icon rail, flyout with full labels on hover — same pattern as
        the approved design prototype's sidebar, just in this app's own
        brand color rather than the prototype's blue. -->
-  <div class="group/nav relative z-30 h-screen shrink-0" style="width: 72px">
+  <div class="group/nav relative z-30 hidden h-screen shrink-0 sm:block" style="width: 72px">
     <div class="flex h-full w-[72px] flex-col items-center border-r border-line bg-card py-5">
       <div class="mb-6 flex h-9 w-9 items-center justify-center rounded-xl bg-brand-600 font-display text-[15px] font-extrabold text-white">
         i

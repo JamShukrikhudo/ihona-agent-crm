@@ -3,6 +3,11 @@ import { ChevronLeft, ChevronRight, Eye, ListTodo } from '@lucide/vue'
 
 definePageMeta({ middleware: 'agent' })
 
+// Nuxt's auto-import only resolves <NuxtLink> in template tag position —
+// binding it to :is for the "only link if this task has a client" case
+// needs the component resolved explicitly.
+const NuxtLink = resolveComponent('NuxtLink')
+
 interface CalendarTask {
   id: number
   title: string
@@ -11,6 +16,7 @@ interface CalendarTask {
   doneAt: string | null
   leadId: number | null
   contactName: string | null
+  clientId: number | null
 }
 
 const cursor = ref(new Date())
@@ -158,24 +164,27 @@ function isOverdue(task: CalendarTask): boolean {
             </div>
 
             <div class="space-y-1">
-              <div
+              <component
+                :is="task.clientId ? NuxtLink : 'div'"
                 v-for="task in cell.tasks.slice(0, 3)"
                 :key="task.id"
+                :to="task.clientId ? `/clients/${task.clientId}` : undefined"
                 class="flex items-center gap-1 truncate rounded px-1.5 py-0.5 text-[10px] font-semibold"
-                :class="
+                :class="[
                   task.doneAt
                     ? 'bg-paper text-ink-soft line-through'
                     : isOverdue(task)
                       ? 'bg-status-deposit-soft text-status-deposit'
                       : isViewing(task)
                         ? 'bg-status-free-soft text-brand-dark'
-                        : 'bg-brand-50 text-brand-600'
-                "
+                        : 'bg-brand-50 text-brand-600',
+                  task.clientId && 'hover:opacity-75',
+                ]"
                 :title="`${task.title}${task.contactName ? ' — ' + task.contactName : ''}`"
               >
                 <component :is="isViewing(task) ? Eye : ListTodo" :size="10" class="shrink-0" />
                 <span class="truncate">{{ task.contactName ?? task.title }}</span>
-              </div>
+              </component>
               <div v-if="cell.tasks.length > 3" class="text-[10px] text-ink-soft">
                 + {{ cell.tasks.length - 3 }} ещё
               </div>

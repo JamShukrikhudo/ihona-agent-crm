@@ -11,6 +11,8 @@ import { STAGE_ICON } from '~/utils/leadStageIcons'
 // when the API rejects it.
 const TERMINAL_STAGES: LeadStage[] = ['contracted', 'lost']
 
+defineEmits<{ 'add-lead': [] }>()
+
 const store = useLeadsStore()
 
 // vue-draggable-plus needs its own mutable array per column (that's how it
@@ -115,7 +117,17 @@ async function confirmLost(reason: LostReason) {
         <LeadCard v-for="lead in columns[stage]" :key="lead.id" :lead="lead" @open="openedLead = $event" />
       </VueDraggable>
 
-      <p v-if="columns[stage].length === 0" class="px-3 text-[11px] text-ink-soft/70">Пусто</p>
+      <div v-if="columns[stage].length === 0" class="mx-3 rounded-xl border border-dashed border-line px-3 py-4 text-center">
+        <p class="text-[11px] text-ink-soft/70">Пусто</p>
+        <button
+          v-if="stage === 'new'"
+          type="button"
+          class="mt-1.5 text-[11px] font-semibold text-brand-600 hover:underline"
+          @click="$emit('add-lead')"
+        >
+          + Добавить лид
+        </button>
+      </div>
     </div>
 
     <LostReasonModal v-if="pendingLostLead" @confirm="confirmLost" @cancel="pendingLostLead = null" />
