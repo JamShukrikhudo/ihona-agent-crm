@@ -7,6 +7,8 @@ export interface Client {
   phone: string
   email: string | null
   notes: string | null
+  source: string | null
+  channels: string[] | null
   createdAt: string
 }
 
