@@ -14,6 +14,19 @@ const source = ref(LEAD_SOURCES[1]) // 'call' — the most common manual entry p
 
 const conversion = computed(() => (store.leads.length === 0 ? 0 : Math.round((store.byStage.get('contracted')!.length / store.leads.length) * 100)))
 
+const TERMINAL = new Set(['contracted', 'lost'])
+const pipelineValue = computed(() =>
+  store.leads.filter((l) => !TERMINAL.has(l.stage)).reduce((sum, l) => sum + (l.unitPrice ?? 0), 0),
+)
+const contractedCount = computed(() => store.byStage.get('contracted')?.length ?? 0)
+const avgDealSize = computed(() => {
+  const priced = store.leads.filter((l) => l.unitPrice)
+  return priced.length === 0 ? 0 : Math.round(priced.reduce((sum, l) => sum + (l.unitPrice ?? 0), 0) / priced.length)
+})
+function formatTjs(n: number): string {
+  return `${n.toLocaleString('ru-RU')} TJS`
+}
+
 async function submitLead() {
   if (contactName.value.trim() === '') {
     return
@@ -91,6 +104,23 @@ onBeforeUnmount(() => {
           Добавить
         </button>
       </form>
+    </div>
+
+    <div class="px-6 pt-6">
+      <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <div class="rounded-xl border border-line bg-card p-4">
+          <div class="text-[11px] text-ink-soft">Сумма в работе</div>
+          <div class="font-display text-lg font-bold text-ink">{{ formatTjs(pipelineValue) }}</div>
+        </div>
+        <div class="rounded-xl border border-line bg-card p-4">
+          <div class="text-[11px] text-ink-soft">Договоров заключено</div>
+          <div class="font-display text-lg font-bold text-ink">{{ contractedCount }}</div>
+        </div>
+        <div class="rounded-xl border border-line bg-card p-4">
+          <div class="text-[11px] text-ink-soft">Средний чек</div>
+          <div class="font-display text-lg font-bold text-ink">{{ formatTjs(avgDealSize) }}</div>
+        </div>
+      </div>
     </div>
 
     <div class="px-6 py-6">

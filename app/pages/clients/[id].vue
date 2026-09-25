@@ -28,6 +28,24 @@ const channels = ref<string[]>([])
 const loading = ref(true)
 
 const hasTelegram = computed(() => channels.value.includes('telegram'))
+
+const CHANNELS = [
+  { value: 'all', label: 'Все' },
+  { value: 'telegram', label: 'Telegram' },
+  { value: 'whatsapp', label: 'WhatsApp' },
+  { value: 'other', label: 'Звонки и заметки' },
+] as const
+const activeChannel = ref<(typeof CHANNELS)[number]['value']>('all')
+
+const filteredInteractions = computed(() => {
+  if (activeChannel.value === 'all') {
+    return interactions.value
+  }
+  if (activeChannel.value === 'other') {
+    return interactions.value.filter((i) => i.type !== 'telegram' && i.type !== 'whatsapp')
+  }
+  return interactions.value.filter((i) => i.type === activeChannel.value)
+})
 const chatMessage = ref('')
 const sendingChat = ref(false)
 
@@ -235,11 +253,31 @@ onMounted(load)
       <div class="flex flex-col rounded-xl border border-line bg-card p-4">
         <div class="mb-3 flex items-center justify-between">
           <span class="font-display text-sm font-bold text-ink">История</span>
-          <span v-if="hasTelegram" class="flex items-center gap-1 text-[11px] font-semibold text-brand-600">
-            <span class="h-1.5 w-1.5 rounded-full bg-brand-600" /> Telegram подключён
-          </span>
         </div>
-        <ClientTimeline :interactions="interactions" />
+
+        <!-- Omnichannel switcher: a colored dot means a live two-way
+             channel (only Telegram today — sends through the bot);
+             WhatsApp/звонки+заметки are log-only, filed the same as any
+             manual note, not a fake "connected" integration. -->
+        <div class="mb-3 flex gap-1 border-b border-line pb-3">
+          <button
+            v-for="ch in CHANNELS"
+            :key="ch.value"
+            type="button"
+            class="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] font-semibold"
+            :class="activeChannel === ch.value ? 'bg-brand-600 text-white' : 'text-ink-soft hover:bg-paper'"
+            @click="activeChannel = ch.value"
+          >
+            {{ ch.label }}
+            <span
+              v-if="ch.value === 'telegram'"
+              class="h-1.5 w-1.5 rounded-full"
+              :class="hasTelegram ? 'bg-status-free' : 'bg-ink-soft/40'"
+            />
+          </button>
+        </div>
+
+        <ClientTimeline :interactions="filteredInteractions" />
 
         <!-- Real send-and-deliver compose box, distinct from "Записать
              контакт" above — only shown when this client actually has a
