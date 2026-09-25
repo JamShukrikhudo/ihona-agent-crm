@@ -22,6 +22,23 @@ interface CalendarTask {
 const cursor = ref(new Date())
 const tasks = ref<CalendarTask[]>([])
 const loading = ref(true)
+const query = ref('')
+const assigneeFilter = ref('')
+
+const assignees = computed(() => [...new Set(tasks.value.map((t) => t.assignee).filter((a): a is string => Boolean(a)))].sort())
+
+const filteredTasks = computed(() =>
+  tasks.value.filter((t) => {
+    if (assigneeFilter.value && t.assignee !== assigneeFilter.value) {
+      return false
+    }
+    if (query.value.trim() !== '') {
+      const q = query.value.trim().toLowerCase()
+      return t.title.toLowerCase().includes(q) || (t.contactName?.toLowerCase().includes(q) ?? false)
+    }
+    return true
+  }),
+)
 
 const monthLabel = computed(() =>
   cursor.value.toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' }),
@@ -61,7 +78,7 @@ function dateKey(d: Date): string {
 
 const tasksByDay = computed(() => {
   const map = new Map<string, CalendarTask[]>()
-  for (const task of tasks.value) {
+  for (const task of filteredTasks.value) {
     if (!task.dueAt) {
       continue
     }
@@ -134,6 +151,19 @@ function isOverdue(task: CalendarTask): boolean {
             <ChevronRight :size="16" />
           </button>
         </div>
+      </div>
+
+      <div class="mt-3 flex flex-wrap items-center gap-2">
+        <select v-model="assigneeFilter" class="rounded-lg border border-line px-3 py-1.5 text-[12.5px] text-ink">
+          <option value="">Все исполнители</option>
+          <option v-for="a in assignees" :key="a" :value="a">{{ a }}</option>
+        </select>
+        <input
+          v-model="query"
+          type="text"
+          placeholder="Поиск по задаче или клиенту…"
+          class="min-w-0 flex-1 rounded-lg border border-line px-3 py-1.5 text-[12.5px] text-ink sm:max-w-xs"
+        />
       </div>
     </div>
 

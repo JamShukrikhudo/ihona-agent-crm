@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Building2, Check, ChevronRight, Plus, X } from '@lucide/vue'
-import { LEAD_STAGE_LABEL } from '~/stores/useLeadsStore'
-import type { Lead, LeadTask } from '~/stores/useLeadsStore'
+import { LEAD_STAGE_LABEL, LEAD_STAGES } from '~/stores/useLeadsStore'
+import type { Lead, LeadStage, LeadTask } from '~/stores/useLeadsStore'
 import { SOURCE_BG, SOURCE_ICON, SOURCE_TEXT, sourceLabel } from '~/utils/leadSources'
 import type { LeadSource } from '~/utils/leadSources'
 
@@ -12,8 +12,32 @@ const store = useLeadsStore()
 const tasks = ref<LeadTask[]>([])
 const loadingTasks = ref(true)
 const newTaskTitle = ref('')
+const newTaskDue = ref('')
+const openClientId = ref<number | null>(null)
+const changingStage = ref(false)
 
 const source = computed(() => (props.lead?.source && props.lead.source in SOURCE_ICON ? (props.lead.source as LeadSource) : null))
+
+async function changeStage(stage: LeadStage) {
+  if (!props.lead || stage === props.lead.stage) {
+    return
+  }
+  changingStage.value = true
+  try {
+    const ok = await store.transitionLead(props.lead.id, stage)
+    if (!ok) {
+      // transitionLead already pushed its own error toast on failure.
+    }
+  } finally {
+    changingStage.value = false
+  }
+}
+
+function setDueQuick(days: number) {
+  const d = new Date()
+  d.setDate(d.getDate() + days)
+  newTaskDue.value = d.toISOString().slice(0, 10)
+}
 
 async function loadTasks(leadId: number) {
   loadingTasks.value = true
@@ -41,8 +65,9 @@ async function submitTask() {
   }
   submittingTask.value = true
   try {
-    await store.addTask(props.lead.id, title, null)
+    await store.addTask(props.lead.id, title, newTaskDue.value ? new Date(newTaskDue.value).toISOString() : null)
     newTaskTitle.value = ''
+    newTaskDue.value = ''
     await loadTasks(props.lead.id)
   } catch {
     useToastStore().push('Не удалось добавить задачу', 'error')
@@ -70,7 +95,7 @@ async function markDone(task: LeadTask) {
     <aside class="h-full w-full max-w-sm overflow-y-auto bg-card shadow-2xl" @click.stop>
       <div class="flex items-center justify-between border-b border-line px-5 py-4">
         <div>
-          <div class="text-[11px] text-ink-soft">{{ LEAD_STAGE_LABEL[lead.stage] }}</div>
+          <div class="text-[11px] text-ink-soft">Сделка №{{ lead.id }}</div>
           <div class="font-display text-lg font-bold text-ink">{{ lead.contactName }}</div>
         </div>
         <button type="button" class="rounded-full p-1.5 hover:bg-paper" @click="emit('close')">
@@ -79,6 +104,18 @@ async function markDone(task: LeadTask) {
       </div>
 
       <div class="px-5 py-4">
+        <label class="mb-3 block">
+          <span class="text-[10.5px] text-ink-soft">Статус</span>
+          <select
+            :value="lead.stage"
+            :disabled="changingStage || lead.stage === 'contracted' || lead.stage === 'lost'"
+            class="mt-1 w-full rounded-xl border border-line bg-paper px-3 py-2 text-[13px] font-semibold text-ink disabled:opacity-60"
+            @change="changeStage(($event.target as HTMLSelectElement).value as LeadStage)"
+          >
+            <option v-for="s in LEAD_STAGES.filter((x) => x !== 'lost')" :key="s" :value="s">{{ LEAD_STAGE_LABEL[s] }}</option>
+            <option v-if="lead.stage === 'lost'" value="lost">{{ LEAD_STAGE_LABEL.lost }}</option>
+          </select>
+        </label>
         <div class="mb-3 flex flex-wrap items-center gap-2">
           <span
             v-if="source"
@@ -103,14 +140,15 @@ async function markDone(task: LeadTask) {
           </div>
         </div>
 
-        <NuxtLink
+        <button
           v-if="lead.clientId"
-          :to="`/clients/${lead.clientId}`"
-          class="mt-3 flex items-center justify-between rounded-xl bg-paper p-3 text-[12px] font-medium text-ink hover:bg-brand-50"
+          type="button"
+          class="mt-3 flex w-full items-center justify-between rounded-xl bg-paper p-3 text-[12px] font-medium text-ink hover:bg-brand-50"
+          @click="openClientId = lead.clientId"
         >
           Полная история клиента
           <ChevronRight :size="14" class="text-ink-soft" />
-        </NuxtLink>
+        </button>
 
         <div class="mt-5">
           <div class="mb-2 text-[10.5px] font-bold uppercase tracking-wide text-ink-soft">Задачи</div>
@@ -131,19 +169,34 @@ async function markDone(task: LeadTask) {
             </div>
           </template>
 
-          <form class="mt-2 flex gap-1.5" @submit.prevent="submitTask">
-            <input
-              v-model="newTaskTitle"
-              type="text"
-              placeholder="Например: перезвонить завтра"
-              class="min-w-0 flex-1 rounded-lg border border-line bg-paper px-2.5 py-1.5 text-[12.5px] text-ink"
-            />
-            <button type="submit" :disabled="submittingTask" class="flex items-center justify-center rounded-lg bg-brand-600 px-2.5 text-white disabled:opacity-60">
-              <Plus :size="14" />
-            </button>
+          <form class="mt-2 space-y-1.5" @submit.prevent="submitTask">
+            <div class="flex gap-1.5">
+              <input
+                v-model="newTaskTitle"
+                type="text"
+                placeholder="Например: перезвонить"
+                class="min-w-0 flex-1 rounded-lg border border-line bg-paper px-2.5 py-1.5 text-[12.5px] text-ink"
+              />
+              <button type="submit" :disabled="submittingTask" class="flex items-center justify-center rounded-lg bg-brand-600 px-2.5 text-white disabled:opacity-60">
+                <Plus :size="14" />
+              </button>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <input
+                v-model="newTaskDue"
+                type="date"
+                class="rounded-lg border border-line bg-paper px-2 py-1 text-[11.5px] text-ink"
+              />
+              <button type="button" class="rounded-full border border-line px-2 py-1 text-[10.5px] text-ink-soft hover:bg-paper" @click="setDueQuick(0)">Сегодня</button>
+              <button type="button" class="rounded-full border border-line px-2 py-1 text-[10.5px] text-ink-soft hover:bg-paper" @click="setDueQuick(1)">Завтра</button>
+            </div>
           </form>
         </div>
       </div>
     </aside>
+
+    <div v-if="openClientId" @click.stop>
+      <ClientDrawer :client-id="openClientId" @close="openClientId = null" />
+    </div>
   </div>
 </template>
