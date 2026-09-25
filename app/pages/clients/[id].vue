@@ -65,6 +65,13 @@ onBeforeUnmount(() => {
   }
 })
 
+const TABS = [
+  { value: 'info', label: 'Информация' },
+  { value: 'deals', label: 'Сделки' },
+  { value: 'units', label: 'Юниты' },
+] as const
+const activeTab = ref<(typeof TABS)[number]['value']>('info')
+
 const NOTE_TYPES = [
   { value: 'note', label: 'Заметка', icon: StickyNote },
   { value: 'call', label: 'Звонок', icon: Phone },
@@ -114,25 +121,47 @@ onMounted(load)
   <div class="min-h-screen bg-paper">
     <div class="border-b border-line bg-card px-6 py-4">
       <NuxtLink to="/clients" class="text-[11px] font-medium text-ink-soft hover:text-brand-600">← Все клиенты</NuxtLink>
-      <h1 v-if="client" class="font-display text-xl font-bold text-ink">{{ client.name }}</h1>
+      <div v-if="client" class="mt-1 flex items-center gap-3">
+        <AgentAvatar :name="client.name" :size="40" />
+        <h1 class="font-display text-xl font-bold text-ink">{{ client.name }}</h1>
+      </div>
     </div>
 
     <div v-if="loading" class="px-6 py-6 text-sm text-ink-soft">Загрузка…</div>
 
     <div v-else-if="client" class="mx-auto grid max-w-4xl gap-6 px-6 py-6 sm:grid-cols-[1fr_1.4fr]">
       <div class="space-y-4">
-        <div class="rounded-xl border border-line bg-card p-4">
+        <div class="flex gap-1 rounded-xl border border-line bg-card p-1">
+          <button
+            v-for="t in TABS"
+            :key="t.value"
+            type="button"
+            class="flex flex-1 items-center justify-center gap-1.5 rounded-lg py-1.5 text-[12px] font-semibold"
+            :class="activeTab === t.value ? 'bg-brand-600 text-white' : 'text-ink-soft hover:bg-paper'"
+            @click="activeTab = t.value"
+          >
+            {{ t.label }}
+            <span
+              v-if="t.value === 'deals' && leads.length > 0"
+              class="rounded-full px-1.5 text-[10px]"
+              :class="activeTab === t.value ? 'bg-white/20' : 'bg-paper'"
+            >{{ leads.length }}</span>
+            <span
+              v-if="t.value === 'units' && units.length > 0"
+              class="rounded-full px-1.5 text-[10px]"
+              :class="activeTab === t.value ? 'bg-white/20' : 'bg-paper'"
+            >{{ units.length }}</span>
+          </button>
+        </div>
+
+        <div v-if="activeTab === 'info'" class="rounded-xl border border-line bg-card p-4">
           <div class="text-[11px] text-ink-soft">Телефон</div>
           <div class="text-sm font-medium text-ink">{{ client.phone }}</div>
           <div v-if="client.email" class="mt-2 text-[11px] text-ink-soft">Email</div>
           <div v-if="client.email" class="text-sm font-medium text-ink">{{ client.email }}</div>
         </div>
 
-        <div class="rounded-xl border border-line bg-card p-4">
-          <div class="mb-2 flex items-center justify-between">
-            <span class="font-display text-sm font-bold text-ink">Сделки</span>
-            <span class="text-[11px] text-ink-soft">{{ leads.length }}</span>
-          </div>
+        <div v-if="activeTab === 'deals'" class="rounded-xl border border-line bg-card p-4">
           <p v-if="leads.length === 0" class="text-[12px] text-ink-soft">У клиента пока нет сделок.</p>
           <div v-else class="space-y-2">
             <NuxtLink
@@ -158,8 +187,7 @@ onMounted(load)
           </div>
         </div>
 
-        <div class="rounded-xl border border-line bg-card p-4">
-          <div class="mb-2 font-display text-sm font-bold text-ink">Юниты</div>
+        <div v-if="activeTab === 'units'" class="rounded-xl border border-line bg-card p-4">
           <p v-if="units.length === 0" class="text-[12px] text-ink-soft">Пока не интересовался ни одним юнитом.</p>
           <div v-else class="space-y-2">
             <div

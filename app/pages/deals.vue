@@ -53,7 +53,15 @@ onBeforeUnmount(() => {
           <h1 class="font-display text-xl font-bold text-ink">{{ store.leads.length }} сделок в работе</h1>
         </div>
         <div class="flex items-center gap-4">
-          <div class="text-[12px] text-ink-soft">Конверсия в договор: <b class="text-brand-dark">{{ conversion }}%</b></div>
+          <div class="w-36">
+            <div class="mb-1 flex items-center justify-between text-[11px] text-ink-soft">
+              <span>Конверсия в договор</span>
+              <b class="text-brand-dark">{{ conversion }}%</b>
+            </div>
+            <div class="h-1.5 w-full overflow-hidden rounded-full bg-paper">
+              <div class="h-full rounded-full bg-brand-600" :style="{ width: `${conversion}%` }" />
+            </div>
+          </div>
           <button
             type="button"
             class="flex items-center gap-1.5 rounded-full bg-brand-600 px-4 py-1.5 text-[13px] font-semibold text-white hover:bg-brand-700"
