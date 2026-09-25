@@ -16,6 +16,7 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { to: '/', label: 'Главная' },
   { to: '/deals', label: 'Воронка сделок', managerOnly: true },
+  { to: '/calendar', label: 'Календарь', managerOnly: true },
   { to: '/clients', label: 'Клиенты' },
   { to: '/contracts', label: 'Договоры', managerOnly: true },
   { to: '/imports/units', label: 'Импорт из Excel', managerOnly: true },
