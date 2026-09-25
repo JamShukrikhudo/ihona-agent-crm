@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { CheckCircle2, KeyRound, MessageCircle, Phone, Send, StickyNote, XCircle } from '@lucide/vue'
+import { Camera, CheckCircle2, KeyRound, MessageCircle, Phone, Send, StickyNote, XCircle } from '@lucide/vue'
 import type { ClientInteraction } from '~/stores/useClientsStore'
 
 defineProps<{ interactions: ClientInteraction[] }>()
@@ -8,6 +8,7 @@ const TYPE_ICON = {
   note: StickyNote,
   call: Phone,
   whatsapp: MessageCircle,
+  instagram: Camera,
   telegram: Send,
   reserved: KeyRound,
   released: XCircle,
@@ -19,6 +20,7 @@ const TYPE_LABEL: Record<ClientInteraction['type'], string> = {
   note: 'Заметка',
   call: 'Звонок',
   whatsapp: 'WhatsApp',
+  instagram: 'Instagram',
   telegram: 'Telegram',
   reserved: 'Бронирование',
   released: 'Снятие брони',

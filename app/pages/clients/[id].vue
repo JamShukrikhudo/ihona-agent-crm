@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { MessageCircle, Phone, Send, StickyNote } from '@lucide/vue'
+import { Camera, MessageCircle, Phone, Send, StickyNote } from '@lucide/vue'
 import { STATUS_BG_SOFT, STATUS_BORDER, STATUS_LABEL } from '~/utils/statusStyles'
 import type { UnitStatus } from '~/stores/useUnitsStore'
 import type { Client, ClientInteraction } from '~/stores/useClientsStore'
@@ -33,6 +33,7 @@ const CHANNELS = [
   { value: 'all', label: 'Все' },
   { value: 'telegram', label: 'Telegram' },
   { value: 'whatsapp', label: 'WhatsApp' },
+  { value: 'instagram', label: 'Instagram' },
   { value: 'other', label: 'Звонки и заметки' },
 ] as const
 const activeChannel = ref<(typeof CHANNELS)[number]['value']>('all')
@@ -42,7 +43,7 @@ const filteredInteractions = computed(() => {
     return interactions.value
   }
   if (activeChannel.value === 'other') {
-    return interactions.value.filter((i) => i.type !== 'telegram' && i.type !== 'whatsapp')
+    return interactions.value.filter((i) => i.type !== 'telegram' && i.type !== 'whatsapp' && i.type !== 'instagram')
   }
   return interactions.value.filter((i) => i.type === activeChannel.value)
 })
@@ -94,6 +95,7 @@ const NOTE_TYPES = [
   { value: 'note', label: 'Заметка', icon: StickyNote },
   { value: 'call', label: 'Звонок', icon: Phone },
   { value: 'whatsapp', label: 'WhatsApp', icon: MessageCircle },
+  { value: 'instagram', label: 'Instagram', icon: Camera },
   { value: 'telegram', label: 'Telegram', icon: Send },
 ] as const
 const noteType = ref<(typeof NOTE_TYPES)[number]['value']>('call')

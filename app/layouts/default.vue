@@ -1,6 +1,8 @@
 <template>
-  <div>
+  <div class="flex min-h-screen">
     <AppNav />
-    <slot />
+    <div class="min-w-0 flex-1">
+      <slot />
+    </div>
   </div>
 </template>

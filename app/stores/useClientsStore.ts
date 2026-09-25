@@ -12,7 +12,7 @@ export interface Client {
 
 export interface ClientInteraction {
   id: number
-  type: 'note' | 'call' | 'whatsapp' | 'telegram' | 'reserved' | 'released' | 'deposit' | 'sold'
+  type: 'note' | 'call' | 'whatsapp' | 'instagram' | 'telegram' | 'reserved' | 'released' | 'deposit' | 'sold'
   message: string | null
   // null for every type except a real two-way channel message (telegram
   // today) — a manually-typed note has no "direction", it's just a log.
@@ -53,7 +53,7 @@ export const useClientsStore = defineStore('clients', {
       return { client: res.data, units: res.units, leads: res.leads, interactions: res.interactions, channels: res.channels }
     },
 
-    async addInteraction(clientId: number, type: 'note' | 'call' | 'whatsapp' | 'telegram', message: string, unitId?: number) {
+    async addInteraction(clientId: number, type: 'note' | 'call' | 'whatsapp' | 'instagram' | 'telegram', message: string, unitId?: number) {
       await apiFetch(`/clients/${clientId}/interactions`, {
         method: 'POST',
         body: { type, message, unit_id: unitId },
