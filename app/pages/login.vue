@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { Building2 } from '@lucide/vue'
-
 definePageMeta({ layout: false })
 
 const auth = useAuthStore()
@@ -24,42 +22,110 @@ async function submit() {
 </script>
 
 <template>
-  <div class="flex min-h-screen items-center justify-center bg-paper">
-    <form class="w-full max-w-sm space-y-5 rounded-2xl border border-line bg-card p-8 shadow-sm" @submit.prevent="submit">
-      <div class="flex items-center gap-2 text-brand-dark">
-        <Building2 :size="20" />
-        <h1 class="font-display text-lg font-bold text-ink">Ihona · Кабинет агента</h1>
+  <div class="flex min-h-screen bg-card">
+    <!-- Illustration side — hidden on narrow screens, same split-panel
+         shape as the Spike Admin reference the user pointed at, themed to
+         real estate (a building + key) instead of a generic phone/lock. -->
+    <div class="relative hidden w-1/2 flex-col justify-between overflow-hidden bg-brand-50 p-10 lg:flex">
+      <div class="flex items-center gap-2">
+        <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-600 font-display text-[15px] font-extrabold text-white">i</div>
+        <span class="font-display text-lg font-extrabold text-ink">ihona CRM</span>
       </div>
 
-      <div class="space-y-1">
-        <label class="text-[12px] font-medium text-ink-soft" for="email">Email</label>
-        <input
-          id="email"
-          v-model="email"
-          type="email"
-          required
-          autocomplete="username"
-          class="w-full rounded-lg border border-line px-3 py-2 text-sm text-ink focus:border-brand-600 focus:outline-none"
-        />
+      <svg viewBox="0 0 480 420" class="mx-auto w-full max-w-md" fill="none">
+        <ellipse cx="240" cy="380" rx="170" ry="16" fill="currentColor" class="text-brand-100" />
+
+        <!-- Building -->
+        <rect x="130" y="90" width="160" height="270" rx="10" fill="currentColor" class="text-card" />
+        <rect x="130" y="90" width="160" height="270" rx="10" fill="none" stroke="currentColor" stroke-width="2" class="text-brand-200" />
+        <g class="text-brand-200" stroke="currentColor" stroke-width="2">
+          <rect x="152" y="118" width="28" height="28" rx="3" fill="none" />
+          <rect x="196" y="118" width="28" height="28" rx="3" fill="none" />
+          <rect x="240" y="118" width="28" height="28" rx="3" fill="none" />
+          <rect x="152" y="162" width="28" height="28" rx="3" fill="none" />
+          <rect x="196" y="162" width="28" height="28" rx="3" fill="none" />
+          <rect x="240" y="162" width="28" height="28" rx="3" fill="none" />
+          <rect x="152" y="206" width="28" height="28" rx="3" fill="none" />
+          <rect x="196" y="206" width="28" height="28" rx="3" fill="none" />
+          <rect x="240" y="206" width="28" height="28" rx="3" fill="none" />
+          <rect x="152" y="250" width="28" height="28" rx="3" fill="none" />
+          <rect x="240" y="250" width="28" height="28" rx="3" fill="none" />
+        </g>
+        <rect x="196" y="250" width="28" height="70" rx="3" fill="currentColor" class="text-brand-600" />
+        <rect x="130" y="90" width="160" height="14" rx="7" fill="currentColor" class="text-brand-600" />
+
+        <!-- Second, smaller building behind -->
+        <rect x="290" y="150" width="90" height="210" rx="8" fill="currentColor" class="text-brand-100" />
+        <g class="text-card" stroke="none">
+          <rect x="306" y="172" width="20" height="20" rx="2" fill="currentColor" opacity="0.7" />
+          <rect x="340" y="172" width="20" height="20" rx="2" fill="currentColor" opacity="0.7" />
+          <rect x="306" y="206" width="20" height="20" rx="2" fill="currentColor" opacity="0.7" />
+          <rect x="340" y="206" width="20" height="20" rx="2" fill="currentColor" opacity="0.7" />
+          <rect x="306" y="240" width="20" height="20" rx="2" fill="currentColor" opacity="0.7" />
+          <rect x="340" y="240" width="20" height="20" rx="2" fill="currentColor" opacity="0.7" />
+        </g>
+
+        <!-- Key -->
+        <g transform="translate(300,300) rotate(-28)">
+          <circle cx="0" cy="0" r="20" fill="none" stroke="currentColor" stroke-width="7" class="text-brand-600" />
+          <rect x="16" y="-4" width="46" height="8" rx="2" fill="currentColor" class="text-brand-600" />
+          <rect x="48" y="4" width="8" height="14" fill="currentColor" class="text-brand-600" />
+          <rect x="60" y="4" width="8" height="10" fill="currentColor" class="text-brand-600" />
+        </g>
+
+        <!-- Small tree -->
+        <circle cx="90" cy="300" r="26" fill="currentColor" class="text-brand-200" />
+        <rect x="86" y="320" width="8" height="40" fill="currentColor" class="text-brand-300" />
+      </svg>
+
+      <div>
+        <div class="font-display text-xl font-bold text-ink">CRM для риелторов Таджикистана</div>
+        <p class="mt-1 text-[13px] text-ink-soft">Воронка заявок, шахматка объектов, клиенты и показы — в одном кабинете.</p>
       </div>
+    </div>
 
-      <div class="space-y-1">
-        <label class="text-[12px] font-medium text-ink-soft" for="password">Пароль</label>
-        <input
-          id="password"
-          v-model="password"
-          type="password"
-          required
-          autocomplete="current-password"
-          class="w-full rounded-lg border border-line px-3 py-2 text-sm text-ink focus:border-brand-600 focus:outline-none"
-        />
+    <!-- Form side -->
+    <div class="flex w-full flex-col justify-center px-8 py-12 sm:px-16 lg:w-1/2">
+      <div class="mx-auto w-full max-w-sm">
+        <h1 class="font-display text-2xl font-bold text-ink">Добро пожаловать</h1>
+        <p class="mt-1 text-[13px] text-ink-soft">Кабинет агента ihona.tj</p>
+
+        <form class="mt-8 space-y-5" @submit.prevent="submit">
+          <div class="space-y-1">
+            <label class="text-[12px] font-medium text-ink-soft" for="email">Email</label>
+            <input
+              id="email"
+              v-model="email"
+              type="email"
+              required
+              autocomplete="username"
+              class="w-full rounded-lg border border-line px-3 py-2.5 text-sm text-ink focus:border-brand-600 focus:outline-none"
+            />
+          </div>
+
+          <div class="space-y-1">
+            <label class="text-[12px] font-medium text-ink-soft" for="password">Пароль</label>
+            <input
+              id="password"
+              v-model="password"
+              type="password"
+              required
+              autocomplete="current-password"
+              class="w-full rounded-lg border border-line px-3 py-2.5 text-sm text-ink focus:border-brand-600 focus:outline-none"
+            />
+          </div>
+
+          <p v-if="error" class="rounded-lg bg-status-sold-soft px-3 py-2 text-[13px] text-status-sold">{{ error }}</p>
+
+          <button
+            type="submit"
+            :disabled="loading"
+            class="w-full rounded-full bg-brand-600 py-2.5 text-sm font-semibold text-white transition hover:bg-brand-700 disabled:opacity-60"
+          >
+            {{ loading ? 'Входим…' : 'Войти' }}
+          </button>
+        </form>
       </div>
-
-      <p v-if="error" class="rounded-lg bg-status-sold-soft px-3 py-2 text-[13px] text-status-sold">{{ error }}</p>
-
-      <button type="submit" :disabled="loading" class="w-full rounded-lg bg-brand-600 py-2 text-sm font-semibold text-white transition hover:bg-brand-700 disabled:opacity-60">
-        {{ loading ? 'Входим…' : 'Войти' }}
-      </button>
-    </form>
+    </div>
   </div>
 </template>
