@@ -71,5 +71,17 @@ export const useClientsStore = defineStore('clients', {
       })
       return res.data
     },
+
+    async updateClient(clientId: number, patch: { name?: string; phone?: string; email?: string | null; notes?: string | null }): Promise<Client> {
+      const res = await apiFetch<{ data: Client }>(`/clients/${clientId}`, {
+        method: 'PUT',
+        body: patch,
+      })
+      return res.data
+    },
+
+    async deleteClient(clientId: number) {
+      await apiFetch(`/clients/${clientId}`, { method: 'DELETE' })
+    },
   },
 })

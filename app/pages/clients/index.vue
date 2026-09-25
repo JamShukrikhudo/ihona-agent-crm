@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ChevronRight, MessageCircle, Search, Send } from '@lucide/vue'
+import { ChevronRight, MessageCircle, Pencil, Search, Send, Trash2 } from '@lucide/vue'
 import type { Client } from '~/stores/useClientsStore'
 import { SOURCE_BG, SOURCE_ICON, SOURCE_TEXT, sourceLabel } from '~/utils/leadSources'
 import type { LeadSource } from '~/utils/leadSources'
@@ -18,9 +18,60 @@ function clientSource(client: Client): LeadSource | null {
 
 definePageMeta({ middleware: 'agent' })
 
+const clientsStore = useClientsStore()
+const toast = useToastStore()
+
 const query = ref('')
 const clients = ref<Client[]>([])
 const loading = ref(true)
+
+const editing = ref<Client | null>(null)
+const editName = ref('')
+const editPhone = ref('')
+const editEmail = ref('')
+const savingEdit = ref(false)
+
+function openEdit(client: Client) {
+  editing.value = client
+  editName.value = client.name
+  editPhone.value = client.phone
+  editEmail.value = client.email ?? ''
+}
+
+async function saveEdit() {
+  if (!editing.value) {
+    return
+  }
+  savingEdit.value = true
+  try {
+    const updated = await clientsStore.updateClient(editing.value.id, {
+      name: editName.value.trim(),
+      phone: editPhone.value.trim(),
+      email: editEmail.value.trim() || null,
+    })
+    const idx = clients.value.findIndex((c) => c.id === updated.id)
+    if (idx !== -1) {
+      clients.value[idx] = { ...clients.value[idx], ...updated }
+    }
+    editing.value = null
+  } catch {
+    toast.push('Не удалось сохранить изменения', 'error')
+  } finally {
+    savingEdit.value = false
+  }
+}
+
+async function removeClient(client: Client) {
+  if (!confirm(`Удалить клиента ${client.name}? Это действие необратимо.`)) {
+    return
+  }
+  try {
+    await clientsStore.deleteClient(client.id)
+    clients.value = clients.value.filter((c) => c.id !== client.id)
+  } catch {
+    toast.push('Не удалось удалить клиента', 'error')
+  }
+}
 
 async function load() {
   loading.value = true
@@ -120,18 +171,68 @@ onMounted(load)
                 <span v-else class="text-[11px] text-ink-soft">—</span>
               </td>
               <td class="px-4 py-3 text-[12px] text-ink-soft">{{ new Date(client.createdAt).toLocaleDateString('ru-RU') }}</td>
-              <td class="px-4 py-3 text-right">
-                <NuxtLink
-                  :to="`/clients/${client.id}`"
-                  class="inline-flex h-7 w-7 items-center justify-center rounded-full text-ink-soft hover:bg-paper hover:text-brand-600"
-                  title="Открыть карточку"
-                >
-                  <ChevronRight :size="16" />
-                </NuxtLink>
+              <td class="px-4 py-3">
+                <div class="flex items-center justify-end gap-1">
+                  <button
+                    type="button"
+                    class="inline-flex h-7 w-7 items-center justify-center rounded-full text-ink-soft hover:bg-paper hover:text-brand-600"
+                    title="Редактировать"
+                    @click="openEdit(client)"
+                  >
+                    <Pencil :size="14" />
+                  </button>
+                  <button
+                    type="button"
+                    class="inline-flex h-7 w-7 items-center justify-center rounded-full text-ink-soft hover:bg-status-deposit-soft hover:text-status-deposit"
+                    title="Удалить"
+                    @click="removeClient(client)"
+                  >
+                    <Trash2 :size="14" />
+                  </button>
+                  <NuxtLink
+                    :to="`/clients/${client.id}`"
+                    class="inline-flex h-7 w-7 items-center justify-center rounded-full text-ink-soft hover:bg-paper hover:text-brand-600"
+                    title="Открыть карточку"
+                  >
+                    <ChevronRight :size="16" />
+                  </NuxtLink>
+                </div>
               </td>
             </tr>
           </tbody>
         </table>
+      </div>
+    </div>
+
+    <div v-if="editing" class="fixed inset-0 z-40 flex items-center justify-center bg-black/25 p-4" @click="editing = null">
+      <div class="w-full max-w-sm rounded-2xl bg-card p-5 shadow-2xl" @click.stop>
+        <div class="mb-4 font-display text-base font-bold text-ink">Редактировать клиента</div>
+        <form class="space-y-3" @submit.prevent="saveEdit">
+          <label class="block text-[11px] text-ink-soft">
+            Имя
+            <input v-model="editName" type="text" required class="mt-1 w-full rounded-lg border border-line px-3 py-2 text-sm text-ink" />
+          </label>
+          <label class="block text-[11px] text-ink-soft">
+            Телефон
+            <input v-model="editPhone" type="text" required class="mt-1 w-full rounded-lg border border-line px-3 py-2 text-sm text-ink" />
+          </label>
+          <label class="block text-[11px] text-ink-soft">
+            Email
+            <input v-model="editEmail" type="email" class="mt-1 w-full rounded-lg border border-line px-3 py-2 text-sm text-ink" />
+          </label>
+          <div class="flex gap-2 pt-2">
+            <button type="button" class="flex-1 rounded-lg border border-line py-2 text-[13px] font-semibold text-ink-soft" @click="editing = null">
+              Отмена
+            </button>
+            <button
+              type="submit"
+              :disabled="savingEdit"
+              class="flex-1 rounded-lg bg-brand-600 py-2 text-[13px] font-semibold text-white hover:bg-brand-700 disabled:opacity-60"
+            >
+              {{ savingEdit ? 'Сохраняю…' : 'Сохранить' }}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   </div>
