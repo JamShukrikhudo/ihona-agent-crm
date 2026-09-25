@@ -64,6 +64,17 @@ body {
 
 html.dark {
   color-scheme: dark;
+  /* Same dark values as the approved Шахматка prototype's own dark theme
+     (kept in sync manually — see the ink/paper/card comment above). */
+  --color-ink: #edf3ef;
+  --color-ink-soft: #9fb0a8;
+  --color-paper: #12201a;
+  --color-card: #17251f;
+  --color-line: rgba(255, 255, 255, 0.1);
+  --color-status-free-soft: #173428;
+  --color-status-reserved-soft: #3a2f10;
+  --color-status-deposit-soft: #3a2412;
+  --color-status-sold-soft: #2a3138;
 }
 
 html.dark body {

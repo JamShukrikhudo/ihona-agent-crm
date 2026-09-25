@@ -16,6 +16,7 @@ import {
 
 const route = useRoute()
 const auth = useAuthStore()
+const { prefs } = useUiPrefs()
 const isManager = computed(() => auth.hasRole('sales-manager') || auth.hasRole('developer-admin'))
 const isIhonaStaff = computed(() => auth.hasRole('ihona-staff'))
 
@@ -79,8 +80,11 @@ function isActive(to: string): boolean {
       </div>
     </div>
 
-    <!-- Flyout: appears on hover over the rail, full labels + account footer -->
+    <!-- Flyout: appears on hover over the rail, full labels + account
+         footer — suppressed entirely in "Свёрнутая" mode (settings
+         drawer), so the rail stays icon-only with native title tooltips. -->
     <div
+      v-if="prefs.sidebar === 'full'"
       class="invisible absolute left-[72px] top-0 flex h-full w-[210px] -translate-x-1.5 flex-col rounded-r-2xl border border-line bg-card p-4 opacity-0 shadow-xl transition-all duration-150 group-hover/nav:visible group-hover/nav:translate-x-0 group-hover/nav:opacity-100"
     >
       <div class="mb-5 flex items-center gap-2.5 px-1">
