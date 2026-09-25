@@ -25,6 +25,8 @@ const query = ref('')
 const clients = ref<Client[]>([])
 const loading = ref(true)
 
+const openClientId = ref<number | null>(null)
+
 const editing = ref<Client | null>(null)
 const editName = ref('')
 const editPhone = ref('')
@@ -64,6 +66,7 @@ async function saveEdit() {
 const creating = ref(false)
 const newName = ref('')
 const newPhone = ref('')
+const newNote = ref('')
 const savingNew = ref(false)
 
 async function saveNewClient() {
@@ -72,11 +75,15 @@ async function saveNewClient() {
   }
   savingNew.value = true
   try {
-    const created = await clientsStore.findOrCreateByPhone(newPhone.value.trim(), newName.value.trim())
+    let created = await clientsStore.findOrCreateByPhone(newPhone.value.trim(), newName.value.trim())
+    if (newNote.value.trim() !== '') {
+      created = await clientsStore.updateClient(created.id, { notes: newNote.value.trim() })
+    }
     clients.value = [created, ...clients.value.filter((c) => c.id !== created.id)]
     creating.value = false
     newName.value = ''
     newPhone.value = ''
+    newNote.value = ''
   } catch {
     toast.push('Не удалось создать клиента — возможно, номер уже занят', 'error')
   } finally {
@@ -178,7 +185,12 @@ onMounted(load)
             </tr>
           </thead>
           <tbody>
-            <tr v-for="client in clients" :key="client.id" class="border-b border-line last:border-b-0 hover:bg-paper">
+            <tr
+              v-for="client in clients"
+              :key="client.id"
+              class="cursor-pointer border-b border-line last:border-b-0 hover:bg-paper"
+              @click="openClientId = client.id"
+            >
               <td class="px-4 py-3">
                 <div class="flex items-center gap-3">
                   <AgentAvatar :name="client.name" :size="32" />
@@ -219,7 +231,7 @@ onMounted(load)
                     type="button"
                     class="inline-flex h-7 w-7 items-center justify-center rounded-full text-ink-soft hover:bg-paper hover:text-brand-600"
                     title="Редактировать"
-                    @click="openEdit(client)"
+                    @click.stop="openEdit(client)"
                   >
                     <Pencil :size="14" />
                   </button>
@@ -227,17 +239,18 @@ onMounted(load)
                     type="button"
                     class="inline-flex h-7 w-7 items-center justify-center rounded-full text-ink-soft hover:bg-status-deposit-soft hover:text-status-deposit"
                     title="Удалить"
-                    @click="removeClient(client)"
+                    @click.stop="removeClient(client)"
                   >
                     <Trash2 :size="14" />
                   </button>
-                  <NuxtLink
-                    :to="`/clients/${client.id}`"
+                  <button
+                    type="button"
                     class="inline-flex h-7 w-7 items-center justify-center rounded-full text-ink-soft hover:bg-paper hover:text-brand-600"
                     title="Открыть карточку"
+                    @click.stop="openClientId = client.id"
                   >
                     <ChevronRight :size="16" />
-                  </NuxtLink>
+                  </button>
                 </div>
               </td>
             </tr>
@@ -257,6 +270,10 @@ onMounted(load)
           <label class="block text-[11px] text-ink-soft">
             Телефон
             <input v-model="newPhone" type="text" required placeholder="+992..." class="mt-1 w-full rounded-lg border border-line px-3 py-2 text-sm text-ink" />
+          </label>
+          <label class="block text-[11px] text-ink-soft">
+            Заметка
+            <textarea v-model="newNote" rows="2" class="mt-1 w-full rounded-lg border border-line px-3 py-2 text-sm text-ink" />
           </label>
           <div class="flex gap-2 pt-2">
             <button type="button" class="flex-1 rounded-lg border border-line py-2 text-[13px] font-semibold text-ink-soft" @click="creating = false">
@@ -305,5 +322,7 @@ onMounted(load)
         </form>
       </div>
     </div>
+
+    <ClientDrawer v-if="openClientId" :client-id="openClientId" @close="openClientId = null" />
   </div>
 </template>
