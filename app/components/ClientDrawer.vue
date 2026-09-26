@@ -2,7 +2,7 @@
 import { Camera, MessageCircle, Phone, Send, StickyNote, X } from '@lucide/vue'
 import { STATUS_BG_SOFT, STATUS_BORDER, STATUS_LABEL } from '~/utils/statusStyles'
 import type { UnitStatus } from '~/stores/useUnitsStore'
-import type { Client, ClientInteraction } from '~/stores/useClientsStore'
+import type { Client, ClientInteraction, TeamAgent } from '~/stores/useClientsStore'
 import { LEAD_STAGE_LABEL } from '~/stores/useLeadsStore'
 import type { Lead } from '~/stores/useLeadsStore'
 
@@ -25,6 +25,36 @@ const leads = ref<Lead[]>([])
 const interactions = ref<ClientInteraction[]>([])
 const channels = ref<string[]>([])
 const loading = ref(true)
+
+const teamAgents = ref<TeamAgent[]>([])
+const savingInfo = ref(false)
+onMounted(() => {
+  clientsStore.fetchTeamAgents().then((agents) => { teamAgents.value = agents })
+})
+
+async function updateAssignedAgent(agentId: string) {
+  if (!client.value) return
+  savingInfo.value = true
+  try {
+    client.value = await clientsStore.updateClient(client.value.id, { assigned_agent_id: agentId === '' ? null : Number(agentId) })
+  } catch {
+    useToastStore().push('Не удалось сохранить менеджера', 'error')
+  } finally {
+    savingInfo.value = false
+  }
+}
+
+async function updateRegion(region: string) {
+  if (!client.value) return
+  savingInfo.value = true
+  try {
+    client.value = await clientsStore.updateClient(client.value.id, { region: region.trim() === '' ? null : region.trim() })
+  } catch {
+    useToastStore().push('Не удалось сохранить регион', 'error')
+  } finally {
+    savingInfo.value = false
+  }
+}
 
 const hasTelegram = computed(() => channels.value.includes('telegram'))
 
@@ -204,6 +234,27 @@ function copyLink() {
             <div v-if="client.email" class="text-sm font-medium text-ink">{{ client.email }}</div>
             <div v-if="client.notes" class="mt-2 text-[11px] text-ink-soft">Заметка</div>
             <div v-if="client.notes" class="text-sm text-ink">{{ client.notes }}</div>
+
+            <div class="mt-3 text-[11px] text-ink-soft">Менеджер</div>
+            <select
+              :value="client.assignedAgentId ?? ''"
+              :disabled="savingInfo"
+              class="w-full rounded-lg border border-line px-2.5 py-1.5 text-[13px] text-ink"
+              @change="updateAssignedAgent(($event.target as HTMLSelectElement).value)"
+            >
+              <option value="">Не назначен</option>
+              <option v-for="a in teamAgents" :key="a.id" :value="a.id">{{ a.name }}</option>
+            </select>
+
+            <div class="mt-3 text-[11px] text-ink-soft">Регион</div>
+            <input
+              :value="client.region ?? ''"
+              type="text"
+              placeholder="Например, Душанбе"
+              :disabled="savingInfo"
+              class="w-full rounded-lg border border-line px-2.5 py-1.5 text-[13px] text-ink"
+              @change="updateRegion(($event.target as HTMLInputElement).value)"
+            />
           </div>
 
           <div v-if="activeTab === 'events'" class="space-y-4">

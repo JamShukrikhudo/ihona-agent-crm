@@ -7,9 +7,17 @@ export interface Client {
   phone: string
   email: string | null
   notes: string | null
+  region: string | null
+  assignedAgentId: number | null
+  assignedAgentName: string | null
   source: string | null
   channels: string[] | null
   createdAt: string
+}
+
+export interface TeamAgent {
+  id: number
+  name: string
 }
 
 export interface ClientInteraction {
@@ -72,11 +80,19 @@ export const useClientsStore = defineStore('clients', {
       return res.data
     },
 
-    async updateClient(clientId: number, patch: { name?: string; phone?: string; email?: string | null; notes?: string | null }): Promise<Client> {
+    async updateClient(clientId: number, patch: { name?: string; phone?: string; email?: string | null; notes?: string | null; region?: string | null; assigned_agent_id?: number | null }): Promise<Client> {
       const res = await apiFetch<{ data: Client }>(`/clients/${clientId}`, {
         method: 'PUT',
         body: patch,
       })
+      return res.data
+    },
+
+    /** Roster for the Менеджер dropdown — the current agent's own team,
+     * id+name only (see TeamAgentController, open to any authenticated
+     * team member, unlike the admin-only /admin/users list). */
+    async fetchTeamAgents(): Promise<TeamAgent[]> {
+      const res = await apiFetch<{ data: TeamAgent[] }>('/team/agents')
       return res.data
     },
 

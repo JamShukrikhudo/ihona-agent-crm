@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ChevronRight, MessageCircle, Pencil, Plus, Search, Send, Trash2 } from '@lucide/vue'
-import type { Client } from '~/stores/useClientsStore'
+import type { Client, TeamAgent } from '~/stores/useClientsStore'
 import { SOURCE_BG, SOURCE_ICON, SOURCE_TEXT, sourceLabel } from '~/utils/leadSources'
 import type { LeadSource } from '~/utils/leadSources'
 
@@ -31,13 +31,25 @@ const editing = ref<Client | null>(null)
 const editName = ref('')
 const editPhone = ref('')
 const editEmail = ref('')
+const editRegion = ref('')
+const editAssignedAgentId = ref('')
 const savingEdit = ref(false)
+
+const teamAgents = ref<TeamAgent[]>([])
+onMounted(() => {
+  clientsStore.fetchTeamAgents().then((agents) => { teamAgents.value = agents })
+})
+function agentName(id: number | null): string {
+  return teamAgents.value.find((a) => a.id === id)?.name ?? '—'
+}
 
 function openEdit(client: Client) {
   editing.value = client
   editName.value = client.name
   editPhone.value = client.phone
   editEmail.value = client.email ?? ''
+  editRegion.value = client.region ?? ''
+  editAssignedAgentId.value = client.assignedAgentId ? String(client.assignedAgentId) : ''
 }
 
 async function saveEdit() {
@@ -50,6 +62,8 @@ async function saveEdit() {
       name: editName.value.trim(),
       phone: editPhone.value.trim(),
       email: editEmail.value.trim() || null,
+      region: editRegion.value.trim() || null,
+      assigned_agent_id: editAssignedAgentId.value === '' ? null : Number(editAssignedAgentId.value),
     })
     const idx = clients.value.findIndex((c) => c.id === updated.id)
     if (idx !== -1) {
@@ -180,6 +194,7 @@ onMounted(load)
               <th class="px-4 py-3 text-[11px] font-bold uppercase tracking-wide text-ink-soft">Клиент</th>
               <th class="px-4 py-3 text-[11px] font-bold uppercase tracking-wide text-ink-soft">Канал</th>
               <th class="px-4 py-3 text-[11px] font-bold uppercase tracking-wide text-ink-soft">Источник</th>
+              <th class="px-4 py-3 text-[11px] font-bold uppercase tracking-wide text-ink-soft">Менеджер</th>
               <th class="px-4 py-3 text-[11px] font-bold uppercase tracking-wide text-ink-soft">Дата</th>
               <th class="px-4 py-3" />
             </tr>
@@ -224,6 +239,7 @@ onMounted(load)
                 </span>
                 <span v-else class="text-[11px] text-ink-soft">—</span>
               </td>
+              <td class="px-4 py-3 text-[12px] text-ink-soft">{{ client.assignedAgentName ?? agentName(client.assignedAgentId) }}</td>
               <td class="px-4 py-3 text-[12px] text-ink-soft">{{ new Date(client.createdAt).toLocaleDateString('ru-RU') }}</td>
               <td class="px-4 py-3">
                 <div class="flex items-center justify-end gap-1">
@@ -306,6 +322,17 @@ onMounted(load)
           <label class="block text-[11px] text-ink-soft">
             Email
             <input v-model="editEmail" type="email" class="mt-1 w-full rounded-lg border border-line px-3 py-2 text-sm text-ink" />
+          </label>
+          <label class="block text-[11px] text-ink-soft">
+            Менеджер
+            <select v-model="editAssignedAgentId" class="mt-1 w-full rounded-lg border border-line px-3 py-2 text-sm text-ink">
+              <option value="">Не назначен</option>
+              <option v-for="a in teamAgents" :key="a.id" :value="String(a.id)">{{ a.name }}</option>
+            </select>
+          </label>
+          <label class="block text-[11px] text-ink-soft">
+            Регион
+            <input v-model="editRegion" type="text" placeholder="Например, Душанбе" class="mt-1 w-full rounded-lg border border-line px-3 py-2 text-sm text-ink" />
           </label>
           <div class="flex gap-2 pt-2">
             <button type="button" class="flex-1 rounded-lg border border-line py-2 text-[13px] font-semibold text-ink-soft" @click="editing = null">
