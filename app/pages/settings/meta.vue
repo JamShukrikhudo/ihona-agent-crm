@@ -101,10 +101,21 @@ async function disconnect() {
             </button>
           </div>
 
+          <!-- type="password" here was tricking Chrome's credential
+               autofill into treating this as a real login form — it would
+               fill this field with a saved password AND silently pollute
+               the next text input (Phone Number ID/Instagram id) with a
+               saved username/email. autocomplete="new-password" plus a
+               name unrelated to "token"/"password" stops Chrome from
+               pattern-matching it as a login field. -->
           <label class="mb-1 block text-[12px] text-ink-soft">Access Token</label>
           <input
             v-model="accessTokenInput"
             type="password"
+            name="meta-credential"
+            autocomplete="new-password"
+            data-lpignore="true"
+            data-1p-ignore
             :placeholder="connected ? 'Оставьте пустым, чтобы не менять' : 'EAAG...'"
             class="mb-3 w-full rounded-lg border border-line bg-paper px-3 py-2 text-sm text-ink"
           />
@@ -113,6 +124,9 @@ async function disconnect() {
           <input
             v-model="phoneNumberId"
             type="text"
+            autocomplete="off"
+            data-lpignore="true"
+            data-1p-ignore
             placeholder="Необязательно, если WhatsApp не используется"
             class="mb-3 w-full rounded-lg border border-line bg-paper px-3 py-2 text-sm text-ink"
           />
@@ -121,6 +135,9 @@ async function disconnect() {
           <input
             v-model="instagramId"
             type="text"
+            autocomplete="off"
+            data-lpignore="true"
+            data-1p-ignore
             placeholder="Необязательно, если Instagram не используется"
             class="mb-3 w-full rounded-lg border border-line bg-paper px-3 py-2 text-sm text-ink"
           />
