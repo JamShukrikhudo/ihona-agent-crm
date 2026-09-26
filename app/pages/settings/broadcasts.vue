@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { Cake, Mail, MessageCircle, MessageSquareText, Phone, Send, Settings2 } from '@lucide/vue'
 
-// UI-only shell — no provider is wired up yet (no SMS/Email gateway
-// credentials exist anywhere in this codebase, and the Telegram bot
-// configured in settings/telegram.vue is scoped to 1:1 client replies,
-// not mass sends). Every tab below is deliberately a "not connected"
-// state rather than a fake compose box, until a real provider is chosen.
+// Telegram is real: it reuses the team's own bot (settings/telegram.vue)
+// and only reaches clients who already messaged that bot first — see
+// BroadcastController::sendTelegram. Every other tab stays a "not
+// connected" placeholder — no SMS/Email/WhatsApp Business API
+// credentials exist anywhere in this codebase — rather than a fake
+// compose box, until a real provider is chosen.
 definePageMeta({ middleware: 'sales-manager' })
 
 const CHANNELS = [
@@ -18,16 +19,16 @@ const CHANNELS = [
   { value: 'birthday', label: 'День рождения', icon: Cake },
 ] as const
 
-const active = ref<(typeof CHANNELS)[number]['value']>('sms')
+const active = ref<(typeof CHANNELS)[number]['value']>('telegram')
 
+// 'telegram' has its own real form below and never reads this map, but
+// keeping it out of the Record type just to satisfy the template's
+// v-else branch isn't worth the narrowing complexity for a static lookup.
 const CHANNEL_COPY: Record<(typeof CHANNELS)[number]['value'], { title: string; body: string }> = {
+  telegram: { title: '', body: '' },
   sms: {
     title: 'SMS-провайдер не подключён',
     body: 'Для рассылок по SMS нужен шлюз (например, местный SMS-агрегатор). Как только появятся реквизиты провайдера — эта вкладка станет формой отправки с выбором сегмента клиентов.',
-  },
-  telegram: {
-    title: 'Массовая рассылка в Telegram не настроена',
-    body: 'Бот в «Настройки → Telegram» отвечает только конкретному клиенту в его карточке. Для массовой рассылки всем подписчикам нужен отдельный сценарий подтверждения (клиент должен сам написать боту первым) — это ещё не реализовано.',
   },
   whatsapp: {
     title: 'WhatsApp-провайдер не подключён',
@@ -49,6 +50,47 @@ const CHANNEL_COPY: Record<(typeof CHANNELS)[number]['value'], { title: string; 
     title: 'Автопоздравления не настроены',
     body: 'Идея — авто-отправка поздравления в день рождения клиента. Требует и даты рождения в карточке клиента (сейчас такого поля нет), и хотя бы одного подключённого канала отправки.',
   },
+}
+
+const toast = useToastStore()
+
+const tgLoading = ref(true)
+const tgConnected = ref(false)
+const tgRecipients = ref(0)
+const tgMessage = ref('')
+const tgRegion = ref('')
+const tgSending = ref(false)
+
+async function loadTelegramStatus() {
+  tgLoading.value = true
+  try {
+    const res = await apiFetch<{ data: { connected: boolean; recipients: number } }>('/broadcasts/telegram/status')
+    tgConnected.value = res.data.connected
+    tgRecipients.value = res.data.recipients
+  } finally {
+    tgLoading.value = false
+  }
+}
+onMounted(loadTelegramStatus)
+
+async function sendTelegramBroadcast() {
+  if (tgMessage.value.trim() === '') {
+    return
+  }
+  tgSending.value = true
+  try {
+    const res = await apiFetch<{ data: { queued: boolean; recipients: number } }>('/broadcasts/telegram', {
+      method: 'POST',
+      body: { message: tgMessage.value.trim(), region: tgRegion.value.trim() || undefined },
+    })
+    toast.push(`Рассылка запущена — получателей: ${res.data.recipients}`, 'success')
+    tgMessage.value = ''
+  } catch (e) {
+    const message = (e as { data?: { message?: string } })?.data?.message ?? 'Не удалось запустить рассылку'
+    toast.push(message, 'error')
+  } finally {
+    tgSending.value = false
+  }
 }
 </script>
 
@@ -73,7 +115,54 @@ const CHANNEL_COPY: Record<(typeof CHANNELS)[number]['value'], { title: string; 
         </button>
       </div>
 
-      <div class="rounded-2xl border border-dashed border-line bg-card p-6">
+      <div v-if="active === 'telegram'">
+        <div v-if="tgLoading" class="h-40 animate-pulse rounded-2xl border border-line bg-card" />
+
+        <div v-else-if="!tgConnected" class="rounded-2xl border border-dashed border-line bg-card p-6">
+          <div class="mb-1 font-display text-sm font-bold text-ink">Бот не подключён</div>
+          <p class="text-[13px] leading-relaxed text-ink-soft">
+            Массовая рассылка использует бота из
+            <NuxtLink to="/settings/telegram" class="font-semibold text-brand-600 hover:underline">Настройки → Telegram</NuxtLink>
+            — сначала подключите его там.
+          </p>
+        </div>
+
+        <form v-else class="space-y-3 rounded-2xl border border-line bg-card p-5" @submit.prevent="sendTelegramBroadcast">
+          <div class="rounded-xl bg-status-free-soft px-3.5 py-2.5 text-[13px] font-semibold text-brand-dark">
+            Получателей: {{ tgRecipients }} — клиенты, уже писавшие боту.
+          </div>
+
+          <label class="block text-[12px] text-ink-soft">
+            Регион (необязательно)
+            <input
+              v-model="tgRegion"
+              type="text"
+              placeholder="Например, Душанбе — оставьте пустым для всех"
+              class="mt-1 w-full rounded-lg border border-line bg-paper px-3 py-2 text-sm text-ink"
+            />
+          </label>
+
+          <label class="block text-[12px] text-ink-soft">
+            Сообщение
+            <textarea
+              v-model="tgMessage"
+              rows="4"
+              placeholder="Текст рассылки…"
+              class="mt-1 w-full rounded-lg border border-line bg-paper px-3 py-2 text-sm text-ink"
+            />
+          </label>
+
+          <button
+            type="submit"
+            :disabled="tgSending || tgMessage.trim() === ''"
+            class="w-full rounded-lg bg-brand-600 py-2.5 text-[13px] font-semibold text-white hover:bg-brand-700 disabled:opacity-60"
+          >
+            {{ tgSending ? 'Запускаю…' : 'Отправить рассылку' }}
+          </button>
+        </form>
+      </div>
+
+      <div v-else class="rounded-2xl border border-dashed border-line bg-card p-6">
         <div class="mb-1 font-display text-sm font-bold text-ink">{{ CHANNEL_COPY[active].title }}</div>
         <p class="text-[13px] leading-relaxed text-ink-soft">{{ CHANNEL_COPY[active].body }}</p>
       </div>
