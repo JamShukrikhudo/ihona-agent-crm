@@ -45,14 +45,14 @@ function shiftMonth(delta: number) {
   cursor.value = new Date(cursor.value.getFullYear(), cursor.value.getMonth() + delta, 1)
 }
 
-function pct(fact: number, target: number): number {
-  return target === 0 ? 0 : Math.round((fact / target) * 100)
+function pct(fact: number, target: number | null | undefined): number {
+  return !target ? 0 : Math.round((fact / target) * 100)
 }
 
 // Only a target already reached shows solid green — an empty target
 // (nothing planned yet) is a neutral state, not a false 100%.
-function pctClass(fact: number, target: number): string {
-  if (target === 0) {
+function pctClass(fact: number, target: number | null | undefined): string {
+  if (!target) {
     return 'text-ink-soft'
   }
   return fact >= target ? 'text-status-free' : 'text-ink'
