@@ -56,17 +56,25 @@ async function updateRegion(region: string) {
   }
 }
 
-const hasTelegram = computed(() => channels.value.includes('telegram'))
-
 // Right panel: live/loggable messenger channels only (the omnichannel
 // chat), separate from the "События" tab's call/note log — matches the
-// reference's split between a message thread and an activity tab.
+// reference's split between a message thread and an activity tab. All
+// three are now real sends (see useClientsStore's sendXMessage methods),
+// gated on the client actually having a linked chat for that channel —
+// none of the three let you message someone who hasn't written first.
 const CHAT_CHANNELS = [
   { value: 'telegram', label: 'Telegram' },
   { value: 'whatsapp', label: 'WhatsApp' },
   { value: 'instagram', label: 'Instagram' },
 ] as const
 const activeChatChannel = ref<(typeof CHAT_CHANNELS)[number]['value']>('telegram')
+const hasActiveChannel = computed(() => channels.value.includes(activeChatChannel.value))
+
+const SEND_METHOD = {
+  telegram: (id: number, msg: string) => clientsStore.sendTelegramMessage(id, msg),
+  whatsapp: (id: number, msg: string) => clientsStore.sendWhatsAppMessage(id, msg),
+  instagram: (id: number, msg: string) => clientsStore.sendInstagramMessage(id, msg),
+} as const
 
 const chatInteractions = computed(() => interactions.value.filter((i) => i.type === activeChatChannel.value))
 const eventInteractions = computed(() => interactions.value.filter((i) => i.type === 'note' || i.type === 'call'))
@@ -80,7 +88,7 @@ async function sendChatMessage() {
   }
   sendingChat.value = true
   try {
-    await clientsStore.sendTelegramMessage(props.clientId, chatMessage.value.trim())
+    await SEND_METHOD[activeChatChannel.value](props.clientId, chatMessage.value.trim())
     chatMessage.value = ''
     await load(true)
   } catch {
@@ -97,7 +105,7 @@ async function sendChatMessage() {
 let pollTimer: ReturnType<typeof setInterval> | null = null
 onMounted(() => {
   pollTimer = setInterval(() => {
-    if (hasTelegram.value) {
+    if (channels.value.length > 0) {
       load(true)
     }
   }, 5000)
@@ -346,7 +354,7 @@ function copyLink() {
               {{ ch.label }}
               <span
                 class="h-1.5 w-1.5 rounded-full"
-                :class="ch.value === 'telegram' && hasTelegram ? 'bg-status-free' : 'bg-ink-soft/40'"
+                :class="channels.includes(ch.value) ? 'bg-status-free' : 'bg-ink-soft/40'"
               />
             </button>
           </div>
@@ -356,14 +364,14 @@ function copyLink() {
             <p v-if="chatInteractions.length === 0" class="text-[12px] text-ink-soft">Нет сообщений в этом канале.</p>
           </div>
 
-          <!-- Real send-and-deliver compose box — only for Telegram, the
-               one channel with an actual bot behind it; WhatsApp/Instagram
-               stay log-only (see "Записать контакт" under События). -->
-          <form v-if="hasTelegram && activeChatChannel === 'telegram'" class="flex gap-2 border-t border-line p-3" @submit.prevent="sendChatMessage">
+          <!-- Real send-and-deliver compose box — only once the client has
+               a linked chat on this channel (they messaged first), which
+               all three platforms require. -->
+          <form v-if="hasActiveChannel" class="flex gap-2 border-t border-line p-3" @submit.prevent="sendChatMessage">
             <input
               v-model="chatMessage"
               type="text"
-              placeholder="Написать в Telegram…"
+              placeholder="Написать сообщение…"
               class="flex-1 rounded-lg border border-line px-3 py-2 text-[13px] text-ink"
             />
             <button

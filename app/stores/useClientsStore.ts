@@ -80,6 +80,24 @@ export const useClientsStore = defineStore('clients', {
       return res.data
     },
 
+    /** Real replies via the team's own WhatsApp number / Instagram
+     * account (Meta Cloud API) — see ClientController::sendWhatsAppMessage
+     * / sendInstagramMessage. */
+    async sendWhatsAppMessage(clientId: number, message: string): Promise<ClientInteraction> {
+      const res = await apiFetch<{ data: ClientInteraction }>(`/clients/${clientId}/whatsapp-messages`, {
+        method: 'POST',
+        body: { message },
+      })
+      return res.data
+    },
+    async sendInstagramMessage(clientId: number, message: string): Promise<ClientInteraction> {
+      const res = await apiFetch<{ data: ClientInteraction }>(`/clients/${clientId}/instagram-messages`, {
+        method: 'POST',
+        body: { message },
+      })
+      return res.data
+    },
+
     async updateClient(clientId: number, patch: { name?: string; phone?: string; email?: string | null; notes?: string | null; region?: string | null; assigned_agent_id?: number | null }): Promise<Client> {
       const res = await apiFetch<{ data: Client }>(`/clients/${clientId}`, {
         method: 'PUT',

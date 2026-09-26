@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import {
+  Camera,
   CalendarDays,
   FileSignature,
   Home,
@@ -39,6 +40,7 @@ const NAV_ITEMS: NavItem[] = [
   { to: '/contracts', label: 'Договоры', icon: FileSignature, managerOnly: true },
   { to: '/imports/units', label: 'Импорт из Excel', icon: Sheet, managerOnly: true },
   { to: '/settings/telegram', label: 'Telegram', icon: Send, managerOnly: true },
+  { to: '/settings/meta', label: 'WhatsApp / Instagram', icon: Camera, managerOnly: true },
   { to: '/settings/broadcasts', label: 'Рассылки', icon: Megaphone, managerOnly: true },
   { to: '/admin/teams', label: 'Команды', icon: UsersRound, staffOnly: true },
   { to: '/admin/users', label: 'Пользователи', icon: UserCog, staffOnly: true },
