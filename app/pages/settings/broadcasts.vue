@@ -1,13 +1,15 @@
 <script setup lang="ts">
 import { Cake, Camera, Mail, MessageCircle, MessageSquareText, Send, Settings2 } from '@lucide/vue'
 
-// Telegram, WhatsApp and Instagram are real: each reuses the team's own
-// bot/number/account (settings/telegram.vue, settings/meta.vue) and only
-// reaches clients who already messaged first — see
-// BroadcastController::sendTelegram/sendMeta. SMS/Email/templates/
-// birthday-trigger stay "not connected" placeholders — no SMS gateway or
-// email provider credentials exist anywhere in this codebase — rather
-// than a fake compose box, until a real one is chosen.
+// Telegram, WhatsApp, Instagram and Email are real. The three chat
+// channels each reuse the team's own bot/number/account
+// (settings/telegram.vue, settings/meta.vue) and only reach clients who
+// already messaged first — see BroadcastController::sendTelegram/
+// sendMeta. Email uses the platform's single SMTP account
+// (config/mail.php) and reaches every client with an email on file — see
+// BroadcastController::sendEmail. SMS/templates/birthday-trigger stay
+// "not connected" placeholders — no SMS gateway exists anywhere in this
+// codebase — rather than a fake compose box, until a real one is chosen.
 definePageMeta({ middleware: 'sales-manager' })
 
 const CHANNELS = [
@@ -21,8 +23,8 @@ const CHANNELS = [
 ] as const
 
 type ChannelValue = (typeof CHANNELS)[number]['value']
-type LiveChannel = 'telegram' | 'whatsapp' | 'instagram'
-const LIVE_CHANNELS: LiveChannel[] = ['telegram', 'whatsapp', 'instagram']
+type LiveChannel = 'telegram' | 'whatsapp' | 'instagram' | 'email'
+const LIVE_CHANNELS: LiveChannel[] = ['telegram', 'whatsapp', 'instagram', 'email']
 function isLive(v: ChannelValue): v is LiveChannel {
   return (LIVE_CHANNELS as string[]).includes(v)
 }
@@ -33,10 +35,6 @@ const CHANNEL_COPY: Partial<Record<ChannelValue, { title: string; body: string }
   sms: {
     title: 'SMS-провайдер не подключён',
     body: 'Для рассылок по SMS нужен шлюз (например, местный SMS-агрегатор). Как только появятся реквизиты провайдера — эта вкладка станет формой отправки с выбором сегмента клиентов.',
-  },
-  email: {
-    title: 'Email-провайдер не подключён',
-    body: 'Нужен SMTP или транзакционный сервис (например, свой домен + провайдер рассылок). У клиентов пока даже не у всех указан email — сначала имеет смысл собрать эти данные.',
   },
   templates: {
     title: 'Шаблонов пока нет',
@@ -54,21 +52,42 @@ interface ChannelState {
   loading: boolean
   connected: boolean
   recipients: number
+  subject: string
   message: string
   region: string
   sending: boolean
 }
 
 const state = reactive<Record<LiveChannel, ChannelState>>({
-  telegram: { loading: true, connected: false, recipients: 0, message: '', region: '', sending: false },
-  whatsapp: { loading: true, connected: false, recipients: 0, message: '', region: '', sending: false },
-  instagram: { loading: true, connected: false, recipients: 0, message: '', region: '', sending: false },
+  telegram: { loading: true, connected: false, recipients: 0, subject: '', message: '', region: '', sending: false },
+  whatsapp: { loading: true, connected: false, recipients: 0, subject: '', message: '', region: '', sending: false },
+  instagram: { loading: true, connected: false, recipients: 0, subject: '', message: '', region: '', sending: false },
+  email: { loading: true, connected: false, recipients: 0, subject: '', message: '', region: '', sending: false },
 })
 
-const CHANNEL_SETTINGS_LINK: Record<LiveChannel, { to: string; label: string }> = {
+// No link for email: unlike the three chat channels, it's not a
+// per-team setting a manager can configure — it's the platform's one
+// SMTP account in config/mail.php, set by whoever administers the
+// server (same reasoning as BroadcastController::smtpConfigured).
+const CHANNEL_SETTINGS_LINK: Partial<Record<LiveChannel, { to: string; label: string }>> = {
   telegram: { to: '/settings/telegram', label: 'Настройки → Telegram' },
   whatsapp: { to: '/settings/meta', label: 'Настройки → WhatsApp / Instagram' },
   instagram: { to: '/settings/meta', label: 'Настройки → WhatsApp / Instagram' },
+}
+
+const RECIPIENTS_COPY: Record<LiveChannel, string> = {
+  telegram: 'клиенты, уже писавшие первыми',
+  whatsapp: 'клиенты, уже писавшие первыми',
+  instagram: 'клиенты, уже писавшие первыми',
+  email: 'клиенты с указанным email',
+}
+
+function canSend(channel: LiveChannel): boolean {
+  const s = state[channel]
+  if (s.message.trim() === '') {
+    return false
+  }
+  return channel !== 'email' || s.subject.trim() !== ''
 }
 
 async function loadStatus(channel: LiveChannel) {
@@ -89,16 +108,21 @@ onMounted(() => {
 
 async function sendBroadcast(channel: LiveChannel) {
   const s = state[channel]
-  if (s.message.trim() === '') {
+  if (!canSend(channel)) {
     return
   }
   s.sending = true
   try {
     const res = await apiFetch<{ data: { queued: boolean; recipients: number } }>(`/broadcasts/${channel}`, {
       method: 'POST',
-      body: { message: s.message.trim(), region: s.region.trim() || undefined },
+      body: {
+        ...(channel === 'email' ? { subject: s.subject.trim() } : {}),
+        message: s.message.trim(),
+        region: s.region.trim() || undefined,
+      },
     })
     toast.push(`Рассылка запущена — получателей: ${res.data.recipients}`, 'success')
+    s.subject = ''
     s.message = ''
   } catch (e) {
     const message = (e as { data?: { message?: string } })?.data?.message ?? 'Не удалось запустить рассылку'
@@ -135,16 +159,19 @@ async function sendBroadcast(channel: LiveChannel) {
 
         <div v-else-if="!state[active].connected" class="rounded-2xl border border-dashed border-line bg-card p-6">
           <div class="mb-1 font-display text-sm font-bold text-ink">Не подключено</div>
-          <p class="text-[13px] leading-relaxed text-ink-soft">
+          <p v-if="CHANNEL_SETTINGS_LINK[active]" class="text-[13px] leading-relaxed text-ink-soft">
             Массовая рассылка использует канал из
-            <NuxtLink :to="CHANNEL_SETTINGS_LINK[active].to" class="font-semibold text-brand-600 hover:underline">{{ CHANNEL_SETTINGS_LINK[active].label }}</NuxtLink>
+            <NuxtLink :to="CHANNEL_SETTINGS_LINK[active]!.to" class="font-semibold text-brand-600 hover:underline">{{ CHANNEL_SETTINGS_LINK[active]!.label }}</NuxtLink>
             — сначала подключите его там.
+          </p>
+          <p v-else class="text-[13px] leading-relaxed text-ink-soft">
+            SMTP-аккаунт для рассылок ещё не настроен на сервере — обратитесь к администратору платформы.
           </p>
         </div>
 
         <form v-else class="space-y-3 rounded-2xl border border-line bg-card p-5" @submit.prevent="sendBroadcast(active)">
           <div class="rounded-xl bg-status-free-soft px-3.5 py-2.5 text-[13px] font-semibold text-brand-dark">
-            Получателей: {{ state[active].recipients }} — клиенты, уже писавшие первыми.
+            Получателей: {{ state[active].recipients }} — {{ RECIPIENTS_COPY[active] }}.
           </div>
 
           <label class="block text-[12px] text-ink-soft">
@@ -153,6 +180,16 @@ async function sendBroadcast(channel: LiveChannel) {
               v-model="state[active].region"
               type="text"
               placeholder="Например, Душанбе — оставьте пустым для всех"
+              class="mt-1 w-full rounded-lg border border-line bg-paper px-3 py-2 text-sm text-ink"
+            />
+          </label>
+
+          <label v-if="active === 'email'" class="block text-[12px] text-ink-soft">
+            Тема письма
+            <input
+              v-model="state[active].subject"
+              type="text"
+              placeholder="Например, Новая акция от ihona.tj"
               class="mt-1 w-full rounded-lg border border-line bg-paper px-3 py-2 text-sm text-ink"
             />
           </label>
@@ -169,7 +206,7 @@ async function sendBroadcast(channel: LiveChannel) {
 
           <button
             type="submit"
-            :disabled="state[active].sending || state[active].message.trim() === ''"
+            :disabled="state[active].sending || !canSend(active)"
             class="w-full rounded-lg bg-brand-600 py-2.5 text-[13px] font-semibold text-white hover:bg-brand-700 disabled:opacity-60"
           >
             {{ state[active].sending ? 'Запускаю…' : 'Отправить рассылку' }}
