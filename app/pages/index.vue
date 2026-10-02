@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { Building2, Wallet, TrendingUp, AlertTriangle, Clock } from '@lucide/vue'
+import { Building2, Camera, Inbox, MessageCircle, Send, Wallet, TrendingUp, AlertTriangle, Clock } from '@lucide/vue'
+import type { Conversation } from '~/stores/useInboxStore'
 import { LEAD_STAGES, LEAD_STAGE_LABEL } from '~/stores/useLeadsStore'
 import { STAGE_ICON } from '~/utils/leadStageIcons'
 import { LEAD_SOURCES, sourceLabel } from '~/utils/leadSources'
@@ -62,6 +63,26 @@ interface TopAgent {
 
 const topAgents = ref<TopAgent[]>([])
 
+// Omnichannel widget: channel connection status (manager-only — same
+// role gate as /settings/broadcasts, since that's what these statuses
+// come from) and unread count across the unified Inbox (any team
+// member — same access as /inbox itself).
+const CHANNEL_META = {
+  telegram: { label: 'Telegram', icon: Send, to: '/settings/telegram' },
+  whatsapp: { label: 'WhatsApp', icon: MessageCircle, to: '/settings/meta' },
+  instagram: { label: 'Instagram', icon: Camera, to: '/settings/meta' },
+} as const
+type InboxChannelKey = keyof typeof CHANNEL_META
+const channelStatus = reactive<Record<InboxChannelKey, { loading: boolean; connected: boolean }>>({
+  telegram: { loading: true, connected: false },
+  whatsapp: { loading: true, connected: false },
+  instagram: { loading: true, connected: false },
+})
+
+const inboxConversations = ref<Conversation[]>([])
+const inboxUnread = computed(() => inboxConversations.value.reduce((sum, c) => sum + c.unreadCount, 0))
+const loadingInbox = ref(true)
+
 const upcomingTasks = computed(() =>
   leadsStore.leads
     .filter((lead) => lead.nextTask !== null)
@@ -105,7 +126,24 @@ onMounted(async () => {
     apiFetch<{ data: Record<string, number> }>('/sales-stats/lead-sources').then((res) => (leadSourceCounts.value = res.data))
     apiFetch<{ data: TopAgent[] }>('/sales-stats/top-agents').then((res) => (topAgents.value = res.data))
     await leadsStore.fetchLeads()
+
+    for (const channel of Object.keys(CHANNEL_META) as InboxChannelKey[]) {
+      apiFetch<{ data: { connected: boolean } }>(`/broadcasts/${channel}/status`)
+        .then((res) => {
+          channelStatus[channel].connected = res.data.connected
+        })
+        .finally(() => {
+          channelStatus[channel].loading = false
+        })
+    }
   }
+
+  loadingInbox.value = true
+  apiFetch<{ data: Conversation[] }>('/inbox/conversations')
+    .then((res) => (inboxConversations.value = res.data))
+    .finally(() => {
+      loadingInbox.value = false
+    })
 })
 
 onBeforeUnmount(() => disconnectEcho())
@@ -127,6 +165,41 @@ onBeforeUnmount(() => disconnectEcho())
     </div>
 
     <div class="mx-auto max-w-5xl space-y-6 px-6 py-6">
+      <!-- Omnichannel: channel connection status + unread count across the
+           unified Inbox — the dashboard had nothing about any of this
+           before, despite Telegram/WhatsApp/Instagram/Email being fully
+           wired up elsewhere (settings/broadcasts.vue, /inbox). -->
+      <section class="rounded-xl border border-line bg-card p-4">
+        <div class="mb-3 flex items-center justify-between">
+          <h2 class="font-display text-sm font-bold text-ink">Омниканал</h2>
+          <NuxtLink to="/inbox" class="flex items-center gap-1 text-[12px] font-semibold text-brand-600 hover:underline">
+            <Inbox :size="13" /> Входящие{{ inboxUnread > 0 ? ` (${inboxUnread})` : '' }}
+          </NuxtLink>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <template v-if="isManager">
+            <div v-if="Object.values(channelStatus).some((s) => s.loading)" class="flex gap-2">
+              <div v-for="n in 3" :key="n" class="h-8 w-28 animate-pulse rounded-full bg-paper" />
+            </div>
+            <template v-else>
+              <NuxtLink
+                v-for="(meta, key) in CHANNEL_META"
+                :key="key"
+                :to="meta.to"
+                class="flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[12px] font-semibold"
+                :class="channelStatus[key].connected ? 'border-status-free bg-status-free-soft text-brand-dark' : 'border-line text-ink-soft hover:bg-paper'"
+              >
+                <component :is="meta.icon" :size="13" />
+                {{ meta.label }}
+                <span class="h-1.5 w-1.5 rounded-full" :class="channelStatus[key].connected ? 'bg-status-free' : 'bg-line'" />
+              </NuxtLink>
+            </template>
+          </template>
+          <div v-if="loadingInbox" class="h-8 w-28 animate-pulse rounded-full bg-paper" />
+          <div v-else-if="inboxUnread === 0" class="flex items-center px-1 text-[12px] text-ink-soft">Непрочитанных сообщений нет.</div>
+        </div>
+      </section>
+
       <!-- Three accent tiles instead of bordered-white cards — matches the
            "color carries the headline numbers" pattern from the Spike
            Admin reference the team asked to follow (docs/CRM spec), kept
