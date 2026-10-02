@@ -6,6 +6,7 @@ import {
   Home,
   Inbox,
   KanbanSquare,
+  ListTodo,
   LogOut,
   Megaphone,
   Send,
@@ -35,6 +36,7 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { to: '/', label: 'Главная', icon: Home },
   { to: '/inbox', label: 'Входящие', icon: Inbox },
+  { to: '/tasks', label: 'Задачи', icon: ListTodo },
   { to: '/deals', label: 'Воронка сделок', icon: KanbanSquare, managerOnly: true },
   { to: '/calendar', label: 'Календарь', icon: CalendarDays, managerOnly: true },
   { to: '/planning', label: 'Планирование', icon: Target, managerOnly: true },
