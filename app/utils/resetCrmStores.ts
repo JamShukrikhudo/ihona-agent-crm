@@ -11,7 +11,6 @@ export function resetCrmStores(): void {
   useLeadsStore().$reset()
   useClientsStore().$reset()
   useInboxStore().$reset()
-  useBoardStore().$reset()
   // Admin stores hold every developer company's teams/users, not just one
   // — an even bigger leak risk than the per-team stores above if a
   // shared device logs out of one ihona-staff session into anything else.
