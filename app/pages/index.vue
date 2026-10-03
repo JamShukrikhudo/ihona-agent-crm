@@ -163,6 +163,50 @@ onBeforeUnmount(() => disconnectEcho())
     </div>
 
     <div class="mx-auto max-w-5xl space-y-6 px-6 py-6">
+      <!-- Hero greeting card — Spike Admin's "Congratulations Jonathan"
+           pattern: a headline + a short icon-chip breakdown of what's
+           happening right now, using data no other widget on this page
+           already surfaces (upcoming tasks, lead volume, this month's
+           signed contracts). -->
+      <UCard v-if="isManager">
+        <div class="flex flex-wrap items-start justify-between gap-6">
+          <div>
+            <h2 class="font-display text-xl font-bold text-ink">Здравствуйте, {{ auth.user?.name }}</h2>
+            <p class="mt-1 max-w-sm text-[13px] text-ink-soft">Коротко о том, что сейчас происходит в воронке и задачах команды.</p>
+          </div>
+
+          <div class="flex flex-col gap-3">
+            <div class="flex items-center gap-3">
+              <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand-700">
+                <UIcon name="i-lucide-list-checks" class="size-4" />
+              </div>
+              <div>
+                <div class="font-display text-[15px] font-bold text-ink">{{ upcomingTasks.length }} задач</div>
+                <div class="text-[11px] text-ink-soft">В ближайшее время</div>
+              </div>
+            </div>
+            <div class="flex items-center gap-3">
+              <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-sky-50 text-sky-700">
+                <UIcon name="i-lucide-users" class="size-4" />
+              </div>
+              <div>
+                <div class="font-display text-[15px] font-bold text-ink">{{ leadSourceTotal }} лидов</div>
+                <div class="text-[11px] text-ink-soft">В работе</div>
+              </div>
+            </div>
+            <div class="flex items-center gap-3">
+              <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-violet-50 text-violet-700">
+                <UIcon name="i-lucide-file-check-2" class="size-4" />
+              </div>
+              <div>
+                <div class="font-display text-[15px] font-bold text-ink">{{ monthly.at(-1)?.contracts_signed ?? 0 }} договоров</div>
+                <div class="text-[11px] text-ink-soft">Подписано в этом месяце</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </UCard>
+
       <!-- Omnichannel: channel connection status + unread count across the
            unified Inbox — the dashboard had nothing about any of this
            before, despite Telegram/WhatsApp/Instagram/Email being fully

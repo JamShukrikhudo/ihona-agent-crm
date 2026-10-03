@@ -6,6 +6,11 @@ const auth = useAuthStore()
 const isManager = computed(() => auth.hasRole('sales-manager') || auth.hasRole('developer-admin'))
 const isIhonaStaff = computed(() => auth.hasRole('ihona-staff'))
 
+const { prefs, setTheme } = useUiPrefs()
+function toggleTheme() {
+  setTheme(prefs.value.theme === 'dark' ? 'light' : 'dark')
+}
+
 interface NavEntry {
   to: string
   label: string
@@ -118,6 +123,20 @@ async function logout() {
         <UDashboardNavbar>
           <template #leading>
             <UDashboardSidebarCollapse />
+          </template>
+
+          <template #right>
+            <UButton
+              :icon="prefs.theme === 'dark' ? 'i-lucide-sun' : 'i-lucide-moon'"
+              color="neutral"
+              variant="ghost"
+              square
+              title="Переключить тему"
+              @click="toggleTheme"
+            />
+            <USeparator orientation="vertical" class="mx-1 h-6" />
+            <AgentAvatar :name="auth.user?.name ?? '—'" :size="30" />
+            <span class="hidden text-[13px] font-semibold text-ink sm:inline">{{ auth.user?.name }}</span>
           </template>
         </UDashboardNavbar>
       </template>
