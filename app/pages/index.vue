@@ -201,26 +201,40 @@ onBeforeUnmount(() => disconnectEcho())
         </div>
       </UCard>
 
-      <!-- Three accent tiles instead of bordered-white cards — matches the
-           "color carries the headline numbers" pattern from the Spike
-           Admin reference the team asked to follow (docs/CRM spec), kept
-           in our own brand palette rather than copying its blue. -->
+      <!-- White cards with a soft icon chip + big headline number — the
+           pattern Spike Admin's KPI cards actually use (icon chip, not a
+           solid-color block), kept in our own brand palette. -->
       <section v-if="isManager && stats" class="grid gap-3 sm:grid-cols-3">
-        <div class="rounded-xl bg-brand-600 p-4 text-white">
-          <Wallet :size="18" class="mb-2 opacity-80" />
-          <div class="font-display text-xl font-bold">{{ stats.collected.toLocaleString('ru-RU') }} TJS</div>
-          <div class="text-[11px] opacity-80">Собрано · остаток {{ stats.remaining.toLocaleString('ru-RU') }}</div>
-        </div>
-        <div class="rounded-xl bg-brand-700 p-4 text-white">
-          <TrendingUp :size="18" class="mb-2 opacity-80" />
-          <div class="font-display text-xl font-bold">{{ stats.sold_units }} / {{ stats.total_units }}</div>
-          <div class="text-[11px] opacity-80">Юнитов продано</div>
-        </div>
-        <div class="rounded-xl p-4 text-white" :class="stats.overdue_installments_count > 0 ? 'bg-status-deposit' : 'bg-brand-800'">
-          <AlertTriangle :size="18" class="mb-2 opacity-80" />
-          <div class="font-display text-xl font-bold">{{ stats.overdue_installments_count }}</div>
-          <div class="text-[11px] opacity-80">Просрочено платежей</div>
-        </div>
+        <UCard :ui="{ body: 'flex items-center gap-3.5' }">
+          <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand-700">
+            <Wallet :size="20" />
+          </div>
+          <div class="min-w-0">
+            <div class="font-display text-xl font-bold text-ink">{{ stats.collected.toLocaleString('ru-RU') }} TJS</div>
+            <div class="truncate text-[12px] text-ink-soft">Собрано · остаток {{ stats.remaining.toLocaleString('ru-RU') }}</div>
+          </div>
+        </UCard>
+        <UCard :ui="{ body: 'flex items-center gap-3.5' }">
+          <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-sky-50 text-sky-700">
+            <TrendingUp :size="20" />
+          </div>
+          <div class="min-w-0">
+            <div class="font-display text-xl font-bold text-ink">{{ stats.sold_units }} / {{ stats.total_units }}</div>
+            <div class="truncate text-[12px] text-ink-soft">Юнитов продано</div>
+          </div>
+        </UCard>
+        <UCard :ui="{ body: 'flex items-center gap-3.5' }">
+          <div
+            class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full"
+            :class="stats.overdue_installments_count > 0 ? 'bg-rose-50 text-rose-600' : 'bg-brand-50 text-brand-700'"
+          >
+            <AlertTriangle :size="20" />
+          </div>
+          <div class="min-w-0">
+            <div class="font-display text-xl font-bold text-ink">{{ stats.overdue_installments_count }}</div>
+            <div class="truncate text-[12px] text-ink-soft">Просрочено платежей</div>
+          </div>
+        </UCard>
       </section>
 
       <!-- Profit & Expenses / Product Sales, side by side like the

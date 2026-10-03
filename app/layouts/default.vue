@@ -17,18 +17,40 @@ interface NavEntry {
 // Same destinations as before (icons now Iconify strings for
 // UNavigationMenu instead of @lucide/vue components — the rest of the
 // app still imports icons as components where it renders them directly).
-const NAV_ENTRIES: NavEntry[] = [
-  { to: '/', label: 'Главная', icon: 'i-lucide-house' },
-  { to: '/inbox', label: 'Входящие', icon: 'i-lucide-inbox' },
-  { to: '/deals', label: 'Воронка сделок', icon: 'i-lucide-kanban-square', managerOnly: true },
-  { to: '/calendar', label: 'Календарь', icon: 'i-lucide-calendar-days', managerOnly: true },
-  { to: '/planning', label: 'Планирование', icon: 'i-lucide-target', managerOnly: true },
-  { to: '/clients', label: 'Клиенты', icon: 'i-lucide-users' },
-  { to: '/contracts', label: 'Договоры', icon: 'i-lucide-file-signature', managerOnly: true },
-  { to: '/imports/units', label: 'Импорт из Excel', icon: 'i-lucide-sheet', managerOnly: true },
-  { to: '/settings/telegram', label: 'Telegram', icon: 'i-lucide-send', managerOnly: true },
-  { to: '/settings/meta', label: 'WhatsApp / Instagram', icon: 'i-lucide-camera', managerOnly: true },
-  { to: '/settings/broadcasts', label: 'Рассылки', icon: 'i-lucide-megaphone', managerOnly: true },
+// Grouped under section labels (Spike Admin's "HOME"/"APPS" pattern) so
+// the sidebar reads as a map of the app instead of one long list.
+interface NavSection {
+  label: string
+  entries: NavEntry[]
+}
+
+const NAV_SECTIONS: NavSection[] = [
+  {
+    label: 'Основное',
+    entries: [
+      { to: '/', label: 'Главная', icon: 'i-lucide-house' },
+      { to: '/inbox', label: 'Входящие', icon: 'i-lucide-inbox' },
+    ],
+  },
+  {
+    label: 'Продажи',
+    entries: [
+      { to: '/deals', label: 'Воронка сделок', icon: 'i-lucide-kanban-square', managerOnly: true },
+      { to: '/calendar', label: 'Календарь', icon: 'i-lucide-calendar-days', managerOnly: true },
+      { to: '/planning', label: 'Планирование', icon: 'i-lucide-target', managerOnly: true },
+      { to: '/clients', label: 'Клиенты', icon: 'i-lucide-users' },
+      { to: '/contracts', label: 'Договоры', icon: 'i-lucide-file-signature', managerOnly: true },
+      { to: '/imports/units', label: 'Импорт из Excel', icon: 'i-lucide-sheet', managerOnly: true },
+    ],
+  },
+  {
+    label: 'Каналы связи',
+    entries: [
+      { to: '/settings/telegram', label: 'Telegram', icon: 'i-lucide-send', managerOnly: true },
+      { to: '/settings/meta', label: 'WhatsApp / Instagram', icon: 'i-lucide-camera', managerOnly: true },
+      { to: '/settings/broadcasts', label: 'Рассылки', icon: 'i-lucide-megaphone', managerOnly: true },
+    ],
+  },
 ]
 
 const STAFF_ENTRIES: NavEntry[] = [
@@ -47,8 +69,15 @@ function toMenuItems(entries: NavEntry[]): NavigationMenuItem[] {
     .map((e) => ({ label: e.label, icon: e.icon, to: e.to, active: isActive(e.to) }))
 }
 
-const primaryItems = computed(() => toMenuItems(NAV_ENTRIES))
-const staffItems = computed(() => (isIhonaStaff.value ? toMenuItems(STAFF_ENTRIES) : []))
+const primaryItems = computed(() =>
+  NAV_SECTIONS.flatMap((section): NavigationMenuItem[] => {
+    const items = toMenuItems(section.entries)
+    return items.length ? [{ label: section.label, type: 'label' as const }, ...items] : []
+  }),
+)
+const staffItems = computed(() =>
+  isIhonaStaff.value ? [{ label: 'Администрирование', type: 'label' as const }, ...toMenuItems(STAFF_ENTRIES)] : [],
+)
 
 async function logout() {
   await auth.logout()
