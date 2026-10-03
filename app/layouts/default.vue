@@ -113,7 +113,7 @@ async function logout() {
       </template>
     </UDashboardSidebar>
 
-    <UDashboardPanel>
+    <UDashboardPanel :ui="{ body: 'p-0 sm:p-0 gap-0' }">
       <template #header>
         <UDashboardNavbar>
           <template #leading>
@@ -122,7 +122,9 @@ async function logout() {
         </UDashboardNavbar>
       </template>
 
-      <slot />
+      <template #body>
+        <slot />
+      </template>
     </UDashboardPanel>
 
     <SettingsDrawer />
