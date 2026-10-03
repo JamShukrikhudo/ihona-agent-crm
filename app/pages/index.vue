@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Building2, Camera, Inbox, MessageCircle, Send, Wallet, TrendingUp, AlertTriangle, Clock } from '@lucide/vue'
+import { Building2, Wallet, TrendingUp, AlertTriangle, Clock } from '@lucide/vue'
 import type { Conversation } from '~/stores/useInboxStore'
 import { LEAD_STAGES, LEAD_STAGE_LABEL } from '~/stores/useLeadsStore'
 import { STAGE_ICON } from '~/utils/leadStageIcons'
@@ -68,9 +68,9 @@ const topAgents = ref<TopAgent[]>([])
 // come from) and unread count across the unified Inbox (any team
 // member — same access as /inbox itself).
 const CHANNEL_META = {
-  telegram: { label: 'Telegram', icon: Send, to: '/settings/telegram' },
-  whatsapp: { label: 'WhatsApp', icon: MessageCircle, to: '/settings/meta' },
-  instagram: { label: 'Instagram', icon: Camera, to: '/settings/meta' },
+  telegram: { label: 'Telegram', icon: 'i-lucide-send', to: '/settings/telegram' },
+  whatsapp: { label: 'WhatsApp', icon: 'i-lucide-message-circle', to: '/settings/meta' },
+  instagram: { label: 'Instagram', icon: 'i-lucide-camera', to: '/settings/meta' },
 } as const
 type InboxChannelKey = keyof typeof CHANNEL_META
 const channelStatus = reactive<Record<InboxChannelKey, { loading: boolean; connected: boolean }>>({
@@ -151,17 +151,15 @@ onBeforeUnmount(() => disconnectEcho())
 
 <template>
   <div class="min-h-screen bg-paper">
-    <div class="border-b border-line bg-card px-6 py-4">
-      <div class="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <div class="text-[11px] font-medium text-ink-soft">Кабинет агента</div>
-          <h1 class="font-display text-xl font-bold text-ink">Здравствуйте, {{ auth.user?.name }}</h1>
-        </div>
-        <div class="flex items-center gap-2 text-[12px] text-ink-soft">
-          <span class="h-2 w-2 rounded-full" :class="echoState === 'connected' ? 'bg-status-free' : 'bg-status-reserved'" />
-          Реалтайм: {{ echoState === 'connected' ? 'подключено' : echoState }}
-        </div>
+    <div class="flex flex-wrap items-center justify-between gap-3 border-b border-line bg-card px-6 py-4">
+      <div>
+        <div class="text-[11px] font-medium text-ink-soft">Кабинет агента</div>
+        <h1 class="font-display text-xl font-bold text-ink">Здравствуйте, {{ auth.user?.name }}</h1>
       </div>
+      <UBadge :color="echoState === 'connected' ? 'success' : 'neutral'" variant="subtle" size="md">
+        <span class="h-1.5 w-1.5 rounded-full" :class="echoState === 'connected' ? 'bg-status-free' : 'bg-status-reserved'" />
+        Реалтайм: {{ echoState === 'connected' ? 'подключено' : echoState }}
+      </UBadge>
     </div>
 
     <div class="mx-auto max-w-5xl space-y-6 px-6 py-6">
@@ -169,36 +167,39 @@ onBeforeUnmount(() => disconnectEcho())
            unified Inbox — the dashboard had nothing about any of this
            before, despite Telegram/WhatsApp/Instagram/Email being fully
            wired up elsewhere (settings/broadcasts.vue, /inbox). -->
-      <section class="rounded-xl border border-line bg-card p-4">
-        <div class="mb-3 flex items-center justify-between">
-          <h2 class="font-display text-sm font-bold text-ink">Омниканал</h2>
-          <NuxtLink to="/inbox" class="flex items-center gap-1 text-[12px] font-semibold text-brand-600 hover:underline">
-            <Inbox :size="13" /> Входящие{{ inboxUnread > 0 ? ` (${inboxUnread})` : '' }}
-          </NuxtLink>
-        </div>
+      <UCard>
+        <template #header>
+          <div class="flex items-center justify-between">
+            <h2 class="font-display text-sm font-bold text-ink">Омниканал</h2>
+            <UButton to="/inbox" icon="i-lucide-inbox" variant="link" size="sm">
+              Входящие{{ inboxUnread > 0 ? ` (${inboxUnread})` : '' }}
+            </UButton>
+          </div>
+        </template>
         <div class="flex flex-wrap gap-2">
           <template v-if="isManager">
             <div v-if="Object.values(channelStatus).some((s) => s.loading)" class="flex gap-2">
               <div v-for="n in 3" :key="n" class="h-8 w-28 animate-pulse rounded-full bg-paper" />
             </div>
             <template v-else>
-              <NuxtLink
+              <UButton
                 v-for="(meta, key) in CHANNEL_META"
                 :key="key"
                 :to="meta.to"
-                class="flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[12px] font-semibold"
-                :class="channelStatus[key].connected ? 'border-status-free bg-status-free-soft text-brand-dark' : 'border-line text-ink-soft hover:bg-paper'"
+                :icon="meta.icon"
+                :color="channelStatus[key].connected ? 'success' : 'neutral'"
+                :variant="channelStatus[key].connected ? 'subtle' : 'outline'"
+                size="sm"
               >
-                <component :is="meta.icon" :size="13" />
                 {{ meta.label }}
                 <span class="h-1.5 w-1.5 rounded-full" :class="channelStatus[key].connected ? 'bg-status-free' : 'bg-line'" />
-              </NuxtLink>
+              </UButton>
             </template>
           </template>
           <div v-if="loadingInbox" class="h-8 w-28 animate-pulse rounded-full bg-paper" />
           <div v-else-if="inboxUnread === 0" class="flex items-center px-1 text-[12px] text-ink-soft">Непрочитанных сообщений нет.</div>
         </div>
-      </section>
+      </UCard>
 
       <!-- Three accent tiles instead of bordered-white cards — matches the
            "color carries the headline numbers" pattern from the Spike
@@ -225,8 +226,10 @@ onBeforeUnmount(() => disconnectEcho())
       <!-- Profit & Expenses / Product Sales, side by side like the
            reference — sourced from sales-stats/monthly (6 months). -->
       <section v-if="isManager && monthly.length > 0" class="grid gap-4 lg:grid-cols-2">
-        <div class="rounded-xl border border-line bg-card p-4">
-          <h2 class="mb-3 font-display text-sm font-bold text-ink">Собрано по месяцам</h2>
+        <UCard>
+          <template #header>
+            <h2 class="font-display text-sm font-bold text-ink">Собрано по месяцам</h2>
+          </template>
           <div class="flex h-28 items-end gap-2">
             <div v-for="m in monthly" :key="m.month" class="group relative flex-1">
               <div
@@ -242,31 +245,37 @@ onBeforeUnmount(() => disconnectEcho())
               </div>
             </div>
           </div>
-        </div>
+        </UCard>
 
-        <div class="rounded-xl border border-line bg-card p-4">
-          <h2 class="mb-3 font-display text-sm font-bold text-ink">Договоров подписано</h2>
+        <UCard>
+          <template #header>
+            <h2 class="font-display text-sm font-bold text-ink">Договоров подписано</h2>
+          </template>
           <LineChart :points="monthly.map((m) => ({ label: m.month, value: m.contracts_signed }))" />
-        </div>
+        </UCard>
       </section>
 
       <!-- Traffic Distribution -> lead sources; Top Employees -> top agents. -->
       <section v-if="isManager" class="grid gap-4 lg:grid-cols-2">
-        <div v-if="leadSourceSegments.length > 0" class="flex items-center gap-4 rounded-xl border border-line bg-card p-4">
-          <MultiDonutChart :segments="leadSourceSegments" />
-          <div class="min-w-0 flex-1 space-y-1.5">
-            <h2 class="mb-1 font-display text-sm font-bold text-ink">Источники лидов</h2>
-            <div v-for="segment in leadSourceSegments" :key="segment.label" class="flex items-center justify-between gap-2 text-[12px]">
-              <span class="flex items-center gap-1.5 text-ink-soft">
-                <span class="h-2 w-2 rounded-full" :style="{ backgroundColor: segment.color }" /> {{ segment.label }}
-              </span>
-              <span class="font-semibold text-ink">{{ Math.round((segment.value / leadSourceTotal) * 100) }}%</span>
+        <UCard v-if="leadSourceSegments.length > 0">
+          <div class="flex items-center gap-4">
+            <MultiDonutChart :segments="leadSourceSegments" />
+            <div class="min-w-0 flex-1 space-y-1.5">
+              <h2 class="mb-1 font-display text-sm font-bold text-ink">Источники лидов</h2>
+              <div v-for="segment in leadSourceSegments" :key="segment.label" class="flex items-center justify-between gap-2 text-[12px]">
+                <span class="flex items-center gap-1.5 text-ink-soft">
+                  <span class="h-2 w-2 rounded-full" :style="{ backgroundColor: segment.color }" /> {{ segment.label }}
+                </span>
+                <span class="font-semibold text-ink">{{ Math.round((segment.value / leadSourceTotal) * 100) }}%</span>
+              </div>
             </div>
           </div>
-        </div>
+        </UCard>
 
-        <div v-if="topAgents.length > 0" class="rounded-xl border border-line bg-card p-4">
-          <h2 class="mb-3 font-display text-sm font-bold text-ink">Топ агентов</h2>
+        <UCard v-if="topAgents.length > 0">
+          <template #header>
+            <h2 class="font-display text-sm font-bold text-ink">Топ агентов</h2>
+          </template>
           <div class="space-y-2.5">
             <div v-for="agent in topAgents" :key="agent.agent_id" class="flex items-center gap-3">
               <AgentAvatar :name="agent.agent_name" :size="28" />
@@ -277,13 +286,13 @@ onBeforeUnmount(() => disconnectEcho())
               <div class="text-[13px] font-semibold text-ink">{{ agent.revenue.toLocaleString('ru-RU') }} TJS</div>
             </div>
           </div>
-        </div>
+        </UCard>
       </section>
 
       <!-- Upcoming Schedules -> nearest lead tasks (calls, viewings). -->
       <section v-if="isManager && upcomingTasks.length > 0">
         <h2 class="mb-3 font-display text-sm font-bold text-ink">Ближайшие задачи</h2>
-        <div class="overflow-hidden rounded-xl border border-line bg-card">
+        <UCard :ui="{ body: 'p-0 sm:p-0' }">
           <div v-for="{ lead, task } in upcomingTasks" :key="`${lead.id}-${task.title}`" class="flex items-center gap-3 border-b border-line px-4 py-3 last:border-b-0">
             <Clock :size="14" :class="task.overdue ? 'text-status-deposit' : 'text-ink-soft'" />
             <div class="min-w-0 flex-1">
@@ -294,7 +303,7 @@ onBeforeUnmount(() => disconnectEcho())
               {{ task.dueAt ? new Date(task.dueAt).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '—' }}
             </div>
           </div>
-        </div>
+        </UCard>
       </section>
 
       <section>

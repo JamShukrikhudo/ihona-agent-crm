@@ -28,7 +28,10 @@ export default defineNuxtConfig({
   // app's own assets/css/main.css instead (see the comment there); this
   // stays a genuinely separate app, matching the whole reason for a
   // separate repo in the first place.
-  modules: ['@pinia/nuxt'],
+  // @nuxt/ui brings its own Tailwind v4 vite plugin — the manual
+  // @tailwindcss/vite one below is kept only if @nuxt/ui doesn't already
+  // cover it; see the build check after installing.
+  modules: ['@pinia/nuxt', '@nuxt/ui'],
 
   css: ['~/assets/css/main.css'],
 
