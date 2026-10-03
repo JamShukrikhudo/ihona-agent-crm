@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { Plus } from '@lucide/vue'
 import { LEAD_SOURCES, SOURCE_LABEL } from '~/utils/leadSources'
 
 definePageMeta({ middleware: 'sales-manager' })
@@ -84,55 +83,38 @@ onBeforeUnmount(() => {
               <div class="h-full rounded-full bg-brand-600" :style="{ width: `${conversion}%` }" />
             </div>
           </div>
-          <button
-            type="button"
-            class="flex items-center gap-1.5 rounded-full bg-brand-600 px-4 py-1.5 text-[13px] font-semibold text-white hover:bg-brand-700"
-            @click="formOpen = !formOpen"
-          >
-            <Plus :size="14" /> Новый лид
-          </button>
+          <UButton icon="i-lucide-plus" @click="formOpen = !formOpen">Новый лид</UButton>
         </div>
       </div>
 
       <form v-if="formOpen" class="mt-3 flex flex-wrap items-end gap-3 rounded-xl bg-paper p-3" @submit.prevent="submitLead">
-        <label class="flex flex-col gap-1 text-[11px] text-ink-soft">
-          Имя контакта
-          <input v-model="contactName" type="text" required class="w-48 rounded-lg border border-line px-2 py-1 text-sm text-ink" />
-        </label>
-        <label class="flex flex-col gap-1 text-[11px] text-ink-soft">
-          Телефон
-          <input v-model="contactPhone" type="text" class="w-40 rounded-lg border border-line px-2 py-1 text-sm text-ink" />
-        </label>
-        <label class="flex flex-col gap-1 text-[11px] text-ink-soft">
-          Источник
-          <select v-model="source" class="w-40 rounded-lg border border-line px-2 py-1.5 text-sm text-ink">
-            <option v-for="s in LEAD_SOURCES" :key="s" :value="s">{{ SOURCE_LABEL[s] }}</option>
-          </select>
-        </label>
-        <button
-          type="submit"
-          :disabled="submittingLead"
-          class="rounded-lg bg-brand-600 px-3 py-1.5 text-[12px] font-semibold text-white hover:bg-brand-700 disabled:opacity-60"
-        >
-          {{ submittingLead ? 'Добавляю…' : 'Добавить' }}
-        </button>
+        <UFormField label="Имя контакта">
+          <UInput v-model="contactName" required class="w-48" />
+        </UFormField>
+        <UFormField label="Телефон">
+          <UInput v-model="contactPhone" class="w-40" />
+        </UFormField>
+        <UFormField label="Источник">
+          <USelect v-model="source" :items="LEAD_SOURCES.map((s) => ({ label: SOURCE_LABEL[s], value: s }))" class="w-40" />
+        </UFormField>
+        <UButton type="submit" :loading="submittingLead">Добавить</UButton>
       </form>
     </div>
 
     <div class="px-6 pt-6">
       <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <div class="rounded-xl border border-line bg-card p-4">
+        <UCard>
           <div class="text-[11px] text-ink-soft">Сумма в работе</div>
           <div class="font-display text-lg font-bold text-ink">{{ formatTjs(pipelineValue) }}</div>
-        </div>
-        <div class="rounded-xl border border-line bg-card p-4">
+        </UCard>
+        <UCard>
           <div class="text-[11px] text-ink-soft">Договоров заключено</div>
           <div class="font-display text-lg font-bold text-ink">{{ contractedCount }}</div>
-        </div>
-        <div class="rounded-xl border border-line bg-card p-4">
+        </UCard>
+        <UCard>
           <div class="text-[11px] text-ink-soft">Средний чек</div>
           <div class="font-display text-lg font-bold text-ink">{{ formatTjs(avgDealSize) }}</div>
-        </div>
+        </UCard>
       </div>
     </div>
 

@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { Plus, Trash2 } from '@lucide/vue'
-
 definePageMeta({ middleware: 'ihona-staff' })
 
 const store = useAdminTeamsStore()
@@ -50,51 +48,33 @@ async function remove(id: number) {
     </div>
 
     <div class="mx-auto max-w-3xl px-6 py-6">
-      <div class="mb-4 rounded-xl border border-line bg-card p-4">
-        <button
-          v-if="!showCreate"
-          type="button"
-          class="flex items-center gap-1.5 text-[13px] font-semibold text-brand-600 hover:underline"
-          @click="showCreate = true"
-        >
-          <Plus :size="14" /> Новая команда
-        </button>
+      <UCard class="mb-4">
+        <UButton v-if="!showCreate" icon="i-lucide-plus" variant="link" @click="showCreate = true">Новая команда</UButton>
         <div v-else class="flex flex-wrap items-end gap-2">
-          <div class="flex-1">
-            <label class="mb-1 block text-[12px] text-ink-soft">Название</label>
-            <input v-model="name" type="text" class="w-full rounded-lg border border-line bg-paper px-3 py-2 text-sm text-ink" />
-          </div>
-          <div class="flex-1">
-            <label class="mb-1 block text-[12px] text-ink-soft">ID владельца (user_id)</label>
-            <input v-model.number="ownerId" type="number" class="w-full rounded-lg border border-line bg-paper px-3 py-2 text-sm text-ink" />
-          </div>
-          <button
-            type="button"
-            :disabled="saving"
-            class="rounded-lg bg-brand-600 px-4 py-2 text-[13px] font-semibold text-white hover:bg-brand-700 disabled:opacity-60"
-            @click="create"
-          >
-            Создать
-          </button>
-          <button type="button" class="rounded-lg border border-line px-4 py-2 text-[13px] text-ink hover:bg-paper" @click="showCreate = false">Отмена</button>
+          <UFormField label="Название" class="flex-1">
+            <UInput v-model="name" class="w-full" />
+          </UFormField>
+          <UFormField label="ID владельца (user_id)" class="flex-1">
+            <UInput v-model.number="ownerId" type="number" class="w-full" />
+          </UFormField>
+          <UButton :loading="saving" @click="create">Создать</UButton>
+          <UButton color="neutral" variant="outline" @click="showCreate = false">Отмена</UButton>
         </div>
-      </div>
+      </UCard>
 
       <div v-if="store.loading" class="text-sm text-ink-soft">Загрузка…</div>
-      <div v-else class="overflow-hidden rounded-xl border border-line bg-card">
+      <UCard v-else :ui="{ body: 'p-0 sm:p-0' }">
         <div v-for="team in store.teams" :key="team.id" class="flex items-center justify-between border-b border-line px-4 py-3 last:border-b-0">
           <div>
             <div class="flex items-center gap-2 text-[13px] font-semibold text-ink">
               {{ team.name }}
-              <span v-if="team.personal_team" class="rounded-full bg-paper px-2 py-0.5 text-[10px] font-semibold text-ink-soft">личная</span>
+              <UBadge v-if="team.personal_team" color="neutral" variant="subtle" size="sm">личная</UBadge>
             </div>
             <div class="text-[11px] text-ink-soft">Владелец: {{ team.owner_name ?? `#${team.user_id}` }}</div>
           </div>
-          <button type="button" class="text-status-deposit hover:opacity-70" @click="remove(team.id)">
-            <Trash2 :size="15" />
-          </button>
+          <UButton icon="i-lucide-trash-2" color="error" variant="ghost" size="xs" @click="remove(team.id)" />
         </div>
-      </div>
+      </UCard>
     </div>
   </div>
 </template>

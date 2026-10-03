@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ChevronLeft, ChevronRight, Eye, ListTodo } from '@lucide/vue'
+import { Eye, ListTodo } from '@lucide/vue'
 
 definePageMeta({ middleware: 'agent' })
 
@@ -141,36 +141,26 @@ function isOverdue(task: CalendarTask): boolean {
           <h1 class="font-display text-xl font-bold capitalize text-ink">{{ monthLabel }}</h1>
         </div>
         <div class="flex items-center gap-1">
-          <button type="button" class="rounded-full border border-line p-1.5 text-ink-soft hover:bg-paper" @click="shiftMonth(-1)">
-            <ChevronLeft :size="16" />
-          </button>
-          <button type="button" class="rounded-full bg-brand-50 px-3 py-1.5 text-[12px] font-semibold text-brand-dark" @click="cursor = new Date()">
-            Сегодня
-          </button>
-          <button type="button" class="rounded-full border border-line p-1.5 text-ink-soft hover:bg-paper" @click="shiftMonth(1)">
-            <ChevronRight :size="16" />
-          </button>
+          <UButton icon="i-lucide-chevron-left" color="neutral" variant="outline" @click="shiftMonth(-1)" />
+          <UButton color="primary" variant="soft" @click="cursor = new Date()">Сегодня</UButton>
+          <UButton icon="i-lucide-chevron-right" color="neutral" variant="outline" @click="shiftMonth(1)" />
         </div>
       </div>
 
       <div class="mt-3 flex flex-wrap items-center gap-2">
-        <select v-model="assigneeFilter" class="rounded-lg border border-line px-3 py-1.5 text-[12.5px] text-ink">
-          <option value="">Все исполнители</option>
-          <option v-for="a in assignees" :key="a" :value="a">{{ a }}</option>
-        </select>
-        <input
-          v-model="query"
-          type="text"
-          placeholder="Поиск по задаче или клиенту…"
-          class="min-w-0 flex-1 rounded-lg border border-line px-3 py-1.5 text-[12.5px] text-ink sm:max-w-xs"
+        <USelect
+          v-model="assigneeFilter"
+          :items="[{ label: 'Все исполнители', value: '' }, ...assignees.map((a) => ({ label: a, value: a }))]"
+          size="sm"
         />
+        <UInput v-model="query" placeholder="Поиск по задаче или клиенту…" size="sm" class="min-w-0 flex-1 sm:max-w-xs" />
       </div>
     </div>
 
     <div class="px-6 py-6">
       <div v-if="loading" class="text-sm text-ink-soft">Загрузка…</div>
 
-      <div v-else class="overflow-hidden rounded-2xl border border-line bg-card">
+      <UCard v-else :ui="{ body: 'p-0 sm:p-0' }">
         <div class="grid grid-cols-7 border-b border-line bg-paper">
           <div v-for="wd in WEEKDAYS" :key="wd" class="px-2 py-2 text-center text-[11px] font-bold uppercase tracking-wide text-ink-soft">
             {{ wd }}
@@ -221,7 +211,7 @@ function isOverdue(task: CalendarTask): boolean {
             </div>
           </div>
         </div>
-      </div>
+      </UCard>
     </div>
   </div>
 </template>

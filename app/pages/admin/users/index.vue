@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { Plus, Trash2 } from '@lucide/vue'
 import type { CrmRole } from '~/stores/auth'
 
 definePageMeta({ middleware: 'ihona-staff' })
@@ -62,56 +61,38 @@ async function remove(id: number) {
     </div>
 
     <div class="mx-auto max-w-3xl px-6 py-6">
-      <div class="mb-4 rounded-xl border border-line bg-card p-4">
-        <button
-          v-if="!showCreate"
-          type="button"
-          class="flex items-center gap-1.5 text-[13px] font-semibold text-brand-600 hover:underline"
-          @click="showCreate = true"
-        >
-          <Plus :size="14" /> Новый пользователь
-        </button>
+      <UCard class="mb-4">
+        <UButton v-if="!showCreate" icon="i-lucide-plus" variant="link" @click="showCreate = true">Новый пользователь</UButton>
         <div v-else class="space-y-3">
           <div class="grid gap-2 sm:grid-cols-3">
-            <input v-model="name" type="text" placeholder="Имя" class="rounded-lg border border-line bg-paper px-3 py-2 text-sm text-ink" />
-            <input v-model="email" type="email" placeholder="Email" class="rounded-lg border border-line bg-paper px-3 py-2 text-sm text-ink" />
-            <input v-model="password" type="password" placeholder="Пароль (мин. 8)" class="rounded-lg border border-line bg-paper px-3 py-2 text-sm text-ink" />
+            <UInput v-model="name" placeholder="Имя" />
+            <UInput v-model="email" type="email" placeholder="Email" />
+            <UInput v-model="password" type="password" placeholder="Пароль (мин. 8)" />
           </div>
           <div class="flex flex-wrap gap-3">
-            <label v-for="role in ALL_ROLES" :key="role" class="flex items-center gap-1.5 text-[12px] text-ink">
-              <input type="checkbox" :checked="roles.includes(role)" @change="toggleRole(role)" /> {{ role }}
-            </label>
+            <UCheckbox v-for="role in ALL_ROLES" :key="role" :model-value="roles.includes(role)" :label="role" @update:model-value="toggleRole(role)" />
           </div>
           <div class="flex gap-2">
-            <button
-              type="button"
-              :disabled="saving"
-              class="rounded-lg bg-brand-600 px-4 py-2 text-[13px] font-semibold text-white hover:bg-brand-700 disabled:opacity-60"
-              @click="create"
-            >
-              Создать
-            </button>
-            <button type="button" class="rounded-lg border border-line px-4 py-2 text-[13px] text-ink hover:bg-paper" @click="showCreate = false">Отмена</button>
+            <UButton :loading="saving" @click="create">Создать</UButton>
+            <UButton color="neutral" variant="outline" @click="showCreate = false">Отмена</UButton>
           </div>
         </div>
-      </div>
+      </UCard>
 
       <div v-if="store.loading" class="text-sm text-ink-soft">Загрузка…</div>
-      <div v-else class="overflow-hidden rounded-xl border border-line bg-card">
+      <UCard v-else :ui="{ body: 'p-0 sm:p-0' }">
         <div v-for="user in store.users" :key="user.id" class="flex items-center justify-between border-b border-line px-4 py-3 last:border-b-0">
           <div>
             <div class="text-[13px] font-semibold text-ink">{{ user.name }}</div>
             <div class="text-[11px] text-ink-soft">{{ user.email }}</div>
             <div class="mt-1 flex flex-wrap gap-1">
-              <span v-for="role in user.roles" :key="role" class="rounded-full bg-status-free-soft px-2 py-0.5 text-[10px] font-semibold text-brand-dark">{{ role }}</span>
+              <UBadge v-for="role in user.roles" :key="role" color="success" variant="subtle" size="sm">{{ role }}</UBadge>
               <span v-if="user.roles.length === 0" class="text-[10px] text-ink-soft">без ролей</span>
             </div>
           </div>
-          <button type="button" class="text-status-deposit hover:opacity-70" @click="remove(user.id)">
-            <Trash2 :size="15" />
-          </button>
+          <UButton icon="i-lucide-trash-2" color="error" variant="ghost" size="xs" @click="remove(user.id)" />
         </div>
-      </div>
+      </UCard>
     </div>
   </div>
 </template>

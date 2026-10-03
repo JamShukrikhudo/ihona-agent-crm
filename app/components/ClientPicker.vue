@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Search, UserPlus, X } from '@lucide/vue'
+import { UserPlus } from '@lucide/vue'
 import type { Client } from '~/stores/useClientsStore'
 
 const emit = defineEmits<{ select: [client: Client]; cancel: [] }>()
@@ -55,21 +55,10 @@ async function createClient() {
     <div class="w-full max-w-sm space-y-4 rounded-2xl border border-line bg-card p-5">
       <div class="flex items-center justify-between">
         <h3 class="font-display text-sm font-bold text-ink">Клиент для брони</h3>
-        <button type="button" class="text-ink-soft hover:text-ink" @click="emit('cancel')">
-          <X :size="16" />
-        </button>
+        <UButton icon="i-lucide-x" color="neutral" variant="ghost" size="xs" @click="emit('cancel')" />
       </div>
 
-      <div class="relative">
-        <Search :size="14" class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-soft" />
-        <input
-          v-model="query"
-          type="text"
-          autofocus
-          placeholder="Телефон или имя"
-          class="w-full rounded-lg border border-line py-2 pl-9 pr-3 text-sm text-ink focus:border-brand-600 focus:outline-none"
-        />
-      </div>
+      <UInput v-model="query" icon="i-lucide-search" autofocus placeholder="Телефон или имя" class="w-full" />
 
       <div v-if="searching" class="text-[12px] text-ink-soft">Ищу…</div>
 
@@ -90,20 +79,10 @@ async function createClient() {
         <div class="flex items-center gap-1.5 text-[12px] font-medium text-ink-soft">
           <UserPlus :size="13" /> Такого клиента ещё нет — создать нового
         </div>
-        <input
-          v-model="newName"
-          type="text"
-          placeholder="Имя клиента"
-          class="w-full rounded-lg border border-line px-3 py-2 text-sm text-ink focus:border-brand-600 focus:outline-none"
-        />
-        <button
-          type="button"
-          :disabled="creating || newName.trim() === ''"
-          class="w-full rounded-lg bg-brand-600 py-2 text-[13px] font-semibold text-white hover:bg-brand-700 disabled:opacity-60"
-          @click="createClient"
-        >
-          {{ creating ? 'Создаю…' : `Создать и выбрать` }}
-        </button>
+        <UInput v-model="newName" placeholder="Имя клиента" class="w-full" />
+        <UButton :loading="creating" :disabled="newName.trim() === ''" block @click="createClient">
+          Создать и выбрать
+        </UButton>
       </div>
 
       <p v-else-if="query.trim() !== ''" class="text-[12px] text-ink-soft">Введите телефон, чтобы найти или создать клиента.</p>

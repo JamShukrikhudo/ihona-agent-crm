@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { ArrowRight, X } from '@lucide/vue'
 import { autoDetectMapping, buildResult } from '~/utils/importFields'
 import type { ColumnMapping, ImportRow, ParsedSheet, SkippedRow } from '~/utils/importFields'
 
@@ -73,12 +72,9 @@ async function commit() {
       <div class="mb-2 text-[11px] font-medium text-ink-soft">Мастер импорта · Юниты</div>
       <h1 class="mb-6 font-display text-xl font-bold text-ink">Перенос квартир из Excel</h1>
 
-      <div v-if="projects.length > 1 && step === 0" class="mb-4">
-        <label class="mb-1 block text-[12px] text-ink-soft">Проект</label>
-        <select v-model.number="projectId" class="w-full rounded-lg border border-line bg-card px-3 py-2 text-sm text-ink">
-          <option v-for="p in projects" :key="p.id" :value="p.id">{{ p.name }}</option>
-        </select>
-      </div>
+      <UFormField v-if="projects.length > 1 && step === 0" label="Проект" class="mb-4">
+        <USelect v-model="projectId" :items="projects.map((p) => ({ label: p.name, value: p.id }))" class="w-full" />
+      </UFormField>
 
       <div class="mb-6 flex gap-1.5">
         <div v-for="(label, i) in STEP_LABELS" :key="label" class="flex flex-1 items-center gap-1.5">
@@ -93,28 +89,21 @@ async function commit() {
         </div>
       </div>
 
-      <div class="rounded-2xl border border-line bg-card p-5">
+      <UCard>
         <ImportFileDropzone v-if="step === 0" @parsed="handleParsed" />
 
         <template v-else-if="step === 1 && sheet">
           <ImportColumnMappingTable :sheet="sheet" :mapping="mapping" @update:mapping="mapping = $event" />
           <div class="mt-5 flex gap-2.5">
-            <button type="button" class="flex items-center gap-1.5 rounded-lg border border-line px-4 py-2.5 text-[13px] font-medium text-ink hover:bg-paper" @click="reset">
-              <X :size="13" /> Отмена
-            </button>
-            <button
-              type="button"
-              :disabled="committing"
-              class="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-brand-600 py-2.5 text-[13.5px] font-semibold text-white hover:bg-brand-700 disabled:opacity-60"
-              @click="commit"
-            >
-              {{ committing ? 'Импортирую…' : 'Импортировать' }} <ArrowRight :size="14" />
-            </button>
+            <UButton icon="i-lucide-x" color="neutral" variant="outline" @click="reset">Отмена</UButton>
+            <UButton trailing-icon="i-lucide-arrow-right" :loading="committing" block class="flex-1" @click="commit">
+              Импортировать
+            </UButton>
           </div>
         </template>
 
         <ImportImportSummary v-else-if="step === 2" :created="finalCreated" :skipped="finalSkipped" @reset="reset" />
-      </div>
+      </UCard>
     </div>
   </div>
 </template>

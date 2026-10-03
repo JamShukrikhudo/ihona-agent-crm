@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { Plus, Trash2 } from '@lucide/vue'
-
 definePageMeta({ middleware: 'ihona-staff' })
 
 const store = useAdminRolesStore()
@@ -66,59 +64,43 @@ async function remove(id: number) {
     </div>
 
     <div class="mx-auto max-w-3xl px-6 py-6">
-      <div class="mb-4 rounded-xl border border-line bg-card p-4">
-        <button
-          v-if="!showCreate"
-          type="button"
-          class="flex items-center gap-1.5 text-[13px] font-semibold text-brand-600 hover:underline"
-          @click="showCreate = true"
-        >
-          <Plus :size="14" /> Новая роль
-        </button>
+      <UCard class="mb-4">
+        <UButton v-if="!showCreate" icon="i-lucide-plus" variant="link" @click="showCreate = true">Новая роль</UButton>
         <div v-else class="space-y-3">
-          <input v-model="name" type="text" placeholder="Название роли" class="w-full rounded-lg border border-line bg-paper px-3 py-2 text-sm text-ink" />
+          <UInput v-model="name" placeholder="Название роли" class="w-full" />
           <div class="flex flex-wrap gap-3">
-            <label v-for="permission in store.availablePermissions" :key="permission" class="flex items-center gap-1.5 text-[12px] text-ink">
-              <input
-                type="checkbox"
-                :checked="permissions.includes(permission)"
-                @change="permissions = togglePermission(permissions, permission)"
-              /> {{ permission }}
-            </label>
+            <UCheckbox
+              v-for="permission in store.availablePermissions"
+              :key="permission"
+              :model-value="permissions.includes(permission)"
+              :label="permission"
+              @update:model-value="permissions = togglePermission(permissions, permission)"
+            />
           </div>
           <div class="flex gap-2">
-            <button
-              type="button"
-              :disabled="saving"
-              class="rounded-lg bg-brand-600 px-4 py-2 text-[13px] font-semibold text-white hover:bg-brand-700 disabled:opacity-60"
-              @click="create"
-            >
-              Создать
-            </button>
-            <button type="button" class="rounded-lg border border-line px-4 py-2 text-[13px] text-ink hover:bg-paper" @click="showCreate = false">Отмена</button>
+            <UButton :loading="saving" @click="create">Создать</UButton>
+            <UButton color="neutral" variant="outline" @click="showCreate = false">Отмена</UButton>
           </div>
         </div>
-      </div>
+      </UCard>
 
       <div v-if="store.loading" class="text-sm text-ink-soft">Загрузка…</div>
       <div v-else class="space-y-3">
-        <div v-for="role in store.roles" :key="role.id" class="rounded-xl border border-line bg-card p-4">
+        <UCard v-for="role in store.roles" :key="role.id">
           <div class="mb-2 flex items-center justify-between">
             <span class="font-display text-sm font-bold text-ink">{{ role.name }}</span>
-            <button type="button" class="text-status-deposit hover:opacity-70" @click="remove(role.id)">
-              <Trash2 :size="15" />
-            </button>
+            <UButton icon="i-lucide-trash-2" color="error" variant="ghost" size="xs" @click="remove(role.id)" />
           </div>
           <div class="flex flex-wrap gap-3">
-            <label v-for="permission in store.availablePermissions" :key="permission" class="flex items-center gap-1.5 text-[12px] text-ink-soft">
-              <input
-                type="checkbox"
-                :checked="role.permissions.includes(permission)"
-                @change="togglePermissionOnRole(role.id, role.permissions, permission)"
-              /> {{ permission }}
-            </label>
+            <UCheckbox
+              v-for="permission in store.availablePermissions"
+              :key="permission"
+              :model-value="role.permissions.includes(permission)"
+              :label="permission"
+              @update:model-value="togglePermissionOnRole(role.id, role.permissions, permission)"
+            />
           </div>
-        </div>
+        </UCard>
       </div>
     </div>
   </div>

@@ -118,9 +118,9 @@ onBeforeUnmount(() => {
             {{ store.conversations.find((c) => c.clientId === selected?.clientId && c.channel === selected?.channel)?.clientName ?? 'Клиент' }}
           </span>
           <span class="text-[12px] text-ink-soft">· {{ CHANNEL_LABEL[selected.channel] }}</span>
-          <NuxtLink :to="`/clients/${selected.clientId}`" class="ml-auto text-[12px] font-semibold text-brand-600 hover:underline">
+          <UButton :to="`/clients/${selected.clientId}`" variant="link" size="xs" class="ml-auto">
             Карточка клиента
-          </NuxtLink>
+          </UButton>
         </div>
 
         <div class="flex-1 overflow-y-auto bg-paper/40 p-5">
@@ -129,19 +129,10 @@ onBeforeUnmount(() => {
         </div>
 
         <form class="flex items-center gap-2 border-t border-line bg-card p-3" @submit.prevent="send">
-          <input
-            v-model="message"
-            type="text"
-            placeholder="Сообщение…"
-            class="flex-1 rounded-lg border border-line bg-paper px-3 py-2 text-sm text-ink"
-          />
-          <button
-            type="submit"
-            :disabled="sending || message.trim() === ''"
-            class="rounded-lg bg-brand-600 px-4 py-2 text-[13px] font-semibold text-white hover:bg-brand-700 disabled:opacity-60"
-          >
-            {{ sending ? 'Отправка…' : 'Отправить' }}
-          </button>
+          <UInput v-model="message" placeholder="Сообщение…" class="flex-1" />
+          <UButton type="submit" :loading="sending" :disabled="message.trim() === ''">
+            Отправить
+          </UButton>
         </form>
       </template>
 

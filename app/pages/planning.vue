@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { ChevronLeft, ChevronRight } from '@lucide/vue'
-
 definePageMeta({ middleware: 'sales-manager' })
 
 interface ManagerPlanRow {
@@ -94,15 +92,9 @@ const METRICS = [
           <h1 class="font-display text-xl font-bold capitalize text-ink">{{ periodLabel }}</h1>
         </div>
         <div class="flex items-center gap-1">
-          <button type="button" class="rounded-full border border-line p-1.5 text-ink-soft hover:bg-paper" @click="shiftMonth(-1)">
-            <ChevronLeft :size="16" />
-          </button>
-          <button type="button" class="rounded-full bg-brand-50 px-3 py-1.5 text-[12px] font-semibold text-brand-dark" @click="cursor = new Date()">
-            Текущий месяц
-          </button>
-          <button type="button" class="rounded-full border border-line p-1.5 text-ink-soft hover:bg-paper" @click="shiftMonth(1)">
-            <ChevronRight :size="16" />
-          </button>
+          <UButton icon="i-lucide-chevron-left" color="neutral" variant="outline" @click="shiftMonth(-1)" />
+          <UButton color="primary" variant="soft" @click="cursor = new Date()">Текущий месяц</UButton>
+          <UButton icon="i-lucide-chevron-right" color="neutral" variant="outline" @click="shiftMonth(1)" />
         </div>
       </div>
     </div>
@@ -114,49 +106,43 @@ const METRICS = [
       </div>
 
       <div v-else class="space-y-3">
-        <div
-          v-for="row in rows"
-          :key="row.agentId"
-          class="rounded-2xl border border-line bg-card p-4"
-        >
+        <UCard v-for="row in rows" :key="row.agentId">
           <div class="mb-3 flex items-center justify-between gap-3">
             <div class="flex items-center gap-2.5">
               <AgentAvatar :name="row.agentName ?? '—'" :size="30" />
               <span class="font-display text-[14px] font-bold text-ink">{{ row.agentName }}</span>
             </div>
-            <select
-              :value="row.status"
+            <USelect
+              :model-value="row.status"
               :disabled="saving === row.agentId"
-              class="rounded-full border border-line px-2.5 py-1 text-[11px] font-semibold"
-              :class="row.status === 'active' ? 'text-brand-dark' : 'text-ink-soft'"
-              @change="saveTarget(row, 'status', ($event.target as HTMLSelectElement).value)"
-            >
-              <option value="active">В работе</option>
-              <option value="closed">Закрыт</option>
-            </select>
+              :items="[{ label: 'В работе', value: 'active' }, { label: 'Закрыт', value: 'closed' }]"
+              size="sm"
+              @update:model-value="saveTarget(row, 'status', $event as string)"
+            />
           </div>
 
           <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <div v-for="m in METRICS" :key="m.key" class="rounded-xl border border-line p-3">
+            <UCard v-for="m in METRICS" :key="m.key" :ui="{ body: 'p-3 sm:p-3' }">
               <div class="text-[11px] text-ink-soft">{{ m.label }}</div>
               <div class="mt-1 flex items-baseline gap-1.5">
                 <span class="text-[18px] font-bold text-ink">{{ row[`${m.key}Fact` as const] }}</span>
                 <span class="text-[12px] text-ink-soft">/</span>
-                <input
+                <UInput
                   type="number"
-                  min="0"
-                  :value="row[m.targetField]"
+                  :min="0"
+                  :model-value="row[m.targetField]"
                   :disabled="saving === row.agentId"
-                  class="w-14 rounded-md border border-line px-1.5 py-0.5 text-[12px] text-ink"
+                  size="xs"
+                  class="w-16"
                   @change="saveTarget(row, m.targetField, Number(($event.target as HTMLInputElement).value))"
                 />
               </div>
               <div class="mt-1 text-[11px] font-semibold" :class="pctClass(row[`${m.key}Fact` as const], row[m.targetField])">
                 {{ pct(row[`${m.key}Fact` as const], row[m.targetField]) }}%
               </div>
-            </div>
+            </UCard>
           </div>
-        </div>
+        </UCard>
       </div>
     </div>
   </div>

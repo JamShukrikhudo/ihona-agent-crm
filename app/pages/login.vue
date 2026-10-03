@@ -91,39 +91,19 @@ async function submit() {
         <p class="mt-1 text-[13px] text-ink-soft">Кабинет агента ihona.tj</p>
 
         <form class="mt-8 space-y-5" @submit.prevent="submit">
-          <div class="space-y-1">
-            <label class="text-[12px] font-medium text-ink-soft" for="email">Email</label>
-            <input
-              id="email"
-              v-model="email"
-              type="email"
-              required
-              autocomplete="username"
-              class="w-full rounded-lg border border-line px-3 py-2.5 text-sm text-ink focus:border-brand-600 focus:outline-none"
-            />
-          </div>
+          <UFormField label="Email">
+            <UInput v-model="email" type="email" required autocomplete="username" class="w-full" />
+          </UFormField>
 
-          <div class="space-y-1">
-            <label class="text-[12px] font-medium text-ink-soft" for="password">Пароль</label>
-            <input
-              id="password"
-              v-model="password"
-              type="password"
-              required
-              autocomplete="current-password"
-              class="w-full rounded-lg border border-line px-3 py-2.5 text-sm text-ink focus:border-brand-600 focus:outline-none"
-            />
-          </div>
+          <UFormField label="Пароль">
+            <UInput v-model="password" type="password" required autocomplete="current-password" class="w-full" />
+          </UFormField>
 
           <p v-if="error" class="rounded-lg bg-status-sold-soft px-3 py-2 text-[13px] text-status-sold">{{ error }}</p>
 
-          <button
-            type="submit"
-            :disabled="loading"
-            class="w-full rounded-full bg-brand-600 py-2.5 text-sm font-semibold text-white transition hover:bg-brand-700 disabled:opacity-60"
-          >
-            {{ loading ? 'Входим…' : 'Войти' }}
-          </button>
+          <UButton type="submit" :loading="loading" block size="lg" class="rounded-full">
+            Войти
+          </UButton>
         </form>
       </div>
     </div>

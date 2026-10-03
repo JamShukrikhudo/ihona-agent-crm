@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { SlidersHorizontal } from '@lucide/vue'
 import type { UnitStatus } from '~/stores/useUnitsStore'
 
 definePageMeta({ middleware: 'agent' })
@@ -115,14 +114,16 @@ onBeforeUnmount(() => {
           {{ label }} <b>{{ store.counts[key] }}</b>
         </button>
 
-        <button
-          type="button"
-          class="flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[12px] font-medium text-ink transition-colors"
-          :class="filtersOpen ? [STATUS_BORDER.reserved, STATUS_BG_SOFT.reserved] : 'border-line'"
+        <UButton
+          icon="i-lucide-sliders-horizontal"
+          :color="filtersOpen ? 'warning' : 'neutral'"
+          :variant="filtersOpen ? 'subtle' : 'outline'"
+          size="sm"
+          class="rounded-full"
           @click="filtersOpen = !filtersOpen"
         >
-          <SlidersHorizontal :size="13" /> Ещё фильтры
-        </button>
+          Ещё фильтры
+        </UButton>
 
         <div class="ml-auto rounded-full bg-brand-dark px-3 py-1.5 text-[12px] font-medium text-white">
           Продано на {{ store.revenue.toLocaleString('ru-RU') }} TJS
@@ -130,29 +131,22 @@ onBeforeUnmount(() => {
       </div>
 
       <div v-if="filtersOpen" class="mt-3 flex flex-wrap items-end gap-3 rounded-xl bg-paper p-3">
-        <label class="flex flex-col gap-1 text-[11px] text-ink-soft">
-          Поиск по номеру
-          <input v-model="searchQuery" type="text" placeholder="A-9C" class="w-32 rounded-lg border border-line px-2 py-1 text-sm text-ink" />
-        </label>
-        <label class="flex flex-col gap-1 text-[11px] text-ink-soft">
-          Цена от
-          <input v-model.number="priceMin" type="number" min="0" class="w-28 rounded-lg border border-line px-2 py-1 text-sm text-ink" />
-        </label>
-        <label class="flex flex-col gap-1 text-[11px] text-ink-soft">
-          Цена до
-          <input v-model.number="priceMax" type="number" min="0" class="w-28 rounded-lg border border-line px-2 py-1 text-sm text-ink" />
-        </label>
-        <label class="flex flex-col gap-1 text-[11px] text-ink-soft">
-          Площадь от, м²
-          <input v-model.number="areaMin" type="number" min="0" class="w-24 rounded-lg border border-line px-2 py-1 text-sm text-ink" />
-        </label>
-        <label class="flex flex-col gap-1 text-[11px] text-ink-soft">
-          Площадь до, м²
-          <input v-model.number="areaMax" type="number" min="0" class="w-24 rounded-lg border border-line px-2 py-1 text-sm text-ink" />
-        </label>
-        <button type="button" class="rounded-lg border border-line px-3 py-1.5 text-[12px] text-ink-soft hover:bg-slate-50" @click="resetRangeFilters">
-          Сбросить
-        </button>
+        <UFormField label="Поиск по номеру">
+          <UInput v-model="searchQuery" placeholder="A-9C" class="w-32" />
+        </UFormField>
+        <UFormField label="Цена от">
+          <UInput v-model.number="priceMin" type="number" :min="0" class="w-28" />
+        </UFormField>
+        <UFormField label="Цена до">
+          <UInput v-model.number="priceMax" type="number" :min="0" class="w-28" />
+        </UFormField>
+        <UFormField label="Площадь от, м²">
+          <UInput v-model.number="areaMin" type="number" :min="0" class="w-24" />
+        </UFormField>
+        <UFormField label="Площадь до, м²">
+          <UInput v-model.number="areaMax" type="number" :min="0" class="w-24" />
+        </UFormField>
+        <UButton color="neutral" variant="outline" @click="resetRangeFilters">Сбросить</UButton>
       </div>
     </div>
 

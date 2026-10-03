@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Bot, MessageCircle, Unlink } from '@lucide/vue'
+import { Bot, MessageCircle } from '@lucide/vue'
 
 // Replaces the Filament-only TelegramSettings page (see docs/CRM spec) —
 // now two separate things: chat_id (which chat gets ops alerts) and
@@ -102,7 +102,7 @@ async function disconnectBot() {
       <div v-if="loading" class="h-32 animate-pulse rounded-2xl border border-line bg-card" />
 
       <template v-else>
-        <div class="rounded-2xl border border-line bg-card p-5">
+        <UCard>
           <div class="mb-2 flex items-center gap-2">
             <Bot :size="16" class="text-brand-600" />
             <span class="font-display text-sm font-bold text-ink">Бот для чата с клиентами</span>
@@ -115,37 +115,19 @@ async function disconnectBot() {
 
           <div v-if="botConnected" class="mb-4 flex items-center justify-between rounded-xl bg-status-free-soft px-3.5 py-2.5">
             <span class="text-[13px] font-semibold text-brand-dark">Бот подключён и принимает сообщения</span>
-            <button
-              type="button"
-              :disabled="savingBot"
-              class="flex items-center gap-1 text-[12px] font-semibold text-status-deposit hover:underline disabled:opacity-60"
-              @click="disconnectBot"
-            >
-              <Unlink :size="12" /> Отключить
-            </button>
+            <UButton icon="i-lucide-unlink" color="error" variant="link" size="xs" :loading="savingBot" @click="disconnectBot">Отключить</UButton>
           </div>
           <template v-else>
-            <label class="mb-1 block text-[12px] text-ink-soft">Токен бота (от @BotFather)</label>
-            <div class="flex gap-2">
-              <input
-                v-model="botTokenInput"
-                type="text"
-                placeholder="123456789:AA..."
-                class="flex-1 rounded-lg border border-line bg-paper px-3 py-2 text-sm text-ink"
-              />
-              <button
-                type="button"
-                :disabled="savingBot || botTokenInput.trim() === ''"
-                class="rounded-lg bg-brand-600 px-4 py-2 text-[13px] font-semibold text-white hover:bg-brand-700 disabled:opacity-60"
-                @click="connectBot"
-              >
-                Подключить
-              </button>
-            </div>
+            <UFormField label="Токен бота (от @BotFather)">
+              <div class="flex gap-2">
+                <UInput v-model="botTokenInput" placeholder="123456789:AA..." class="flex-1" />
+                <UButton :loading="savingBot" :disabled="botTokenInput.trim() === ''" @click="connectBot">Подключить</UButton>
+              </div>
+            </UFormField>
           </template>
-        </div>
+        </UCard>
 
-        <div class="rounded-2xl border border-line bg-card p-5">
+        <UCard>
           <div class="mb-2 flex items-center gap-2">
             <MessageCircle :size="16" class="text-brand-600" />
             <span class="font-display text-sm font-bold text-ink">Чат для оповещений</span>
@@ -155,34 +137,18 @@ async function disconnectBot() {
 
           <div v-if="chatId" class="mb-4 flex items-center justify-between rounded-xl bg-status-free-soft px-3.5 py-2.5">
             <span class="text-[13px] font-semibold text-brand-dark">Подключён: {{ chatId }}</span>
-            <button
-              type="button"
-              :disabled="saving"
-              class="flex items-center gap-1 text-[12px] font-semibold text-status-deposit hover:underline disabled:opacity-60"
-              @click="disconnect"
-            >
-              <Unlink :size="12" /> Отключить
-            </button>
+            <UButton icon="i-lucide-unlink" color="error" variant="link" size="xs" :loading="saving" @click="disconnect">Отключить</UButton>
           </div>
 
-          <label class="mb-1 block text-[12px] text-ink-soft">Chat ID</label>
-          <div class="flex gap-2">
-            <input
-              v-model="chatInput"
-              type="text"
-              placeholder="-100123456789"
-              class="flex-1 rounded-lg border border-line bg-paper px-3 py-2 text-sm text-ink"
-            />
-            <button
-              type="button"
-              :disabled="saving || chatInput.trim() === ''"
-              class="rounded-lg bg-brand-600 px-4 py-2 text-[13px] font-semibold text-white hover:bg-brand-700 disabled:opacity-60"
-              @click="save"
-            >
-              {{ chatId ? 'Изменить' : 'Подключить' }}
-            </button>
-          </div>
-        </div>
+          <UFormField label="Chat ID">
+            <div class="flex gap-2">
+              <UInput v-model="chatInput" placeholder="-100123456789" class="flex-1" />
+              <UButton :loading="saving" :disabled="chatInput.trim() === ''" @click="save">
+                {{ chatId ? 'Изменить' : 'Подключить' }}
+              </UButton>
+            </div>
+          </UFormField>
+        </UCard>
       </template>
     </div>
   </div>

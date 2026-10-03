@@ -22,7 +22,7 @@ onMounted(() => store.fetchAll())
       <div v-if="store.loading" class="text-sm text-ink-soft">Загрузка…</div>
       <div v-else-if="store.contracts.length === 0" class="text-sm text-ink-soft">Договоров пока нет.</div>
 
-      <div v-else class="overflow-hidden rounded-xl border border-line bg-card">
+      <UCard v-else :ui="{ body: 'p-0 sm:p-0' }">
         <NuxtLink
           v-for="contract in store.contracts"
           :key="contract.id"
@@ -41,7 +41,7 @@ onMounted(() => store.fetchAll())
             <div class="text-[11px] text-ink-soft">остаток {{ contract.outstandingBalance.toLocaleString('ru-RU') }}</div>
           </div>
         </NuxtLink>
-      </div>
+      </UCard>
     </div>
   </div>
 </template>

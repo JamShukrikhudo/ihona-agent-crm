@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Camera, MessageCircle, Phone, Send, StickyNote, X } from '@lucide/vue'
+import { Camera, MessageCircle, Phone, Send, StickyNote } from '@lucide/vue'
 import { STATUS_BG_SOFT, STATUS_BORDER, STATUS_LABEL } from '~/utils/statusStyles'
 import type { UnitStatus } from '~/stores/useUnitsStore'
 import type { Client, ClientInteraction, TeamAgent } from '~/stores/useClientsStore'
@@ -185,22 +185,16 @@ function copyLink() {
     <div class="flex h-full w-full max-w-5xl flex-col overflow-hidden rounded-2xl bg-paper shadow-2xl sm:h-[92vh]">
       <div class="flex items-center justify-between border-b border-line bg-card px-5 py-3">
         <div class="flex items-center gap-3">
-          <button type="button" class="flex h-9 w-9 items-center justify-center rounded-full border border-line text-ink-soft hover:bg-paper" @click="emit('close')">
-            <X :size="16" />
-          </button>
+          <UButton icon="i-lucide-x" color="neutral" variant="outline" @click="emit('close')" />
           <AgentAvatar v-if="client" :name="client.name" :size="34" />
           <div v-if="client">
             <div class="text-[10.5px] text-ink-soft">Клиент</div>
             <div class="font-display text-[15px] font-bold text-ink">{{ client.name }} <span class="font-sans text-[11px] font-normal text-ink-soft">ID: {{ clientId }}</span></div>
           </div>
         </div>
-        <button
-          type="button"
-          class="flex items-center gap-1.5 rounded-full border border-line px-3 py-1.5 text-[12px] font-semibold text-ink-soft hover:bg-paper"
-          @click="copyLink"
-        >
+        <UButton color="neutral" variant="outline" class="rounded-full" @click="copyLink">
           Скопировать ссылку
-        </button>
+        </UButton>
       </div>
 
       <div v-if="loading" class="flex flex-1 items-center justify-center text-sm text-ink-soft">Загрузка…</div>
@@ -244,23 +238,20 @@ function copyLink() {
             <div v-if="client.notes" class="text-sm text-ink">{{ client.notes }}</div>
 
             <div class="mt-3 text-[11px] text-ink-soft">Менеджер</div>
-            <select
-              :value="client.assignedAgentId ?? ''"
+            <USelect
+              :model-value="client.assignedAgentId ? String(client.assignedAgentId) : ''"
               :disabled="savingInfo"
-              class="w-full rounded-lg border border-line px-2.5 py-1.5 text-[13px] text-ink"
-              @change="updateAssignedAgent(($event.target as HTMLSelectElement).value)"
-            >
-              <option value="">Не назначен</option>
-              <option v-for="a in teamAgents" :key="a.id" :value="a.id">{{ a.name }}</option>
-            </select>
+              :items="[{ label: 'Не назначен', value: '' }, ...teamAgents.map((a) => ({ label: a.name, value: String(a.id) }))]"
+              class="w-full"
+              @update:model-value="updateAssignedAgent($event as string)"
+            />
 
             <div class="mt-3 text-[11px] text-ink-soft">Регион</div>
-            <input
-              :value="client.region ?? ''"
-              type="text"
+            <UInput
+              :model-value="client.region ?? ''"
               placeholder="Например, Душанбе"
               :disabled="savingInfo"
-              class="w-full rounded-lg border border-line px-2.5 py-1.5 text-[13px] text-ink"
+              class="w-full"
               @change="updateRegion(($event.target as HTMLInputElement).value)"
             />
           </div>
@@ -283,19 +274,10 @@ function copyLink() {
                   <component :is="t.icon" :size="12" /> {{ t.label }}
                 </button>
               </div>
-              <textarea
-                v-model="noteMessage"
-                rows="3"
-                placeholder="Что обсудили?"
-                class="w-full rounded-lg border border-line px-3 py-2 text-[13px] text-ink"
-              />
-              <button
-                type="submit"
-                :disabled="savingNote || noteMessage.trim() === ''"
-                class="w-full rounded-lg bg-brand-600 py-2 text-[13px] font-semibold text-white hover:bg-brand-700 disabled:opacity-60"
-              >
-                {{ savingNote ? 'Сохраняю…' : 'Сохранить' }}
-              </button>
+              <UTextarea v-model="noteMessage" :rows="3" placeholder="Что обсудили?" class="w-full" />
+              <UButton type="submit" :loading="savingNote" :disabled="noteMessage.trim() === ''" block>
+                Сохранить
+              </UButton>
             </form>
           </div>
 
@@ -368,19 +350,10 @@ function copyLink() {
                a linked chat on this channel (they messaged first), which
                all three platforms require. -->
           <form v-if="hasActiveChannel" class="flex gap-2 border-t border-line p-3" @submit.prevent="sendChatMessage">
-            <input
-              v-model="chatMessage"
-              type="text"
-              placeholder="Написать сообщение…"
-              class="flex-1 rounded-lg border border-line px-3 py-2 text-[13px] text-ink"
-            />
-            <button
-              type="submit"
-              :disabled="sendingChat || chatMessage.trim() === ''"
-              class="rounded-lg bg-brand-600 px-4 py-2 text-[13px] font-semibold text-white hover:bg-brand-700 disabled:opacity-60"
-            >
+            <UInput v-model="chatMessage" placeholder="Написать сообщение…" class="flex-1" />
+            <UButton type="submit" :loading="sendingChat" :disabled="chatMessage.trim() === ''">
               Отправить
-            </button>
+            </UButton>
           </form>
         </div>
       </div>

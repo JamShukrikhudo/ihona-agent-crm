@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Building2, Check, ChevronRight, Plus, X } from '@lucide/vue'
+import { Building2, Check } from '@lucide/vue'
 import { LEAD_STAGE_LABEL, LEAD_STAGES } from '~/stores/useLeadsStore'
 import type { Lead, LeadStage, LeadTask } from '~/stores/useLeadsStore'
 import { SOURCE_BG, SOURCE_ICON, SOURCE_TEXT, sourceLabel } from '~/utils/leadSources'
@@ -98,24 +98,19 @@ async function markDone(task: LeadTask) {
           <div class="text-[11px] text-ink-soft">Сделка №{{ lead.id }}</div>
           <div class="font-display text-lg font-bold text-ink">{{ lead.contactName }}</div>
         </div>
-        <button type="button" class="rounded-full p-1.5 hover:bg-paper" @click="emit('close')">
-          <X :size="18" class="text-ink-soft" />
-        </button>
+        <UButton icon="i-lucide-x" color="neutral" variant="ghost" @click="emit('close')" />
       </div>
 
       <div class="px-5 py-4">
-        <label class="mb-3 block">
-          <span class="text-[10.5px] text-ink-soft">Статус</span>
-          <select
-            :value="lead.stage"
+        <UFormField label="Статус" class="mb-3">
+          <USelect
+            :model-value="lead.stage"
             :disabled="changingStage || lead.stage === 'contracted' || lead.stage === 'lost'"
-            class="mt-1 w-full rounded-xl border border-line bg-paper px-3 py-2 text-[13px] font-semibold text-ink disabled:opacity-60"
-            @change="changeStage(($event.target as HTMLSelectElement).value as LeadStage)"
-          >
-            <option v-for="s in LEAD_STAGES.filter((x) => x !== 'lost')" :key="s" :value="s">{{ LEAD_STAGE_LABEL[s] }}</option>
-            <option v-if="lead.stage === 'lost'" value="lost">{{ LEAD_STAGE_LABEL.lost }}</option>
-          </select>
-        </label>
+            :items="(lead.stage === 'lost' ? [...LEAD_STAGES.filter((x) => x !== 'lost'), 'lost'] : LEAD_STAGES.filter((x) => x !== 'lost')).map((s) => ({ label: LEAD_STAGE_LABEL[s], value: s }))"
+            class="w-full"
+            @update:model-value="changeStage($event as LeadStage)"
+          />
+        </UFormField>
         <div class="mb-3 flex flex-wrap items-center gap-2">
           <span
             v-if="source"
@@ -140,15 +135,17 @@ async function markDone(task: LeadTask) {
           </div>
         </div>
 
-        <button
+        <UButton
           v-if="lead.clientId"
-          type="button"
-          class="mt-3 flex w-full items-center justify-between rounded-xl bg-paper p-3 text-[12px] font-medium text-ink hover:bg-brand-50"
+          color="neutral"
+          variant="soft"
+          trailing-icon="i-lucide-chevron-right"
+          block
+          class="mt-3 justify-between"
           @click="openClientId = lead.clientId"
         >
           Полная история клиента
-          <ChevronRight :size="14" class="text-ink-soft" />
-        </button>
+        </UButton>
 
         <div class="mt-5">
           <div class="mb-2 text-[10.5px] font-bold uppercase tracking-wide text-ink-soft">Задачи</div>
@@ -171,24 +168,13 @@ async function markDone(task: LeadTask) {
 
           <form class="mt-2 space-y-1.5" @submit.prevent="submitTask">
             <div class="flex gap-1.5">
-              <input
-                v-model="newTaskTitle"
-                type="text"
-                placeholder="Например: перезвонить"
-                class="min-w-0 flex-1 rounded-lg border border-line bg-paper px-2.5 py-1.5 text-[12.5px] text-ink"
-              />
-              <button type="submit" :disabled="submittingTask" class="flex items-center justify-center rounded-lg bg-brand-600 px-2.5 text-white disabled:opacity-60">
-                <Plus :size="14" />
-              </button>
+              <UInput v-model="newTaskTitle" placeholder="Например: перезвонить" class="min-w-0 flex-1" />
+              <UButton type="submit" icon="i-lucide-plus" :loading="submittingTask" />
             </div>
             <div class="flex items-center gap-1.5">
-              <input
-                v-model="newTaskDue"
-                type="date"
-                class="rounded-lg border border-line bg-paper px-2 py-1 text-[11.5px] text-ink"
-              />
-              <button type="button" class="rounded-full border border-line px-2 py-1 text-[10.5px] text-ink-soft hover:bg-paper" @click="setDueQuick(0)">Сегодня</button>
-              <button type="button" class="rounded-full border border-line px-2 py-1 text-[10.5px] text-ink-soft hover:bg-paper" @click="setDueQuick(1)">Завтра</button>
+              <UInput v-model="newTaskDue" type="date" size="sm" />
+              <UButton color="neutral" variant="outline" size="xs" @click="setDueQuick(0)">Сегодня</UButton>
+              <UButton color="neutral" variant="outline" size="xs" @click="setDueQuick(1)">Завтра</UButton>
             </div>
           </form>
         </div>
