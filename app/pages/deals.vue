@@ -102,35 +102,35 @@ onBeforeUnmount(() => {
     </div>
 
     <div class="px-6 pt-6">
-      <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <UCard :ui="{ body: 'flex items-center gap-3.5' }">
-          <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand-700">
-            <UIcon name="i-lucide-wallet" class="size-5" />
-          </div>
-          <div class="min-w-0">
-            <div class="font-display text-lg font-bold text-ink">{{ formatTjs(pipelineValue) }}</div>
-            <div class="text-[12px] text-ink-soft">Сумма в работе</div>
-          </div>
-        </UCard>
-        <UCard :ui="{ body: 'flex items-center gap-3.5' }">
-          <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-sky-50 text-sky-700">
-            <UIcon name="i-lucide-file-signature" class="size-5" />
-          </div>
-          <div class="min-w-0">
-            <div class="font-display text-lg font-bold text-ink">{{ contractedCount }}</div>
-            <div class="text-[12px] text-ink-soft">Договоров заключено</div>
-          </div>
-        </UCard>
-        <UCard :ui="{ body: 'flex items-center gap-3.5' }">
-          <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-violet-50 text-violet-700">
-            <UIcon name="i-lucide-trending-up" class="size-5" />
-          </div>
-          <div class="min-w-0">
-            <div class="font-display text-lg font-bold text-ink">{{ formatTjs(avgDealSize) }}</div>
-            <div class="text-[12px] text-ink-soft">Средний чек</div>
-          </div>
-        </UCard>
-      </div>
+      <UPageGrid class="gap-4 sm:grid-cols-3 sm:gap-6 lg:gap-px">
+        <UPageCard
+          icon="i-lucide-wallet"
+          title="Сумма в работе"
+          variant="subtle"
+          :ui="{ container: 'gap-y-1.5', wrapper: 'items-start', leading: 'p-2.5 rounded-full bg-primary/10 ring ring-inset ring-primary/25 flex-col', title: 'font-normal text-muted text-xs uppercase' }"
+          class="sm:rounded-none first:rounded-l-lg last:rounded-r-lg hover:z-1"
+        >
+          <span class="text-2xl font-semibold text-highlighted">{{ formatTjs(pipelineValue) }}</span>
+        </UPageCard>
+        <UPageCard
+          icon="i-lucide-file-signature"
+          title="Договоров заключено"
+          variant="subtle"
+          :ui="{ container: 'gap-y-1.5', wrapper: 'items-start', leading: 'p-2.5 rounded-full bg-primary/10 ring ring-inset ring-primary/25 flex-col', title: 'font-normal text-muted text-xs uppercase' }"
+          class="sm:rounded-none first:rounded-l-lg last:rounded-r-lg hover:z-1"
+        >
+          <span class="text-2xl font-semibold text-highlighted">{{ contractedCount }}</span>
+        </UPageCard>
+        <UPageCard
+          icon="i-lucide-trending-up"
+          title="Средний чек"
+          variant="subtle"
+          :ui="{ container: 'gap-y-1.5', wrapper: 'items-start', leading: 'p-2.5 rounded-full bg-primary/10 ring ring-inset ring-primary/25 flex-col', title: 'font-normal text-muted text-xs uppercase' }"
+          class="sm:rounded-none first:rounded-l-lg last:rounded-r-lg hover:z-1"
+        >
+          <span class="text-2xl font-semibold text-highlighted">{{ formatTjs(avgDealSize) }}</span>
+        </UPageCard>
+      </UPageGrid>
     </div>
 
     <div class="px-6 py-6">

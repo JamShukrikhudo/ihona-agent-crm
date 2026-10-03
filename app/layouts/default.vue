@@ -6,11 +6,6 @@ const auth = useAuthStore()
 const isManager = computed(() => auth.hasRole('sales-manager') || auth.hasRole('developer-admin'))
 const isIhonaStaff = computed(() => auth.hasRole('ihona-staff'))
 
-const { prefs, setTheme } = useUiPrefs()
-function toggleTheme() {
-  setTheme(prefs.value.theme === 'dark' ? 'light' : 'dark')
-}
-
 interface NavEntry {
   to: string
   label: string
@@ -84,15 +79,25 @@ const staffItems = computed(() =>
   isIhonaStaff.value ? [{ label: 'Администрирование', type: 'label' as const }, ...toMenuItems(STAFF_ENTRIES)] : [],
 )
 
-async function logout() {
-  await auth.logout()
-  navigateTo('/login')
-}
+// Cmd+K command palette — every real destination in the sidebar, grouped
+// the same way, so it's a genuine "jump to page" tool rather than a
+// decorative search box with nothing behind it.
+const searchGroups = computed(() => [
+  ...NAV_SECTIONS.map((section) => ({
+    id: section.label,
+    label: section.label,
+    items: toMenuItems(section.entries).map((item) => ({ label: item.label as string, icon: item.icon as string, to: item.to as string })),
+  })).filter((g) => g.items.length),
+  ...(isIhonaStaff.value
+    ? [{ id: 'staff', label: 'Администрирование', items: toMenuItems(STAFF_ENTRIES).map((item) => ({ label: item.label as string, icon: item.icon as string, to: item.to as string })) }]
+    : []),
+])
+
 </script>
 
 <template>
   <UDashboardGroup storage-key="ihona-crm-sidebar">
-    <UDashboardSidebar collapsible resizable :min-size="14" :default-size="16" :max-size="22" :ui="{ footer: 'border-t border-default' }">
+    <UDashboardSidebar collapsible resizable :min-size="14" :default-size="16" :max-size="22" class="bg-elevated/25" :ui="{ footer: 'border-t border-default' }">
       <template #header="{ collapsed }">
         <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-600 font-display text-[15px] font-extrabold text-white">
           i
@@ -101,42 +106,23 @@ async function logout() {
       </template>
 
       <template #default="{ collapsed }">
+        <UDashboardSearchButton :collapsed="collapsed" class="bg-transparent ring-default" />
         <UNavigationMenu :collapsed="collapsed" :items="primaryItems" orientation="vertical" />
         <UNavigationMenu v-if="staffItems.length" :collapsed="collapsed" :items="staffItems" orientation="vertical" class="mt-auto" />
       </template>
 
       <template #footer="{ collapsed }">
-        <UButton
-          :label="collapsed ? undefined : auth.user?.name"
-          icon="i-lucide-log-out"
-          color="neutral"
-          variant="ghost"
-          :block="!collapsed"
-          :square="collapsed"
-          @click="logout"
-        />
+        <UserMenu :collapsed="collapsed" />
       </template>
     </UDashboardSidebar>
+
+    <UDashboardSearch :groups="searchGroups" />
 
     <UDashboardPanel :ui="{ body: 'p-0 sm:p-0 gap-0' }">
       <template #header>
         <UDashboardNavbar>
           <template #leading>
             <UDashboardSidebarCollapse />
-          </template>
-
-          <template #right>
-            <UButton
-              :icon="prefs.theme === 'dark' ? 'i-lucide-sun' : 'i-lucide-moon'"
-              color="neutral"
-              variant="ghost"
-              square
-              title="Переключить тему"
-              @click="toggleTheme"
-            />
-            <USeparator orientation="vertical" class="mx-1 h-6" />
-            <AgentAvatar :name="auth.user?.name ?? '—'" :size="30" />
-            <span class="hidden text-[13px] font-semibold text-ink sm:inline">{{ auth.user?.name }}</span>
           </template>
         </UDashboardNavbar>
       </template>

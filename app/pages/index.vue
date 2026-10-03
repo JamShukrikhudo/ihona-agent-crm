@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Building2, Wallet, TrendingUp, AlertTriangle, Clock } from '@lucide/vue'
+import { Building2, Clock } from '@lucide/vue'
 import type { Conversation } from '~/stores/useInboxStore'
 import { LEAD_STAGES, LEAD_STAGE_LABEL } from '~/stores/useLeadsStore'
 import { STAGE_ICON } from '~/utils/leadStageIcons'
@@ -245,41 +245,45 @@ onBeforeUnmount(() => disconnectEcho())
         </div>
       </UCard>
 
-      <!-- White cards with a soft icon chip + big headline number — the
-           pattern Spike Admin's KPI cards actually use (icon chip, not a
-           solid-color block), kept in our own brand palette. -->
-      <section v-if="isManager && stats" class="grid gap-3 sm:grid-cols-3">
-        <UCard :ui="{ body: 'flex items-center gap-3.5' }">
-          <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand-700">
-            <Wallet :size="20" />
-          </div>
-          <div class="min-w-0">
-            <div class="font-display text-xl font-bold text-ink">{{ stats.collected.toLocaleString('ru-RU') }} TJS</div>
-            <div class="truncate text-[12px] text-ink-soft">Собрано · остаток {{ stats.remaining.toLocaleString('ru-RU') }}</div>
-          </div>
-        </UCard>
-        <UCard :ui="{ body: 'flex items-center gap-3.5' }">
-          <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-sky-50 text-sky-700">
-            <TrendingUp :size="20" />
-          </div>
-          <div class="min-w-0">
-            <div class="font-display text-xl font-bold text-ink">{{ stats.sold_units }} / {{ stats.total_units }}</div>
-            <div class="truncate text-[12px] text-ink-soft">Юнитов продано</div>
-          </div>
-        </UCard>
-        <UCard :ui="{ body: 'flex items-center gap-3.5' }">
-          <div
-            class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full"
-            :class="stats.overdue_installments_count > 0 ? 'bg-rose-50 text-rose-600' : 'bg-brand-50 text-brand-700'"
-          >
-            <AlertTriangle :size="20" />
-          </div>
-          <div class="min-w-0">
-            <div class="font-display text-xl font-bold text-ink">{{ stats.overdue_installments_count }}</div>
-            <div class="truncate text-[12px] text-ink-soft">Просрочено платежей</div>
-          </div>
-        </UCard>
-      </section>
+      <!-- Official Nuxt UI dashboard template's stat-strip pattern
+           (UPageGrid + UPageCard, variant="subtle", edge-to-edge joined
+           cards) instead of an ad hoc card grid. -->
+      <UPageGrid v-if="isManager && stats" class="gap-4 sm:grid-cols-3 sm:gap-6 lg:gap-px">
+        <UPageCard
+          icon="i-lucide-wallet"
+          title="Собрано"
+          variant="subtle"
+          :ui="{ container: 'gap-y-1.5', wrapper: 'items-start', leading: 'p-2.5 rounded-full bg-primary/10 ring ring-inset ring-primary/25 flex-col', title: 'font-normal text-muted text-xs uppercase' }"
+          class="sm:rounded-none first:rounded-l-lg last:rounded-r-lg hover:z-1"
+        >
+          <span class="text-2xl font-semibold text-highlighted">{{ stats.collected.toLocaleString('ru-RU') }} TJS</span>
+          <div class="mt-1 text-[12px] text-ink-soft">остаток {{ stats.remaining.toLocaleString('ru-RU') }}</div>
+        </UPageCard>
+        <UPageCard
+          icon="i-lucide-trending-up"
+          title="Юнитов продано"
+          variant="subtle"
+          :ui="{ container: 'gap-y-1.5', wrapper: 'items-start', leading: 'p-2.5 rounded-full bg-primary/10 ring ring-inset ring-primary/25 flex-col', title: 'font-normal text-muted text-xs uppercase' }"
+          class="sm:rounded-none first:rounded-l-lg last:rounded-r-lg hover:z-1"
+        >
+          <span class="text-2xl font-semibold text-highlighted">{{ stats.sold_units }} / {{ stats.total_units }}</span>
+        </UPageCard>
+        <UPageCard
+          icon="i-lucide-alert-triangle"
+          title="Просрочено платежей"
+          variant="subtle"
+          :ui="{
+            container: 'gap-y-1.5',
+            wrapper: 'items-start',
+            leading: stats.overdue_installments_count > 0 ? 'p-2.5 rounded-full bg-error/10 ring ring-inset ring-error/25 flex-col' : 'p-2.5 rounded-full bg-primary/10 ring ring-inset ring-primary/25 flex-col',
+            leadingIcon: stats.overdue_installments_count > 0 ? 'text-error' : 'text-primary',
+            title: 'font-normal text-muted text-xs uppercase',
+          }"
+          class="sm:rounded-none first:rounded-l-lg last:rounded-r-lg hover:z-1"
+        >
+          <span class="text-2xl font-semibold text-highlighted">{{ stats.overdue_installments_count }}</span>
+        </UPageCard>
+      </UPageGrid>
 
       <!-- Profit & Expenses / Product Sales, side by side like the
            reference — sourced from sales-stats/monthly (6 months). -->
