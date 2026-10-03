@@ -36,7 +36,7 @@ async function updateAssignedAgent(agentId: string) {
   if (!client.value) return
   savingInfo.value = true
   try {
-    client.value = await clientsStore.updateClient(client.value.id, { assigned_agent_id: agentId === '' ? null : Number(agentId) })
+    client.value = await clientsStore.updateClient(client.value.id, { assigned_agent_id: agentId === 'none' ? null : Number(agentId) })
   } catch {
     useToastStore().push('Не удалось сохранить менеджера', 'error')
   } finally {
@@ -239,9 +239,9 @@ function copyLink() {
 
             <div class="mt-3 text-[11px] text-ink-soft">Менеджер</div>
             <USelect
-              :model-value="client.assignedAgentId ? String(client.assignedAgentId) : ''"
+              :model-value="client.assignedAgentId ? String(client.assignedAgentId) : 'none'"
               :disabled="savingInfo"
-              :items="[{ label: 'Не назначен', value: '' }, ...teamAgents.map((a) => ({ label: a.name, value: String(a.id) }))]"
+              :items="[{ label: 'Не назначен', value: 'none' }, ...teamAgents.map((a) => ({ label: a.name, value: String(a.id) }))]"
               class="w-full"
               @update:model-value="updateAssignedAgent($event as string)"
             />

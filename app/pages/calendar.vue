@@ -149,9 +149,10 @@ function isOverdue(task: CalendarTask): boolean {
 
       <div class="mt-3 flex flex-wrap items-center gap-2">
         <USelect
-          v-model="assigneeFilter"
-          :items="[{ label: 'Все исполнители', value: '' }, ...assignees.map((a) => ({ label: a, value: a }))]"
+          :model-value="assigneeFilter === '' ? 'all' : assigneeFilter"
+          :items="[{ label: 'Все исполнители', value: 'all' }, ...assignees.map((a) => ({ label: a, value: a }))]"
           size="sm"
+          @update:model-value="assigneeFilter = $event === 'all' ? '' : ($event as string)"
         />
         <UInput v-model="query" placeholder="Поиск по задаче или клиенту…" size="sm" class="min-w-0 flex-1 sm:max-w-xs" />
       </div>

@@ -43,7 +43,7 @@ const editName = ref('')
 const editPhone = ref('')
 const editEmail = ref('')
 const editRegion = ref('')
-const editAssignedAgentId = ref('')
+const editAssignedAgentId = ref('none')
 const savingEdit = ref(false)
 
 const teamAgents = ref<TeamAgent[]>([])
@@ -53,7 +53,10 @@ onMounted(() => {
 function agentName(id: number | null): string {
   return teamAgents.value.find((a) => a.id === id)?.name ?? '—'
 }
-const agentOptions = computed(() => [{ label: 'Не назначен', value: '' }, ...teamAgents.value.map((a) => ({ label: a.name, value: String(a.id) }))])
+// Nuxt UI's <USelectItem> rejects an empty-string value outright (it's
+// reserved to mean "clear selection") — 'none' stands in for "unassigned"
+// and is converted back to '' at the ref boundary (saveEdit below).
+const agentOptions = computed(() => [{ label: 'Не назначен', value: 'none' }, ...teamAgents.value.map((a) => ({ label: a.name, value: String(a.id) }))])
 
 function openEdit(client: Client) {
   editing.value = client
@@ -61,7 +64,7 @@ function openEdit(client: Client) {
   editPhone.value = client.phone
   editEmail.value = client.email ?? ''
   editRegion.value = client.region ?? ''
-  editAssignedAgentId.value = client.assignedAgentId ? String(client.assignedAgentId) : ''
+  editAssignedAgentId.value = client.assignedAgentId ? String(client.assignedAgentId) : 'none'
   editOpen.value = true
 }
 
@@ -76,7 +79,7 @@ async function saveEdit() {
       phone: editPhone.value.trim(),
       email: editEmail.value.trim() || null,
       region: editRegion.value.trim() || null,
-      assigned_agent_id: editAssignedAgentId.value === '' ? null : Number(editAssignedAgentId.value),
+      assigned_agent_id: editAssignedAgentId.value === 'none' ? null : Number(editAssignedAgentId.value),
     })
     const idx = clients.value.findIndex((c) => c.id === updated.id)
     if (idx !== -1) {
