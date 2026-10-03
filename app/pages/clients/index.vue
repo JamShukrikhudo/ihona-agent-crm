@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ChevronRight, MessageCircle, Pencil, Plus, Search, Send, Trash2 } from '@lucide/vue'
+import { MessageCircle, Send } from '@lucide/vue'
+import type { TableColumn } from '@nuxt/ui'
 import type { Client, TeamAgent } from '~/stores/useClientsStore'
 import { SOURCE_BG, SOURCE_ICON, SOURCE_TEXT, sourceLabel } from '~/utils/leadSources'
 import type { LeadSource } from '~/utils/leadSources'
@@ -27,7 +28,17 @@ const loading = ref(true)
 
 const openClientId = ref<number | null>(null)
 
+const columns: TableColumn<Client>[] = [
+  { accessorKey: 'name', header: 'Клиент' },
+  { accessorKey: 'channels', header: 'Канал' },
+  { accessorKey: 'source', header: 'Источник' },
+  { accessorKey: 'assignedAgentName', header: 'Менеджер' },
+  { accessorKey: 'createdAt', header: 'Дата' },
+  { accessorKey: 'id', header: '' },
+]
+
 const editing = ref<Client | null>(null)
+const editOpen = ref(false)
 const editName = ref('')
 const editPhone = ref('')
 const editEmail = ref('')
@@ -42,6 +53,7 @@ onMounted(() => {
 function agentName(id: number | null): string {
   return teamAgents.value.find((a) => a.id === id)?.name ?? '—'
 }
+const agentOptions = computed(() => [{ label: 'Не назначен', value: '' }, ...teamAgents.value.map((a) => ({ label: a.name, value: String(a.id) }))])
 
 function openEdit(client: Client) {
   editing.value = client
@@ -50,6 +62,7 @@ function openEdit(client: Client) {
   editEmail.value = client.email ?? ''
   editRegion.value = client.region ?? ''
   editAssignedAgentId.value = client.assignedAgentId ? String(client.assignedAgentId) : ''
+  editOpen.value = true
 }
 
 async function saveEdit() {
@@ -69,7 +82,7 @@ async function saveEdit() {
     if (idx !== -1) {
       clients.value[idx] = { ...clients.value[idx], ...updated }
     }
-    editing.value = null
+    editOpen.value = false
   } catch {
     toast.push('Не удалось сохранить изменения', 'error')
   } finally {
@@ -146,209 +159,126 @@ onMounted(load)
 
 <template>
   <div class="min-h-screen bg-paper">
-    <div class="border-b border-line bg-card px-6 py-4">
-      <div class="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <div class="text-[11px] font-medium text-ink-soft">Клиенты</div>
-          <h1 class="font-display text-xl font-bold text-ink">Все клиенты</h1>
-        </div>
-        <div class="flex items-center gap-2">
-          <div class="relative w-64">
-            <Search :size="14" class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-soft" />
-            <input
-              v-model="query"
-              type="text"
-              placeholder="Поиск по имени или телефону"
-              class="w-full rounded-lg border border-line py-2 pl-9 pr-3 text-sm text-ink focus:border-brand-600 focus:outline-none"
-            />
-          </div>
-          <button
-            type="button"
-            class="flex items-center gap-1.5 rounded-full bg-brand-600 px-4 py-2 text-[13px] font-semibold text-white hover:bg-brand-700"
-            @click="creating = true"
-          >
-            <Plus :size="14" /> Клиент
-          </button>
-        </div>
+    <div class="flex flex-wrap items-center justify-between gap-3 border-b border-line bg-card px-6 py-4">
+      <div>
+        <div class="text-[11px] font-medium text-ink-soft">Клиенты</div>
+        <h1 class="font-display text-xl font-bold text-ink">Все клиенты</h1>
+      </div>
+      <div class="flex items-center gap-2">
+        <UInput v-model="query" icon="i-lucide-search" placeholder="Поиск по имени или телефону" class="w-64" />
+        <UButton icon="i-lucide-plus" @click="creating = true">Клиент</UButton>
       </div>
     </div>
 
     <div class="px-6 py-6">
-      <div v-if="loading" class="text-sm text-ink-soft">Загрузка…</div>
-      <div v-else-if="clients.length === 0" class="rounded-2xl border border-dashed border-line bg-card p-8 text-center">
+      <div v-if="!loading && clients.length === 0" class="rounded-2xl border border-dashed border-line bg-card p-8 text-center">
         <p class="text-sm text-ink-soft">{{ query ? 'Ничего не найдено по этому запросу.' : 'Клиентов пока нет.' }}</p>
-        <button
-          v-if="!query"
-          type="button"
-          class="mt-3 inline-flex items-center gap-1.5 rounded-full bg-brand-600 px-4 py-2 text-[13px] font-semibold text-white hover:bg-brand-700"
-          @click="creating = true"
+        <UButton v-if="!query" icon="i-lucide-plus" class="mt-3" @click="creating = true">Добавить первого клиента</UButton>
+      </div>
+
+      <UCard v-else :ui="{ body: 'p-0 sm:p-0' }">
+        <UTable
+          :data="clients"
+          :columns="columns"
+          :loading="loading"
+          @select="(_e, row) => (openClientId = row.original.id)"
         >
-          <Plus :size="14" /> Добавить первого клиента
-        </button>
-      </div>
+          <template #name-cell="{ row }">
+            <div class="flex items-center gap-3">
+              <AgentAvatar :name="row.original.name" :size="32" />
+              <div class="min-w-0">
+                <div class="truncate text-[13px] font-semibold text-ink">{{ row.original.name }}</div>
+                <div class="text-[11px] text-ink-soft">{{ row.original.phone }}</div>
+              </div>
+            </div>
+          </template>
 
-      <div v-else class="overflow-hidden rounded-2xl border border-line bg-card">
-        <table class="w-full text-left">
-          <thead>
-            <tr class="border-b border-line bg-paper">
-              <th class="px-4 py-3 text-[11px] font-bold uppercase tracking-wide text-ink-soft">Клиент</th>
-              <th class="px-4 py-3 text-[11px] font-bold uppercase tracking-wide text-ink-soft">Канал</th>
-              <th class="px-4 py-3 text-[11px] font-bold uppercase tracking-wide text-ink-soft">Источник</th>
-              <th class="px-4 py-3 text-[11px] font-bold uppercase tracking-wide text-ink-soft">Менеджер</th>
-              <th class="px-4 py-3 text-[11px] font-bold uppercase tracking-wide text-ink-soft">Дата</th>
-              <th class="px-4 py-3" />
-            </tr>
-          </thead>
-          <tbody>
-            <tr
-              v-for="client in clients"
-              :key="client.id"
-              class="cursor-pointer border-b border-line last:border-b-0 hover:bg-paper"
-              @click="openClientId = client.id"
-            >
-              <td class="px-4 py-3">
-                <div class="flex items-center gap-3">
-                  <AgentAvatar :name="client.name" :size="32" />
-                  <div class="min-w-0">
-                    <div class="truncate text-[13px] font-semibold text-ink">{{ client.name }}</div>
-                    <div class="text-[11px] text-ink-soft">{{ client.phone }}</div>
-                  </div>
-                </div>
-              </td>
-              <td class="px-4 py-3">
-                <div class="flex items-center gap-1.5">
-                  <template v-for="ch in client.channels ?? []" :key="ch">
-                    <span
-                      v-if="CHANNEL_ICON[ch]"
-                      class="flex h-7 w-7 items-center justify-center rounded-full bg-paper text-brand-600"
-                      :title="CHANNEL_LABEL[ch]"
-                    >
-                      <component :is="CHANNEL_ICON[ch]" :size="13" />
-                    </span>
-                  </template>
-                  <span v-if="!client.channels?.length" class="text-[11px] text-ink-soft">—</span>
-                </div>
-              </td>
-              <td class="px-4 py-3">
+          <template #channels-cell="{ row }">
+            <div class="flex items-center gap-1.5">
+              <template v-for="ch in row.original.channels ?? []" :key="ch">
                 <span
-                  v-if="clientSource(client)"
-                  class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold"
-                  :class="[SOURCE_BG[clientSource(client)!], SOURCE_TEXT[clientSource(client)!]]"
+                  v-if="CHANNEL_ICON[ch]"
+                  class="flex h-7 w-7 items-center justify-center rounded-full bg-paper text-brand-600"
+                  :title="CHANNEL_LABEL[ch]"
                 >
-                  <component :is="SOURCE_ICON[clientSource(client)!]" :size="11" /> {{ sourceLabel(client.source) }}
+                  <component :is="CHANNEL_ICON[ch]" :size="13" />
                 </span>
-                <span v-else class="text-[11px] text-ink-soft">—</span>
-              </td>
-              <td class="px-4 py-3 text-[12px] text-ink-soft">{{ client.assignedAgentName ?? agentName(client.assignedAgentId) }}</td>
-              <td class="px-4 py-3 text-[12px] text-ink-soft">{{ new Date(client.createdAt).toLocaleDateString('ru-RU') }}</td>
-              <td class="px-4 py-3">
-                <div class="flex items-center justify-end gap-1">
-                  <button
-                    type="button"
-                    class="inline-flex h-7 w-7 items-center justify-center rounded-full text-ink-soft hover:bg-paper hover:text-brand-600"
-                    title="Редактировать"
-                    @click.stop="openEdit(client)"
-                  >
-                    <Pencil :size="14" />
-                  </button>
-                  <button
-                    type="button"
-                    class="inline-flex h-7 w-7 items-center justify-center rounded-full text-ink-soft hover:bg-status-deposit-soft hover:text-status-deposit"
-                    title="Удалить"
-                    @click.stop="removeClient(client)"
-                  >
-                    <Trash2 :size="14" />
-                  </button>
-                  <button
-                    type="button"
-                    class="inline-flex h-7 w-7 items-center justify-center rounded-full text-ink-soft hover:bg-paper hover:text-brand-600"
-                    title="Открыть карточку"
-                    @click.stop="openClientId = client.id"
-                  >
-                    <ChevronRight :size="16" />
-                  </button>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+              </template>
+              <span v-if="!row.original.channels?.length" class="text-[11px] text-ink-soft">—</span>
+            </div>
+          </template>
+
+          <template #source-cell="{ row }">
+            <UBadge v-if="clientSource(row.original)" variant="subtle" :class="[SOURCE_BG[clientSource(row.original)!], SOURCE_TEXT[clientSource(row.original)!]]">
+              <component :is="SOURCE_ICON[clientSource(row.original)!]" :size="11" /> {{ sourceLabel(row.original.source) }}
+            </UBadge>
+            <span v-else class="text-[11px] text-ink-soft">—</span>
+          </template>
+
+          <template #assignedAgentName-cell="{ row }">
+            <span class="text-[12px] text-ink-soft">{{ row.original.assignedAgentName ?? agentName(row.original.assignedAgentId) }}</span>
+          </template>
+
+          <template #createdAt-cell="{ row }">
+            <span class="text-[12px] text-ink-soft">{{ new Date(row.original.createdAt).toLocaleDateString('ru-RU') }}</span>
+          </template>
+
+          <template #id-cell="{ row }">
+            <div class="flex items-center justify-end gap-1">
+              <UButton icon="i-lucide-pencil" color="neutral" variant="ghost" size="xs" title="Редактировать" @click.stop="openEdit(row.original)" />
+              <UButton icon="i-lucide-trash-2" color="error" variant="ghost" size="xs" title="Удалить" @click.stop="removeClient(row.original)" />
+              <UButton icon="i-lucide-chevron-right" color="neutral" variant="ghost" size="xs" title="Открыть карточку" @click.stop="openClientId = row.original.id" />
+            </div>
+          </template>
+        </UTable>
+      </UCard>
     </div>
 
-    <div v-if="creating" class="fixed inset-0 z-40 flex items-center justify-center bg-black/25 p-4" @click="creating = false">
-      <div class="w-full max-w-sm rounded-2xl bg-card p-5 shadow-2xl" @click.stop>
-        <div class="mb-4 font-display text-base font-bold text-ink">Новый клиент</div>
-        <form class="space-y-3" @submit.prevent="saveNewClient">
-          <label class="block text-[11px] text-ink-soft">
-            Имя
-            <input v-model="newName" type="text" required class="mt-1 w-full rounded-lg border border-line px-3 py-2 text-sm text-ink" />
-          </label>
-          <label class="block text-[11px] text-ink-soft">
-            Телефон
-            <input v-model="newPhone" type="text" required placeholder="+992..." class="mt-1 w-full rounded-lg border border-line px-3 py-2 text-sm text-ink" />
-          </label>
-          <label class="block text-[11px] text-ink-soft">
-            Заметка
-            <textarea v-model="newNote" rows="2" class="mt-1 w-full rounded-lg border border-line px-3 py-2 text-sm text-ink" />
-          </label>
-          <div class="flex gap-2 pt-2">
-            <button type="button" class="flex-1 rounded-lg border border-line py-2 text-[13px] font-semibold text-ink-soft" @click="creating = false">
-              Отмена
-            </button>
-            <button
-              type="submit"
-              :disabled="savingNew"
-              class="flex-1 rounded-lg bg-brand-600 py-2 text-[13px] font-semibold text-white hover:bg-brand-700 disabled:opacity-60"
-            >
-              {{ savingNew ? 'Создаю…' : 'Создать' }}
-            </button>
-          </div>
+    <UModal v-model:open="creating" title="Новый клиент">
+      <template #body>
+        <form id="new-client-form" class="space-y-3" @submit.prevent="saveNewClient">
+          <UFormField label="Имя" required>
+            <UInput v-model="newName" class="w-full" />
+          </UFormField>
+          <UFormField label="Телефон" required>
+            <UInput v-model="newPhone" placeholder="+992..." class="w-full" />
+          </UFormField>
+          <UFormField label="Заметка">
+            <UTextarea v-model="newNote" :rows="2" class="w-full" />
+          </UFormField>
         </form>
-      </div>
-    </div>
+      </template>
+      <template #footer="{ close }">
+        <UButton color="neutral" variant="outline" @click="close">Отмена</UButton>
+        <UButton type="submit" form="new-client-form" :loading="savingNew" class="ml-auto">Создать</UButton>
+      </template>
+    </UModal>
 
-    <div v-if="editing" class="fixed inset-0 z-40 flex items-center justify-center bg-black/25 p-4" @click="editing = null">
-      <div class="w-full max-w-sm rounded-2xl bg-card p-5 shadow-2xl" @click.stop>
-        <div class="mb-4 font-display text-base font-bold text-ink">Редактировать клиента</div>
-        <form class="space-y-3" @submit.prevent="saveEdit">
-          <label class="block text-[11px] text-ink-soft">
-            Имя
-            <input v-model="editName" type="text" required class="mt-1 w-full rounded-lg border border-line px-3 py-2 text-sm text-ink" />
-          </label>
-          <label class="block text-[11px] text-ink-soft">
-            Телефон
-            <input v-model="editPhone" type="text" required class="mt-1 w-full rounded-lg border border-line px-3 py-2 text-sm text-ink" />
-          </label>
-          <label class="block text-[11px] text-ink-soft">
-            Email
-            <input v-model="editEmail" type="email" class="mt-1 w-full rounded-lg border border-line px-3 py-2 text-sm text-ink" />
-          </label>
-          <label class="block text-[11px] text-ink-soft">
-            Менеджер
-            <select v-model="editAssignedAgentId" class="mt-1 w-full rounded-lg border border-line px-3 py-2 text-sm text-ink">
-              <option value="">Не назначен</option>
-              <option v-for="a in teamAgents" :key="a.id" :value="String(a.id)">{{ a.name }}</option>
-            </select>
-          </label>
-          <label class="block text-[11px] text-ink-soft">
-            Регион
-            <input v-model="editRegion" type="text" placeholder="Например, Душанбе" class="mt-1 w-full rounded-lg border border-line px-3 py-2 text-sm text-ink" />
-          </label>
-          <div class="flex gap-2 pt-2">
-            <button type="button" class="flex-1 rounded-lg border border-line py-2 text-[13px] font-semibold text-ink-soft" @click="editing = null">
-              Отмена
-            </button>
-            <button
-              type="submit"
-              :disabled="savingEdit"
-              class="flex-1 rounded-lg bg-brand-600 py-2 text-[13px] font-semibold text-white hover:bg-brand-700 disabled:opacity-60"
-            >
-              {{ savingEdit ? 'Сохраняю…' : 'Сохранить' }}
-            </button>
-          </div>
+    <UModal v-model:open="editOpen" title="Редактировать клиента">
+      <template #body>
+        <form id="edit-client-form" class="space-y-3" @submit.prevent="saveEdit">
+          <UFormField label="Имя" required>
+            <UInput v-model="editName" class="w-full" />
+          </UFormField>
+          <UFormField label="Телефон" required>
+            <UInput v-model="editPhone" class="w-full" />
+          </UFormField>
+          <UFormField label="Email">
+            <UInput v-model="editEmail" type="email" class="w-full" />
+          </UFormField>
+          <UFormField label="Менеджер">
+            <USelect v-model="editAssignedAgentId" :items="agentOptions" class="w-full" />
+          </UFormField>
+          <UFormField label="Регион">
+            <UInput v-model="editRegion" placeholder="Например, Душанбе" class="w-full" />
+          </UFormField>
         </form>
-      </div>
-    </div>
+      </template>
+      <template #footer="{ close }">
+        <UButton color="neutral" variant="outline" @click="close">Отмена</UButton>
+        <UButton type="submit" form="edit-client-form" :loading="savingEdit" class="ml-auto">Сохранить</UButton>
+      </template>
+    </UModal>
 
     <ClientDrawer v-if="openClientId" :client-id="openClientId" @close="openClientId = null" />
   </div>
