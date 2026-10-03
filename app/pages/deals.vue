@@ -103,17 +103,32 @@ onBeforeUnmount(() => {
 
     <div class="px-6 pt-6">
       <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <UCard>
-          <div class="text-[11px] text-ink-soft">Сумма в работе</div>
-          <div class="font-display text-lg font-bold text-ink">{{ formatTjs(pipelineValue) }}</div>
+        <UCard :ui="{ body: 'flex items-center gap-3.5' }">
+          <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand-700">
+            <UIcon name="i-lucide-wallet" class="size-5" />
+          </div>
+          <div class="min-w-0">
+            <div class="font-display text-lg font-bold text-ink">{{ formatTjs(pipelineValue) }}</div>
+            <div class="text-[12px] text-ink-soft">Сумма в работе</div>
+          </div>
         </UCard>
-        <UCard>
-          <div class="text-[11px] text-ink-soft">Договоров заключено</div>
-          <div class="font-display text-lg font-bold text-ink">{{ contractedCount }}</div>
+        <UCard :ui="{ body: 'flex items-center gap-3.5' }">
+          <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-sky-50 text-sky-700">
+            <UIcon name="i-lucide-file-signature" class="size-5" />
+          </div>
+          <div class="min-w-0">
+            <div class="font-display text-lg font-bold text-ink">{{ contractedCount }}</div>
+            <div class="text-[12px] text-ink-soft">Договоров заключено</div>
+          </div>
         </UCard>
-        <UCard>
-          <div class="text-[11px] text-ink-soft">Средний чек</div>
-          <div class="font-display text-lg font-bold text-ink">{{ formatTjs(avgDealSize) }}</div>
+        <UCard :ui="{ body: 'flex items-center gap-3.5' }">
+          <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-violet-50 text-violet-700">
+            <UIcon name="i-lucide-trending-up" class="size-5" />
+          </div>
+          <div class="min-w-0">
+            <div class="font-display text-lg font-bold text-ink">{{ formatTjs(avgDealSize) }}</div>
+            <div class="text-[12px] text-ink-soft">Средний чек</div>
+          </div>
         </UCard>
       </div>
     </div>
