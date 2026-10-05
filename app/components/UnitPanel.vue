@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { AlertTriangle, Clock, Layers, Ruler, Users, X } from '@lucide/vue'
+import { AlertTriangle, Clock, Layers, Ruler, Users } from '@lucide/vue'
 
 const props = defineProps<{ unitId: number | null }>()
 const emit = defineEmits<{ close: [] }>()
@@ -133,49 +133,47 @@ watch(() => props.unitId, (id) => {
 </script>
 
 <template>
-  <div v-if="unit" class="fixed inset-0 z-40 flex justify-end bg-black/25" @click="emit('close')">
-    <aside class="h-full w-full max-w-sm overflow-y-auto bg-card shadow-2xl" @click.stop>
+  <USlideover :open="unit !== null" :ui="{ content: 'max-w-sm' }" @update:open="(v) => { if (!v) emit('close') }">
+    <template v-if="unit" #content>
       <div class="flex items-center justify-between border-b border-line px-5 py-4">
         <div>
           <div class="text-[11px] text-ink-soft">Секция {{ unit.section }} · Этаж {{ unit.floor }}</div>
           <div class="font-display text-lg font-bold text-ink">{{ unit.label }}</div>
         </div>
-        <button type="button" class="rounded-full p-1.5 hover:bg-slate-100" @click="emit('close')">
-          <X :size="18" class="text-ink-soft" />
-        </button>
+        <UButton icon="i-lucide-x" color="neutral" variant="ghost" size="sm" @click="emit('close')" />
       </div>
 
-      <div class="px-5 py-4">
-        <span class="inline-block rounded-full px-2.5 py-1 text-xs font-semibold text-white" :class="STATUS_BG[unit.status]">
+      <div class="overflow-y-auto px-5 py-4">
+        <UBadge :class="STATUS_BG[unit.status]" class="text-white" :ui="{ base: 'px-2.5 py-1 text-xs font-semibold' }">
           {{ STATUS_LABEL[unit.status] }}
-        </span>
+        </UBadge>
 
         <div class="mt-4 grid grid-cols-2 gap-3">
-          <div class="rounded-xl bg-paper p-3">
+          <UCard variant="subtle" :ui="{ body: 'p-3' }">
             <Ruler :size="15" class="text-brand-600" />
             <div class="mt-1 text-sm font-semibold text-ink">{{ unit.area }} м²</div>
             <div class="text-[11px] text-ink-soft">{{ unit.rooms === 0 ? 'Студия' : `${unit.rooms}-комнатная` }}</div>
-          </div>
-          <div class="rounded-xl bg-paper p-3">
+          </UCard>
+          <UCard variant="subtle" :ui="{ body: 'p-3' }">
             <Layers :size="15" class="text-brand-600" />
             <div class="mt-1 text-sm font-semibold text-ink">Этаж {{ unit.floor }}</div>
             <div class="text-[11px] text-ink-soft">Секция {{ unit.section }}</div>
-          </div>
+          </UCard>
         </div>
 
-        <div class="mt-3 rounded-xl bg-paper p-3">
+        <UCard variant="subtle" class="mt-3" :ui="{ body: 'p-3' }">
           <div class="text-[11px] text-ink-soft">Стоимость</div>
           <div class="font-display text-xl font-bold text-brand-dark">{{ unit.price.toLocaleString('ru-RU') }} TJS</div>
           <div v-if="pricePerSqm" class="text-[11px] text-ink-soft">~{{ pricePerSqm.toLocaleString('ru-RU') }} TJS / м²</div>
-        </div>
+        </UCard>
 
-        <div v-if="unit.agent" class="mt-3 flex items-center gap-2 rounded-xl bg-paper p-3">
+        <UCard v-if="unit.agent" variant="subtle" class="mt-3" :ui="{ body: 'flex items-center gap-2 p-3' }">
           <Users :size="15" class="text-brand-600" />
           <div>
             <div class="text-[11px] text-ink-soft">Закреплено за</div>
             <div class="text-sm font-medium text-ink">{{ unit.agent }}</div>
           </div>
-        </div>
+        </UCard>
 
         <NuxtLink
           v-if="unit.clientId"
@@ -198,104 +196,73 @@ watch(() => props.unitId, (id) => {
 
         <div class="mt-5 space-y-2">
           <CanAccess v-if="unit.status === 'free'" permission="units.reserve">
-            <button
-              type="button"
-              :disabled="busy"
-              class="w-full rounded-xl bg-brand-600 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
-              @click="startReserve"
-            >
-              Забронировать
-            </button>
+            <UButton block :loading="busy" @click="startReserve">Забронировать</UButton>
           </CanAccess>
 
           <template v-else-if="unit.status === 'reserved'">
-            <button
-              type="button"
-              :disabled="busy"
-              class="w-full rounded-xl bg-brand-600 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
-              @click="markDeposit"
-            >
-              Внести задаток
-            </button>
+            <UButton block :loading="busy" @click="markDeposit">Внести задаток</UButton>
             <CanAccess permission="units.release">
-              <button
+              <UButton
                 v-if="!releasing"
-                type="button"
+                icon="i-lucide-alert-triangle"
+                color="neutral"
+                variant="outline"
+                block
                 :disabled="busy"
-                class="flex w-full items-center justify-center gap-1.5 rounded-xl border border-line py-2.5 text-sm font-semibold text-ink transition-colors hover:bg-slate-50 disabled:opacity-60"
                 @click="releasing = true"
               >
-                <AlertTriangle :size="14" /> Снять бронь
-              </button>
+                Снять бронь
+              </UButton>
               <div v-else class="space-y-2">
-                <textarea
-                  v-model="releaseReason"
-                  placeholder="Причина снятия брони"
-                  rows="2"
-                  class="w-full rounded-xl border border-line px-3 py-2 text-sm"
-                />
+                <UTextarea v-model="releaseReason" placeholder="Причина снятия брони" :rows="2" class="w-full" />
                 <div class="flex gap-2">
-                  <button
-                    type="button"
-                    :disabled="busy || releaseReason.trim() === ''"
-                    class="flex-1 rounded-xl bg-red-600 py-2 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-60"
+                  <UButton
+                    color="error"
+                    class="flex-1 justify-center"
+                    :loading="busy"
+                    :disabled="releaseReason.trim() === ''"
                     @click="confirmRelease"
                   >
                     Подтвердить
-                  </button>
-                  <button type="button" class="rounded-xl border border-line px-3 py-2 text-sm" @click="releasing = false">
-                    Отмена
-                  </button>
+                  </UButton>
+                  <UButton color="neutral" variant="outline" @click="releasing = false">Отмена</UButton>
                 </div>
               </div>
             </CanAccess>
           </template>
 
           <template v-else-if="unit.status === 'deposit'">
-            <button
-              v-if="!creatingContract"
-              type="button"
-              class="w-full rounded-xl bg-brand-600 py-2.5 text-sm font-semibold text-white hover:opacity-90"
-              @click="creatingContract = true; contractAmount = unit.price"
-            >
+            <UButton v-if="!creatingContract" block @click="creatingContract = true; contractAmount = unit.price">
               Оформить договор
-            </button>
+            </UButton>
             <div v-else class="space-y-2">
-              <label class="block text-[11px] text-ink-soft">
-                Сумма договора
-                <input v-model.number="contractAmount" type="number" min="1" class="mt-1 w-full rounded-lg border border-line px-3 py-2 text-sm" />
-              </label>
-              <label class="block text-[11px] text-ink-soft">
-                Рассрочка на, мес. (1 — единовременно)
-                <input v-model.number="contractInstallments" type="number" min="1" max="60" class="mt-1 w-full rounded-lg border border-line px-3 py-2 text-sm" />
-              </label>
-              <label v-if="contractInstallments > 1" class="block text-[11px] text-ink-soft">
-                Дата первого платежа
-                <input v-model="contractFirstDueAt" type="date" class="mt-1 w-full rounded-lg border border-line px-3 py-2 text-sm" />
-              </label>
+              <UFormField label="Сумма договора">
+                <UInput v-model.number="contractAmount" type="number" :min="1" class="w-full" />
+              </UFormField>
+              <UFormField label="Рассрочка на, мес. (1 — единовременно)">
+                <UInput v-model.number="contractInstallments" type="number" :min="1" :max="60" class="w-full" />
+              </UFormField>
+              <UFormField v-if="contractInstallments > 1" label="Дата первого платежа">
+                <UInput v-model="contractFirstDueAt" type="date" class="w-full" />
+              </UFormField>
               <div class="flex gap-2">
-                <button
-                  type="button"
-                  :disabled="savingContract || !contractAmount"
-                  class="flex-1 rounded-xl bg-brand-600 py-2 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-60"
-                  @click="submitContract"
-                >
-                  {{ savingContract ? 'Оформляю…' : 'Подтвердить' }}
-                </button>
-                <button type="button" class="rounded-xl border border-line px-3 py-2 text-sm" @click="creatingContract = false">
-                  Отмена
-                </button>
+                <UButton class="flex-1 justify-center" :loading="savingContract" :disabled="!contractAmount" @click="submitContract">
+                  Подтвердить
+                </UButton>
+                <UButton color="neutral" variant="outline" @click="creatingContract = false">Отмена</UButton>
               </div>
             </div>
           </template>
 
-          <NuxtLink
+          <UButton
             v-else-if="unit.status === 'sold' && unit.contractId"
             :to="`/contracts/${unit.contractId}`"
-            class="block w-full rounded-xl border border-line py-2.5 text-center text-sm font-semibold text-ink hover:bg-paper"
+            color="neutral"
+            variant="outline"
+            block
           >
             Открыть договор
-          </NuxtLink>
+          </UButton>
 
           <p v-else class="text-[12px] text-ink-soft">Действия для этого статуса появятся в следующих спринтах.</p>
         </div>
@@ -310,8 +277,8 @@ watch(() => props.unitId, (id) => {
           </div>
         </div>
       </div>
-    </aside>
+    </template>
+  </USlideover>
 
-    <ClientPicker v-if="pickingClient" @select="(client) => reserve(client.id)" @cancel="pickingClient = false" />
-  </div>
+  <ClientPicker v-if="pickingClient" @select="(client) => reserve(client.id)" @cancel="pickingClient = false" />
 </template>
