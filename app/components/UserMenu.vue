@@ -1,69 +1,53 @@
 <script setup lang="ts">
-import type { DropdownMenuItem } from '@nuxt/ui'
-
-defineProps<{ collapsed?: boolean }>()
+import { useTheme } from 'vuetify'
 
 const auth = useAuthStore()
 const { prefs, setTheme } = useUiPrefs()
+const vuetifyTheme = useTheme()
+
+watch(
+  () => prefs.theme,
+  (theme) => {
+    vuetifyTheme.global.name.value = theme === 'dark' ? 'ihonaDark' : 'ihonaLight'
+  },
+  { immediate: true },
+)
 
 async function logout() {
   await auth.logout()
   navigateTo('/login')
 }
-
-const items = computed<DropdownMenuItem[][]>(() => [
-  [{ type: 'label', label: auth.user?.name ?? '—' }],
-  [
-    {
-      label: 'Тема',
-      icon: 'i-lucide-sun-moon',
-      children: [
-        {
-          label: 'Светлая',
-          icon: 'i-lucide-sun',
-          type: 'checkbox',
-          checked: prefs.theme === 'light',
-          onSelect: (e: Event) => {
-            e.preventDefault()
-            setTheme('light')
-          },
-        },
-        {
-          label: 'Тёмная',
-          icon: 'i-lucide-moon',
-          type: 'checkbox',
-          checked: prefs.theme === 'dark',
-          onSelect: (e: Event) => {
-            e.preventDefault()
-            setTheme('dark')
-          },
-        },
-      ],
-    },
-  ],
-  [{ label: 'Выйти', icon: 'i-lucide-log-out', onSelect: logout }],
-])
 </script>
 
 <template>
-  <UDropdownMenu
-    :items="items"
-    :content="{ align: 'center', collisionPadding: 12 }"
-    :ui="{ content: collapsed ? 'w-48' : 'w-(--reka-dropdown-menu-trigger-width)' }"
-  >
-    <UButton
-      color="neutral"
-      variant="ghost"
-      block
-      :square="collapsed"
-      :trailing-icon="collapsed ? undefined : 'i-lucide-chevrons-up-down'"
-      class="data-[state=open]:bg-elevated"
-      :ui="{ trailingIcon: 'text-dimmed' }"
-    >
-      <template #leading>
-        <AgentAvatar :name="auth.user?.name ?? '—'" :size="20" />
+  <div class="px-2 py-2">
+    <VMenu location="top" :close-on-content-click="false">
+      <template #activator="{ props: menuProps }">
+        <VBtn variant="text" color="default" block class="justify-start" v-bind="menuProps">
+          <template #prepend>
+            <AgentAvatar :name="auth.user?.name ?? '—'" :size="24" />
+          </template>
+          <span class="truncate">{{ auth.user?.name }}</span>
+          <template #append>
+            <VIcon icon="mdi-unfold-more-horizontal" size="18" />
+          </template>
+        </VBtn>
       </template>
-      <span v-if="!collapsed" class="truncate">{{ auth.user?.name }}</span>
-    </UButton>
-  </UDropdownMenu>
+
+      <VList density="compact" min-width="220">
+        <VListSubheader>{{ auth.user?.name }}</VListSubheader>
+        <VDivider class="mb-1" />
+        <VListItem title="Тема" subtitle="Светлая / тёмная">
+          <template #append>
+            <VBtnToggle :model-value="prefs.theme" mandatory density="compact" color="primary" @update:model-value="setTheme($event)">
+              <VBtn value="light" icon="mdi-white-balance-sunny" size="x-small" />
+              <VBtn value="dark" icon="mdi-weather-night" size="x-small" />
+            </VBtnToggle>
+          </template>
+        </VListItem>
+        <VDivider class="my-1" />
+        <VListItem prepend-icon="mdi-logout" title="Выйти" @click="logout" />
+      </VList>
+    </VMenu>
+  </div>
 </template>

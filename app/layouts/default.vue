@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import type { NavigationMenuItem } from '@nuxt/ui'
-
 const route = useRoute()
 const auth = useAuthStore()
 const isManager = computed(() => auth.hasRole('sales-manager') || auth.hasRole('developer-admin'))
@@ -13,125 +11,137 @@ interface NavEntry {
   managerOnly?: boolean
   staffOnly?: boolean
 }
-
-// Same destinations as before (icons now Iconify strings for
-// UNavigationMenu instead of @lucide/vue components — the rest of the
-// app still imports icons as components where it renders them directly).
-// Grouped under section labels (Spike Admin's "HOME"/"APPS" pattern) so
-// the sidebar reads as a map of the app instead of one long list.
 interface NavSection {
   label: string
   entries: NavEntry[]
 }
 
+// mdi-* icon names (Vuetify's default icon set) — same destinations as
+// before, just a different icon font than the Iconify/lucide strings the
+// Nuxt UI sidebar used.
 const NAV_SECTIONS: NavSection[] = [
   {
     label: 'Основное',
     entries: [
-      { to: '/', label: 'Главная', icon: 'i-lucide-house' },
-      { to: '/inbox', label: 'Входящие', icon: 'i-lucide-inbox' },
+      { to: '/', label: 'Главная', icon: 'mdi-home-outline' },
+      { to: '/inbox', label: 'Входящие', icon: 'mdi-inbox-outline' },
     ],
   },
   {
     label: 'Продажи',
     entries: [
-      { to: '/deals', label: 'Воронка сделок', icon: 'i-lucide-kanban-square', managerOnly: true },
-      { to: '/calendar', label: 'Календарь', icon: 'i-lucide-calendar-days', managerOnly: true },
-      { to: '/planning', label: 'Планирование', icon: 'i-lucide-target', managerOnly: true },
-      { to: '/clients', label: 'Клиенты', icon: 'i-lucide-users' },
-      { to: '/contracts', label: 'Договоры', icon: 'i-lucide-file-signature', managerOnly: true },
-      { to: '/imports/units', label: 'Импорт из Excel', icon: 'i-lucide-sheet', managerOnly: true },
+      { to: '/deals', label: 'Воронка сделок', icon: 'mdi-view-column-outline', managerOnly: true },
+      { to: '/calendar', label: 'Календарь', icon: 'mdi-calendar-blank-outline', managerOnly: true },
+      { to: '/planning', label: 'Планирование', icon: 'mdi-target', managerOnly: true },
+      { to: '/clients', label: 'Клиенты', icon: 'mdi-account-group-outline' },
+      { to: '/contracts', label: 'Договоры', icon: 'mdi-file-sign', managerOnly: true },
+      { to: '/imports/units', label: 'Импорт из Excel', icon: 'mdi-file-table-outline', managerOnly: true },
     ],
   },
   {
     label: 'Каналы связи',
     entries: [
-      { to: '/settings/telegram', label: 'Telegram', icon: 'i-lucide-send', managerOnly: true },
-      { to: '/settings/meta', label: 'WhatsApp / Instagram', icon: 'i-lucide-camera', managerOnly: true },
-      { to: '/settings/broadcasts', label: 'Рассылки', icon: 'i-lucide-megaphone', managerOnly: true },
+      { to: '/settings/telegram', label: 'Telegram', icon: 'mdi-send-outline', managerOnly: true },
+      { to: '/settings/meta', label: 'WhatsApp / Instagram', icon: 'mdi-camera-outline', managerOnly: true },
+      { to: '/settings/broadcasts', label: 'Рассылки', icon: 'mdi-bullhorn-outline', managerOnly: true },
     ],
   },
 ]
 
 const STAFF_ENTRIES: NavEntry[] = [
-  { to: '/admin/teams', label: 'Команды', icon: 'i-lucide-users-round' },
-  { to: '/admin/users', label: 'Пользователи', icon: 'i-lucide-user-cog' },
-  { to: '/admin/roles', label: 'Роли', icon: 'i-lucide-shield-check' },
+  { to: '/admin/teams', label: 'Команды', icon: 'mdi-account-multiple-outline' },
+  { to: '/admin/users', label: 'Пользователи', icon: 'mdi-account-cog-outline' },
+  { to: '/admin/roles', label: 'Роли', icon: 'mdi-shield-check-outline' },
 ]
 
 function isActive(to: string): boolean {
   return to === '/' ? route.path === '/' : route.path.startsWith(to)
 }
-
-function toMenuItems(entries: NavEntry[]): NavigationMenuItem[] {
-  return entries
-    .filter((e) => (!e.managerOnly || isManager.value) && (!e.staffOnly || isIhonaStaff.value))
-    .map((e) => ({ label: e.label, icon: e.icon, to: e.to, active: isActive(e.to) }))
+function visible(entries: NavEntry[]): NavEntry[] {
+  return entries.filter((e) => (!e.managerOnly || isManager.value) && (!e.staffOnly || isIhonaStaff.value))
 }
 
-const primaryItems = computed(() =>
-  NAV_SECTIONS.flatMap((section): NavigationMenuItem[] => {
-    const items = toMenuItems(section.entries)
-    return items.length ? [{ label: section.label, type: 'label' as const }, ...items] : []
-  }),
-)
-const staffItems = computed(() =>
-  isIhonaStaff.value ? [{ label: 'Администрирование', type: 'label' as const }, ...toMenuItems(STAFF_ENTRIES)] : [],
-)
+const visibleSections = computed(() => NAV_SECTIONS.map((s) => ({ ...s, entries: visible(s.entries) })).filter((s) => s.entries.length))
+const visibleStaffEntries = computed(() => (isIhonaStaff.value ? visible(STAFF_ENTRIES) : []))
 
-// Cmd+K command palette — every real destination in the sidebar, grouped
-// the same way, so it's a genuine "jump to page" tool rather than a
-// decorative search box with nothing behind it.
+const rail = ref(false)
+
+const searchOpen = ref(false)
 const searchGroups = computed(() => [
-  ...NAV_SECTIONS.map((section) => ({
-    id: section.label,
-    label: section.label,
-    items: toMenuItems(section.entries).map((item) => ({ label: item.label as string, icon: item.icon as string, to: item.to as string })),
-  })).filter((g) => g.items.length),
-  ...(isIhonaStaff.value
-    ? [{ id: 'staff', label: 'Администрирование', items: toMenuItems(STAFF_ENTRIES).map((item) => ({ label: item.label as string, icon: item.icon as string, to: item.to as string })) }]
+  ...visibleSections.value.map((s) => ({ id: s.label, label: s.label, items: s.entries.map((e) => ({ label: e.label, icon: e.icon, to: e.to })) })),
+  ...(visibleStaffEntries.value.length
+    ? [{ id: 'staff', label: 'Администрирование', items: visibleStaffEntries.value.map((e) => ({ label: e.label, icon: e.icon, to: e.to })) }]
     : []),
 ])
-
 </script>
 
 <template>
-  <UDashboardGroup storage-key="ihona-crm-sidebar">
-    <UDashboardSidebar collapsible resizable :min-size="14" :default-size="16" :max-size="22" class="bg-elevated/25" :ui="{ footer: 'border-t border-default' }">
-      <template #header="{ collapsed }">
-        <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-600 font-display text-[15px] font-extrabold text-white">
-          i
-        </div>
-        <span v-if="!collapsed" class="font-display text-[15px] font-extrabold text-ink">ihona CRM</span>
+  <VApp>
+    <VNavigationDrawer :rail="rail" permanent expand-on-hover color="surface" border="e">
+      <VListItem class="py-3">
+        <template #prepend>
+          <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-primary font-display text-[15px] font-extrabold text-white">
+            i
+          </div>
+        </template>
+        <VListItemTitle class="font-display text-[15px] font-extrabold">ihona CRM</VListItemTitle>
+      </VListItem>
+
+      <VDivider />
+
+      <div class="px-3 py-2">
+        <VBtn variant="outlined" color="default" block class="justify-start" prepend-icon="mdi-magnify" @click="searchOpen = true">
+          <span v-if="!rail">Поиск…</span>
+        </VBtn>
+      </div>
+
+      <template v-for="section in visibleSections" :key="section.label">
+        <VListSubheader>{{ section.label }}</VListSubheader>
+        <VList density="compact" nav>
+          <VListItem
+            v-for="e in section.entries"
+            :key="e.to"
+            :to="e.to"
+            :prepend-icon="e.icon"
+            :title="e.label"
+            :active="isActive(e.to)"
+            color="primary"
+            rounded="lg"
+          />
+        </VList>
       </template>
 
-      <template #default="{ collapsed }">
-        <UDashboardSearchButton :collapsed="collapsed" class="bg-transparent ring-default" />
-        <UNavigationMenu :collapsed="collapsed" :items="primaryItems" orientation="vertical" />
-        <UNavigationMenu v-if="staffItems.length" :collapsed="collapsed" :items="staffItems" orientation="vertical" class="mt-auto" />
+      <template v-if="visibleStaffEntries.length">
+        <VListSubheader>Администрирование</VListSubheader>
+        <VList density="compact" nav>
+          <VListItem
+            v-for="e in visibleStaffEntries"
+            :key="e.to"
+            :to="e.to"
+            :prepend-icon="e.icon"
+            :title="e.label"
+            :active="isActive(e.to)"
+            color="primary"
+            rounded="lg"
+          />
+        </VList>
       </template>
 
-      <template #footer="{ collapsed }">
-        <UserMenu :collapsed="collapsed" />
+      <template #append>
+        <UserMenu />
       </template>
-    </UDashboardSidebar>
+    </VNavigationDrawer>
 
-    <UDashboardSearch :groups="searchGroups" />
+    <VAppBar color="surface" elevation="0" border="b" density="comfortable">
+      <VAppBarNavIcon @click="rail = !rail" />
+      <VSpacer />
+    </VAppBar>
 
-    <UDashboardPanel :ui="{ body: 'p-0 sm:p-0 gap-0' }">
-      <template #header>
-        <UDashboardNavbar>
-          <template #leading>
-            <UDashboardSidebarCollapse />
-          </template>
-        </UDashboardNavbar>
-      </template>
+    <VMain>
+      <slot />
+    </VMain>
 
-      <template #body>
-        <slot />
-      </template>
-    </UDashboardPanel>
-
+    <UDashboardSearch v-model:open="searchOpen" :groups="searchGroups" />
     <SettingsDrawer />
-  </UDashboardGroup>
+  </VApp>
 </template>

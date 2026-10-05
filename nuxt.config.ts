@@ -1,4 +1,5 @@
 import tailwindcss from '@tailwindcss/vite'
+import vuetify from 'vite-plugin-vuetify'
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
@@ -28,15 +29,25 @@ export default defineNuxtConfig({
   // app's own assets/css/main.css instead (see the comment there); this
   // stays a genuinely separate app, matching the whole reason for a
   // separate repo in the first place.
-  // @nuxt/ui brings its own Tailwind v4 vite plugin — the manual
-  // @tailwindcss/vite one below is kept only if @nuxt/ui doesn't already
-  // cover it; see the build check after installing.
+  // Mid-migration from @nuxt/ui to Vuetify (app/plugins/vuetify.ts) — both
+  // run side by side so pages not yet converted keep working on Nuxt UI
+  // while newly-rebuilt pages use Vuetify. @nuxt/ui comes out once every
+  // page is converted.
   modules: ['@pinia/nuxt', '@nuxt/ui'],
 
   css: ['~/assets/css/main.css'],
 
+  build: {
+    transpile: ['vuetify'],
+  },
+
   vite: {
-    plugins: [tailwindcss()],
+    plugins: [tailwindcss(), vuetify({ autoImport: true })],
+    vue: {
+      template: {
+        transformAssetUrls: {},
+      },
+    },
   },
 
   runtimeConfig: {
