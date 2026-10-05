@@ -91,7 +91,7 @@ async function markDone(task: LeadTask) {
 </script>
 
 <template>
-  <div v-if="lead" class="fixed inset-0 z-40 flex justify-end bg-black/25" @click="emit('close')">
+  <div v-if="lead" class="fixed inset-0 z-[1500] flex justify-end bg-black/25" @click="emit('close')">
     <aside class="h-full w-full max-w-sm overflow-y-auto bg-surface shadow-2xl" @click.stop>
       <div class="flex items-center justify-between border-b border-surface-light px-5 py-4">
         <div>

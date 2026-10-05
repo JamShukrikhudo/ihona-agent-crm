@@ -181,7 +181,7 @@ function copyLink() {
 </script>
 
 <template>
-  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-3 sm:p-6" @click.self="emit('close')">
+  <div class="fixed inset-0 z-[2000] flex items-center justify-center bg-black/40 p-3 sm:p-6" @click.self="emit('close')">
     <VCard class="flex h-full w-full max-w-5xl flex-col overflow-hidden sm:h-[92vh]">
       <div class="flex items-center justify-between border-b border-surface-light bg-surface px-5 py-3">
         <div class="flex items-center gap-3">

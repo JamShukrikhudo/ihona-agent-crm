@@ -51,7 +51,7 @@ async function createClient() {
 </script>
 
 <template>
-  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4" @click.self="emit('cancel')">
+  <div class="fixed inset-0 z-[2000] flex items-center justify-center bg-black/30 p-4" @click.self="emit('cancel')">
     <VCard class="w-full max-w-sm">
       <VCardText class="space-y-4">
         <div class="flex items-center justify-between">

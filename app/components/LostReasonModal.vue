@@ -17,7 +17,7 @@ const selected = ref<LostReason>('price_disagreement')
 </script>
 
 <template>
-  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4" @click.self="emit('cancel')">
+  <div class="fixed inset-0 z-[2000] flex items-center justify-center bg-black/30 p-4" @click.self="emit('cancel')">
     <VCard class="w-full max-w-sm" title="Причина отказа">
       <template #append>
         <VBtn icon="mdi-close" color="default" variant="text" size="small" @click="emit('cancel')" />
