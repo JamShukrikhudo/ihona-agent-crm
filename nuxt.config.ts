@@ -29,11 +29,9 @@ export default defineNuxtConfig({
   // app's own assets/css/main.css instead (see the comment there); this
   // stays a genuinely separate app, matching the whole reason for a
   // separate repo in the first place.
-  // Mid-migration from @nuxt/ui to Vuetify (app/plugins/vuetify.ts) — both
-  // run side by side so pages not yet converted keep working on Nuxt UI
-  // while newly-rebuilt pages use Vuetify. @nuxt/ui comes out once every
-  // page is converted.
-  modules: ['@pinia/nuxt', '@nuxt/ui'],
+  // Vuetify is the UI library (app/plugins/vuetify.ts) — @nuxt/ui was
+  // removed once every page finished migrating off it.
+  modules: ['@pinia/nuxt'],
 
   css: ['~/assets/css/main.css'],
 

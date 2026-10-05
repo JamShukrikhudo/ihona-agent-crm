@@ -1,5 +1,4 @@
 @import "tailwindcss";
-@import "@nuxt/ui";
 
 /* Same dark: variant fix as ihona-frontend (Tailwind v4's dark: defaults to
    @media(prefers-color-scheme) — this makes it follow the .dark class a

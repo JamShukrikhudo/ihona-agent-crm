@@ -12,7 +12,6 @@
   "dependencies": {
     "@lucide/vue": "^1.46.0",
     "@mdi/font": "^7.4.47",
-    "@nuxt/ui": "^4.11.3",
     "@pinia/nuxt": "^1.0.2",
     "laravel-echo": "^2.2.0",
     "nuxt": "^4.5.2",
@@ -25,7 +24,6 @@
     "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
   },
   "devDependencies": {
-    "@iconify-json/lucide": "^1.2.139",
     "@playwright/test": "^1.63.0",
     "@tailwindcss/vite": "^4.3.3",
     "tailwindcss": "^4.3.3",
