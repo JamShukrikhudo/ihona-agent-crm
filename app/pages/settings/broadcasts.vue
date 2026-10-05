@@ -131,83 +131,80 @@ async function send() {
 </script>
 
 <template>
-  <div class="min-h-screen bg-paper">
-    <div class="border-b border-line bg-card px-6 py-4">
-      <div class="text-[11px] font-medium text-ink-soft">Настройки</div>
-      <h1 class="font-display text-xl font-bold text-ink">Рассылки</h1>
+  <div>
+    <div class="border-b border-surface-light bg-surface px-6 py-4">
+      <div class="text-[11px] font-medium text-medium-emphasis">Настройки</div>
+      <h1 class="font-display text-xl font-bold">Рассылки</h1>
     </div>
 
     <div class="mx-auto max-w-2xl px-6 py-8">
-      <UCard as="form" @submit.prevent="send">
-        <div class="space-y-4">
-          <div>
-            <div class="mb-2 text-[12px] font-semibold text-ink-soft">Каналы</div>
-            <div class="space-y-1.5">
-              <label
-                v-for="ch in LIVE_CHANNELS"
-                :key="ch.value"
-                class="flex items-center gap-2.5 rounded-xl border border-line px-3 py-2.5"
-                :class="status[ch.value].connected ? 'cursor-pointer hover:bg-paper' : 'opacity-60'"
-              >
-                <UCheckbox :model-value="selected[ch.value]" :disabled="!status[ch.value].connected" @update:model-value="selected[ch.value] = $event as boolean" />
-                <component :is="ch.icon" :size="15" class="text-ink-soft" />
-                <span class="text-[13px] font-semibold text-ink">{{ ch.label }}</span>
-                <span class="ml-auto text-[12px] text-ink-soft">
-                  <template v-if="status[ch.value].loading">…</template>
-                  <template v-else-if="!status[ch.value].connected">
-                    не подключено<template v-if="CHANNEL_SETTINGS_LINK[ch.value]"> —
-                      <UButton :to="CHANNEL_SETTINGS_LINK[ch.value]!.to" variant="link" size="xs" class="p-0" @click.stop>настроить</UButton>
+      <VCard>
+        <VCardText>
+          <form class="space-y-4" @submit.prevent="send">
+            <div>
+              <div class="mb-2 text-[12px] font-semibold text-medium-emphasis">Каналы</div>
+              <div class="space-y-1.5">
+                <label
+                  v-for="ch in LIVE_CHANNELS"
+                  :key="ch.value"
+                  class="flex items-center gap-2.5 rounded-xl border border-surface-light px-3 py-2.5"
+                  :class="status[ch.value].connected ? 'cursor-pointer hover:bg-surface-light' : 'opacity-60'"
+                >
+                  <VCheckbox :model-value="selected[ch.value]" :disabled="!status[ch.value].connected" density="compact" hide-details @update:model-value="selected[ch.value] = $event as boolean" />
+                  <component :is="ch.icon" :size="15" class="text-medium-emphasis" />
+                  <span class="text-[13px] font-semibold">{{ ch.label }}</span>
+                  <span class="ml-auto text-[12px] text-medium-emphasis">
+                    <template v-if="status[ch.value].loading">…</template>
+                    <template v-else-if="!status[ch.value].connected">
+                      не подключено<template v-if="CHANNEL_SETTINGS_LINK[ch.value]"> —
+                        <VBtn :to="CHANNEL_SETTINGS_LINK[ch.value]!.to" variant="text" color="primary" size="x-small" class="px-0" @click.stop>настроить</VBtn>
+                      </template>
                     </template>
-                  </template>
-                  <template v-else>{{ status[ch.value].recipients }} {{ RECIPIENTS_COPY[ch.value] }}</template>
-                </span>
-              </label>
+                    <template v-else>{{ status[ch.value].recipients }} {{ RECIPIENTS_COPY[ch.value] }}</template>
+                  </span>
+                </label>
+              </div>
             </div>
-          </div>
 
-          <UFormField label="Регион (необязательно)">
-            <UInput v-model="region" placeholder="Например, Душанбе — оставьте пустым для всех" class="w-full" />
-          </UFormField>
+            <VTextField v-model="region" label="Регион (необязательно)" placeholder="Например, Душанбе — оставьте пустым для всех" />
 
-          <UFormField v-if="selected.email" label="Тема письма">
-            <UInput v-model="subject" placeholder="Например, Новая акция от ihona.tj" class="w-full" />
-          </UFormField>
+            <VTextField v-if="selected.email" v-model="subject" label="Тема письма" placeholder="Например, Новая акция от ihona.tj" />
 
-          <UFormField label="Сообщение">
-            <UTextarea v-model="message" :rows="4" placeholder="Текст рассылки…" class="w-full" />
-          </UFormField>
+            <VTextarea v-model="message" label="Сообщение" rows="4" placeholder="Текст рассылки…" />
 
-          <UButton type="submit" :loading="sending" :disabled="!canSend" block>
-            Отправить{{ selectedChannels.length > 1 ? ` (${selectedChannels.length} канала)` : '' }}
-          </UButton>
-        </div>
-      </UCard>
+            <VBtn type="submit" color="primary" :loading="sending" :disabled="!canSend" block>
+              Отправить{{ selectedChannels.length > 1 ? ` (${selectedChannels.length} канала)` : '' }}
+            </VBtn>
+          </form>
+        </VCardText>
+      </VCard>
 
       <div class="mt-6">
-        <div class="mb-3 text-[12px] font-semibold text-ink-soft">Другие каналы</div>
+        <div class="mb-3 text-[12px] font-semibold text-medium-emphasis">Другие каналы</div>
         <div class="flex flex-wrap gap-1.5">
-          <UButton
+          <VBtn
             v-for="ch in PLACEHOLDER_CHANNELS"
             :key="ch.value"
-            :icon="undefined"
-            :color="activePlaceholder === ch.value ? 'primary' : 'neutral'"
-            :variant="activePlaceholder === ch.value ? 'subtle' : 'outline'"
-            size="sm"
-            class="rounded-full"
+            :color="activePlaceholder === ch.value ? 'primary' : 'default'"
+            :variant="activePlaceholder === ch.value ? 'tonal' : 'outlined'"
+            size="small"
+            rounded="pill"
             @click="activePlaceholder = activePlaceholder === ch.value ? null : ch.value"
           >
             <component :is="ch.icon" :size="13" /> {{ ch.label }}
-          </UButton>
+          </VBtn>
         </div>
 
-        <UCard v-if="activePlaceholder" class="mt-3 border-dashed">
-          <template v-for="ch in PLACEHOLDER_CHANNELS" :key="ch.value">
-            <template v-if="ch.value === activePlaceholder">
-              <div class="mb-1 font-display text-sm font-bold text-ink">{{ ch.title }}</div>
-              <p class="text-[13px] leading-relaxed text-ink-soft">{{ ch.body }}</p>
+        <VCard v-if="activePlaceholder" variant="outlined" class="mt-3 border-dashed">
+          <VCardText>
+            <template v-for="ch in PLACEHOLDER_CHANNELS" :key="ch.value">
+              <template v-if="ch.value === activePlaceholder">
+                <div class="mb-1 font-display text-sm font-bold">{{ ch.title }}</div>
+                <p class="text-[13px] leading-relaxed text-medium-emphasis">{{ ch.body }}</p>
+              </template>
             </template>
-          </template>
-        </UCard>
+          </VCardText>
+        </VCard>
       </div>
     </div>
   </div>

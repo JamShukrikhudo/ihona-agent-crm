@@ -133,37 +133,39 @@ function isOverdue(task: CalendarTask): boolean {
 </script>
 
 <template>
-  <div class="min-h-screen bg-paper">
-    <div class="border-b border-line bg-card px-6 py-4">
+  <div>
+    <div class="border-b border-surface-light bg-surface px-6 py-4">
       <div class="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <div class="text-[11px] font-medium text-ink-soft">Календарь</div>
-          <h1 class="font-display text-xl font-bold capitalize text-ink">{{ monthLabel }}</h1>
+          <div class="text-[11px] font-medium text-medium-emphasis">Календарь</div>
+          <h1 class="font-display text-xl font-bold capitalize">{{ monthLabel }}</h1>
         </div>
         <div class="flex items-center gap-1">
-          <UButton icon="i-lucide-chevron-left" color="neutral" variant="outline" @click="shiftMonth(-1)" />
-          <UButton color="primary" variant="soft" @click="cursor = new Date()">Сегодня</UButton>
-          <UButton icon="i-lucide-chevron-right" color="neutral" variant="outline" @click="shiftMonth(1)" />
+          <VBtn icon="mdi-chevron-left" color="default" variant="outlined" @click="shiftMonth(-1)" />
+          <VBtn color="primary" variant="tonal" @click="cursor = new Date()">Сегодня</VBtn>
+          <VBtn icon="mdi-chevron-right" color="default" variant="outlined" @click="shiftMonth(1)" />
         </div>
       </div>
 
       <div class="mt-3 flex flex-wrap items-center gap-2">
-        <USelect
+        <VSelect
           :model-value="assigneeFilter === '' ? 'all' : assigneeFilter"
-          :items="[{ label: 'Все исполнители', value: 'all' }, ...assignees.map((a) => ({ label: a, value: a }))]"
-          size="sm"
+          :items="[{ title: 'Все исполнители', value: 'all' }, ...assignees.map((a) => ({ title: a, value: a }))]"
+          hide-details
+          density="compact"
+          style="min-width: 200px"
           @update:model-value="assigneeFilter = $event === 'all' ? '' : ($event as string)"
         />
-        <UInput v-model="query" placeholder="Поиск по задаче или клиенту…" size="sm" class="min-w-0 flex-1 sm:max-w-xs" />
+        <VTextField v-model="query" placeholder="Поиск по задаче или клиенту…" hide-details density="compact" class="min-w-0 flex-1 sm:max-w-xs" />
       </div>
     </div>
 
     <div class="px-6 py-6">
-      <div v-if="loading" class="text-sm text-ink-soft">Загрузка…</div>
+      <div v-if="loading" class="text-sm text-medium-emphasis">Загрузка…</div>
 
-      <UCard v-else :ui="{ body: 'p-0 sm:p-0' }">
-        <div class="grid grid-cols-7 border-b border-line bg-paper">
-          <div v-for="wd in WEEKDAYS" :key="wd" class="px-2 py-2 text-center text-[11px] font-bold uppercase tracking-wide text-ink-soft">
+      <VCard v-else>
+        <div class="grid grid-cols-7 border-b border-surface-light bg-surface-light">
+          <div v-for="wd in WEEKDAYS" :key="wd" class="px-2 py-2 text-center text-[11px] font-bold uppercase tracking-wide text-medium-emphasis">
             {{ wd }}
           </div>
         </div>
@@ -172,13 +174,13 @@ function isOverdue(task: CalendarTask): boolean {
           <div
             v-for="cell in days"
             :key="dateKey(cell.date)"
-            class="min-h-[92px] border-b border-r border-line p-1.5 last:border-r-0"
-            :class="[!cell.inMonth && 'bg-paper/60', cell.isToday && 'bg-brand-50']"
+            class="min-h-[92px] border-b border-r border-surface-light p-1.5 last:border-r-0"
+            :class="[!cell.inMonth && 'bg-surface-light/60', cell.isToday && 'bg-primary/10']"
           >
             <div
               class="mb-1 inline-flex h-5 w-5 items-center justify-center rounded-full text-[11px] font-bold"
               :class="[
-                cell.isToday ? 'bg-brand-600 text-white' : cell.inMonth ? 'text-ink' : 'text-ink-soft/50',
+                cell.isToday ? 'bg-primary text-white' : cell.inMonth ? '' : 'text-medium-emphasis/50',
               ]"
             >
               {{ cell.date.getDate() }}
@@ -193,12 +195,12 @@ function isOverdue(task: CalendarTask): boolean {
                 class="flex items-center gap-1 truncate rounded px-1.5 py-0.5 text-[10px] font-semibold"
                 :class="[
                   task.doneAt
-                    ? 'bg-paper text-ink-soft line-through'
+                    ? 'bg-surface-light text-medium-emphasis line-through'
                     : isOverdue(task)
-                      ? 'bg-status-deposit-soft text-status-deposit'
+                      ? 'bg-error/15 text-error'
                       : isViewing(task)
-                        ? 'bg-status-free-soft text-brand-dark'
-                        : 'bg-brand-50 text-brand-600',
+                        ? 'bg-success/15 text-success'
+                        : 'bg-primary/10 text-primary',
                   task.clientId && 'hover:opacity-75',
                 ]"
                 :title="`${task.title}${task.contactName ? ' — ' + task.contactName : ''}`"
@@ -206,13 +208,13 @@ function isOverdue(task: CalendarTask): boolean {
                 <component :is="isViewing(task) ? Eye : ListTodo" :size="10" class="shrink-0" />
                 <span class="truncate">{{ task.contactName ?? task.title }}</span>
               </component>
-              <div v-if="cell.tasks.length > 3" class="text-[10px] text-ink-soft">
+              <div v-if="cell.tasks.length > 3" class="text-[10px] text-medium-emphasis">
                 + {{ cell.tasks.length - 3 }} ещё
               </div>
             </div>
           </div>
         </div>
-      </UCard>
+      </VCard>
     </div>
   </div>
 </template>

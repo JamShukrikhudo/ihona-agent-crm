@@ -22,48 +22,52 @@ const floors = computed(() => {
 <template>
   <div>
     <div class="mb-5 flex gap-3">
-      <div class="flex-1 rounded-2xl bg-status-free-soft p-4">
-        <div class="flex items-center gap-1.5 font-display text-xl font-bold text-brand-dark">
-          <CheckCircle2 :size="18" /> {{ created.length }}
-        </div>
-        <div class="mt-0.5 text-[12px] text-ink-soft">создано</div>
-      </div>
-      <div class="flex-1 rounded-2xl p-4" :class="skipped.length > 0 ? 'bg-status-deposit-soft' : 'bg-paper'">
-        <div class="flex items-center gap-1.5 font-display text-xl font-bold" :class="skipped.length > 0 ? 'text-status-deposit' : 'text-ink-soft'">
-          <AlertTriangle :size="18" /> {{ skipped.length }}
-        </div>
-        <div class="mt-0.5 text-[12px] text-ink-soft">пропущено</div>
-      </div>
+      <VCard variant="tonal" color="success" class="flex-1">
+        <VCardText>
+          <div class="flex items-center gap-1.5 font-display text-xl font-bold">
+            <CheckCircle2 :size="18" /> {{ created.length }}
+          </div>
+          <div class="mt-0.5 text-[12px] opacity-80">создано</div>
+        </VCardText>
+      </VCard>
+      <VCard :variant="skipped.length > 0 ? 'tonal' : 'outlined'" :color="skipped.length > 0 ? 'error' : undefined" class="flex-1">
+        <VCardText>
+          <div class="flex items-center gap-1.5 font-display text-xl font-bold">
+            <AlertTriangle :size="18" /> {{ skipped.length }}
+          </div>
+          <div class="mt-0.5 text-[12px] opacity-80">пропущено</div>
+        </VCardText>
+      </VCard>
     </div>
 
     <div v-if="skipped.length > 0" class="mb-5">
-      <UButton
-        :icon="expanded ? 'i-lucide-chevron-down' : 'i-lucide-chevron-right'"
+      <VBtn
+        :prepend-icon="expanded ? 'mdi-chevron-down' : 'mdi-chevron-right'"
         color="primary"
-        variant="link"
-        class="mb-2 p-0"
+        variant="text"
+        class="mb-2 px-0"
         @click="expanded = !expanded"
       >
         Почему пропущены строки
-      </UButton>
-      <div v-if="expanded" class="overflow-hidden rounded-xl border border-line">
+      </VBtn>
+      <div v-if="expanded" class="overflow-hidden rounded-xl border border-surface-light">
         <div
           v-for="(s, i) in skipped"
           :key="i"
           class="flex justify-between px-3.5 py-2 text-[12px]"
-          :class="i < skipped.length - 1 ? 'border-b border-line' : ''"
+          :class="i < skipped.length - 1 ? 'border-b border-surface-light' : ''"
         >
-          <span class="text-ink">Строка {{ s.row }}</span>
-          <span class="text-status-deposit">{{ s.reasons.join(', ') }}</span>
+          <span>Строка {{ s.row }}</span>
+          <span class="text-error">{{ s.reasons.join(', ') }}</span>
         </div>
       </div>
     </div>
 
     <div v-if="created.length > 0">
-      <div class="mb-2.5 text-[11.5px] font-semibold uppercase tracking-wide text-ink-soft">Так это ляжет в шахматку</div>
+      <div class="mb-2.5 text-[11.5px] font-semibold uppercase tracking-wide text-medium-emphasis">Так это ляжет в шахматку</div>
       <div class="flex flex-col gap-2">
         <div v-for="[floor, units] in floors" :key="floor" class="flex items-start gap-2.5">
-          <div class="flex h-[30px] w-14 shrink-0 items-center justify-center rounded-lg border border-line text-[11px] font-semibold text-ink-soft">
+          <div class="flex h-[30px] w-14 shrink-0 items-center justify-center rounded-lg border border-surface-light text-[11px] font-semibold text-medium-emphasis">
             Эт. {{ floor }}
           </div>
           <div class="grid flex-1 gap-1.5" style="grid-template-columns: repeat(auto-fill, minmax(96px, 1fr))">
@@ -81,8 +85,8 @@ const floors = computed(() => {
       </div>
     </div>
 
-    <UButton icon="i-lucide-rotate-ccw" color="neutral" variant="outline" class="mt-5" @click="$emit('reset')">
+    <VBtn prepend-icon="mdi-restore" variant="outlined" class="mt-5" @click="$emit('reset')">
       Импортировать другой файл
-    </UButton>
+    </VBtn>
   </div>
 </template>

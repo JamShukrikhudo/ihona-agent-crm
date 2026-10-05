@@ -182,188 +182,165 @@ function copyLink() {
 
 <template>
   <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-3 sm:p-6" @click.self="emit('close')">
-    <div class="flex h-full w-full max-w-5xl flex-col overflow-hidden rounded-2xl bg-paper shadow-2xl sm:h-[92vh]">
-      <div class="flex items-center justify-between border-b border-line bg-card px-5 py-3">
+    <VCard class="flex h-full w-full max-w-5xl flex-col overflow-hidden sm:h-[92vh]">
+      <div class="flex items-center justify-between border-b border-surface-light bg-surface px-5 py-3">
         <div class="flex items-center gap-3">
-          <UButton icon="i-lucide-x" color="neutral" variant="outline" @click="emit('close')" />
+          <VBtn icon="mdi-close" color="default" variant="outlined" size="small" @click="emit('close')" />
           <AgentAvatar v-if="client" :name="client.name" :size="34" />
           <div v-if="client">
-            <div class="text-[10.5px] text-ink-soft">Клиент</div>
-            <div class="font-display text-[15px] font-bold text-ink">{{ client.name }} <span class="font-sans text-[11px] font-normal text-ink-soft">ID: {{ clientId }}</span></div>
+            <div class="text-[10.5px] text-medium-emphasis">Клиент</div>
+            <div class="font-display text-[15px] font-bold">{{ client.name }} <span class="font-sans text-[11px] font-normal text-medium-emphasis">ID: {{ clientId }}</span></div>
           </div>
         </div>
-        <UButton color="neutral" variant="outline" class="rounded-full" @click="copyLink">
+        <VBtn color="default" variant="outlined" rounded="pill" @click="copyLink">
           Скопировать ссылку
-        </UButton>
+        </VBtn>
       </div>
 
-      <div v-if="loading" class="flex flex-1 items-center justify-center text-sm text-ink-soft">Загрузка…</div>
+      <div v-if="loading" class="flex flex-1 items-center justify-center text-sm text-medium-emphasis">Загрузка…</div>
 
       <div v-else-if="client" class="grid min-h-0 flex-1 grid-cols-1 gap-0 overflow-hidden sm:grid-cols-[1fr_1.1fr]">
         <div class="min-h-0 space-y-4 overflow-y-auto p-5">
-          <div class="flex gap-1 rounded-xl border border-line bg-card p-1">
-            <UButton
-              v-for="t in TABS"
-              :key="t.value"
-              :color="activeTab === t.value ? 'primary' : 'neutral'"
-              :variant="activeTab === t.value ? 'solid' : 'ghost'"
-              size="sm"
-              block
-              class="flex-1 justify-center"
-              @click="activeTab = t.value"
-            >
+          <VBtnToggle :model-value="activeTab" mandatory color="primary" density="comfortable" class="w-full" @update:model-value="activeTab = $event">
+            <VBtn v-for="t in TABS" :key="t.value" :value="t.value" class="flex-1">
               {{ t.label }}
-              <UBadge
-                v-if="t.value === 'events' && eventInteractions.length > 0"
-                :color="activeTab === t.value ? 'neutral' : 'neutral'"
-                :variant="activeTab === t.value ? 'solid' : 'soft'"
-                size="sm"
-                class="rounded-full"
-              >{{ eventInteractions.length }}</UBadge>
-              <UBadge
-                v-if="t.value === 'deals' && leads.length > 0"
-                :variant="activeTab === t.value ? 'solid' : 'soft'"
-                size="sm"
-                class="rounded-full"
-              >{{ leads.length }}</UBadge>
-              <UBadge
-                v-if="t.value === 'units' && units.length > 0"
-                :variant="activeTab === t.value ? 'solid' : 'soft'"
-                size="sm"
-                class="rounded-full"
-              >{{ units.length }}</UBadge>
-            </UButton>
-          </div>
+              <VChip v-if="t.value === 'events' && eventInteractions.length > 0" size="x-small" class="ml-1.5">{{ eventInteractions.length }}</VChip>
+              <VChip v-if="t.value === 'deals' && leads.length > 0" size="x-small" class="ml-1.5">{{ leads.length }}</VChip>
+              <VChip v-if="t.value === 'units' && units.length > 0" size="x-small" class="ml-1.5">{{ units.length }}</VChip>
+            </VBtn>
+          </VBtnToggle>
 
-          <div v-if="activeTab === 'info'" class="rounded-xl border border-line bg-card p-4">
-            <div class="text-[11px] text-ink-soft">Телефон</div>
-            <div class="text-sm font-medium text-ink">{{ client.phone }}</div>
-            <div v-if="client.email" class="mt-2 text-[11px] text-ink-soft">Email</div>
-            <div v-if="client.email" class="text-sm font-medium text-ink">{{ client.email }}</div>
-            <div v-if="client.notes" class="mt-2 text-[11px] text-ink-soft">Заметка</div>
-            <div v-if="client.notes" class="text-sm text-ink">{{ client.notes }}</div>
+          <VCard v-if="activeTab === 'info'" variant="outlined">
+            <VCardText>
+              <div class="text-[11px] text-medium-emphasis">Телефон</div>
+              <div class="text-sm font-medium">{{ client.phone }}</div>
+              <div v-if="client.email" class="mt-2 text-[11px] text-medium-emphasis">Email</div>
+              <div v-if="client.email" class="text-sm font-medium">{{ client.email }}</div>
+              <div v-if="client.notes" class="mt-2 text-[11px] text-medium-emphasis">Заметка</div>
+              <div v-if="client.notes" class="text-sm">{{ client.notes }}</div>
 
-            <div class="mt-3 text-[11px] text-ink-soft">Менеджер</div>
-            <USelect
-              :model-value="client.assignedAgentId ? String(client.assignedAgentId) : 'none'"
-              :disabled="savingInfo"
-              :items="[{ label: 'Не назначен', value: 'none' }, ...teamAgents.map((a) => ({ label: a.name, value: String(a.id) }))]"
-              class="w-full"
-              @update:model-value="updateAssignedAgent($event as string)"
-            />
+              <VSelect
+                :model-value="client.assignedAgentId ? String(client.assignedAgentId) : 'none'"
+                :disabled="savingInfo"
+                :items="[{ label: 'Не назначен', value: 'none' }, ...teamAgents.map((a) => ({ label: a.name, value: String(a.id) }))]"
+                item-title="label"
+                item-value="value"
+                label="Менеджер"
+                class="mt-3"
+                @update:model-value="updateAssignedAgent($event as string)"
+              />
 
-            <div class="mt-3 text-[11px] text-ink-soft">Регион</div>
-            <UInput
-              :model-value="client.region ?? ''"
-              placeholder="Например, Душанбе"
-              :disabled="savingInfo"
-              class="w-full"
-              @change="updateRegion(($event.target as HTMLInputElement).value)"
-            />
-          </div>
+              <VTextField
+                :model-value="client.region ?? ''"
+                label="Регион"
+                placeholder="Например, Душанбе"
+                :disabled="savingInfo"
+                @change="updateRegion(($event.target as HTMLInputElement).value)"
+              />
+            </VCardText>
+          </VCard>
 
           <div v-if="activeTab === 'events'" class="space-y-4">
-            <div class="rounded-xl border border-line bg-card p-4">
-              <ClientTimeline :interactions="eventInteractions" />
-            </div>
-            <form class="space-y-2 rounded-xl border border-line bg-card p-4" @submit.prevent="submitNote">
-              <div class="font-display text-sm font-bold text-ink">Записать контакт</div>
-              <div class="flex flex-wrap gap-1.5">
-                <UButton
-                  v-for="t in NOTE_TYPES"
-                  :key="t.value"
-                  :color="noteType === t.value ? 'primary' : 'neutral'"
-                  :variant="noteType === t.value ? 'subtle' : 'outline'"
-                  size="xs"
-                  @click="noteType = t.value"
+            <VCard variant="outlined">
+              <VCardText><ClientTimeline :interactions="eventInteractions" /></VCardText>
+            </VCard>
+            <VCard variant="outlined">
+              <VCardText>
+                <form class="space-y-2" @submit.prevent="submitNote">
+                  <div class="font-display text-sm font-bold">Записать контакт</div>
+                  <div class="flex flex-wrap gap-1.5">
+                    <VBtn
+                      v-for="t in NOTE_TYPES"
+                      :key="t.value"
+                      :color="noteType === t.value ? 'primary' : 'default'"
+                      :variant="noteType === t.value ? 'tonal' : 'outlined'"
+                      size="x-small"
+                      @click="noteType = t.value"
+                    >
+                      <component :is="t.icon" :size="12" /> {{ t.label }}
+                    </VBtn>
+                  </div>
+                  <VTextarea v-model="noteMessage" rows="3" placeholder="Что обсудили?" />
+                  <VBtn type="submit" color="primary" :loading="savingNote" :disabled="noteMessage.trim() === ''" block>
+                    Сохранить
+                  </VBtn>
+                </form>
+              </VCardText>
+            </VCard>
+          </div>
+
+          <VCard v-if="activeTab === 'deals'" variant="outlined">
+            <VCardText>
+              <p v-if="leads.length === 0" class="text-[12px] text-medium-emphasis">У клиента пока нет сделок.</p>
+              <div v-else class="space-y-2">
+                <NuxtLink
+                  v-for="lead in leads"
+                  :key="lead.id"
+                  to="/deals"
+                  class="block rounded-lg border border-surface-light px-3 py-2 text-[12px] hover:bg-surface-light"
                 >
-                  <component :is="t.icon" :size="12" /> {{ t.label }}
-                </UButton>
+                  <div class="flex items-center justify-between gap-2">
+                    <span class="font-semibold">{{ lead.unitLabel ?? lead.buildingName ?? `Сделка №${lead.id}` }}</span>
+                    <VChip size="x-small" :color="lead.stage === 'lost' ? 'error' : 'primary'" variant="tonal">
+                      {{ LEAD_STAGE_LABEL[lead.stage] }}
+                    </VChip>
+                  </div>
+                  <div class="mt-1 flex items-center justify-between text-medium-emphasis">
+                    <span>{{ lead.agent ?? '—' }}</span>
+                    <span>{{ lead.unitPrice ? `${lead.unitPrice.toLocaleString('ru-RU')} TJS` : '—' }}</span>
+                  </div>
+                </NuxtLink>
               </div>
-              <UTextarea v-model="noteMessage" :rows="3" placeholder="Что обсудили?" class="w-full" />
-              <UButton type="submit" :loading="savingNote" :disabled="noteMessage.trim() === ''" block>
-                Сохранить
-              </UButton>
-            </form>
-          </div>
+            </VCardText>
+          </VCard>
 
-          <div v-if="activeTab === 'deals'" class="rounded-xl border border-line bg-card p-4">
-            <p v-if="leads.length === 0" class="text-[12px] text-ink-soft">У клиента пока нет сделок.</p>
-            <div v-else class="space-y-2">
-              <NuxtLink
-                v-for="lead in leads"
-                :key="lead.id"
-                to="/deals"
-                class="block rounded-lg border border-line px-3 py-2 text-[12px] hover:bg-paper"
-              >
-                <div class="flex items-center justify-between gap-2">
-                  <span class="font-semibold text-ink">{{ lead.unitLabel ?? lead.buildingName ?? `Сделка №${lead.id}` }}</span>
-                  <span
-                    class="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold"
-                    :class="lead.stage === 'lost' ? 'bg-status-deposit-soft text-status-deposit' : 'bg-brand-50 text-brand-dark'"
-                  >
-                    {{ LEAD_STAGE_LABEL[lead.stage] }}
-                  </span>
+          <VCard v-if="activeTab === 'units'" variant="outlined">
+            <VCardText>
+              <p v-if="units.length === 0" class="text-[12px] text-medium-emphasis">Пока не интересовался ни одним юнитом.</p>
+              <div v-else class="space-y-2">
+                <div
+                  v-for="unit in units"
+                  :key="unit.id"
+                  class="flex items-center justify-between rounded-lg border px-3 py-2 text-[12px]"
+                  :class="[STATUS_BORDER[unit.status], STATUS_BG_SOFT[unit.status]]"
+                >
+                  <span class="font-semibold">{{ unit.section }}, {{ unit.label }}</span>
+                  <span class="text-medium-emphasis">{{ STATUS_LABEL[unit.status] }}</span>
                 </div>
-                <div class="mt-1 flex items-center justify-between text-ink-soft">
-                  <span>{{ lead.agent ?? '—' }}</span>
-                  <span>{{ lead.unitPrice ? `${lead.unitPrice.toLocaleString('ru-RU')} TJS` : '—' }}</span>
-                </div>
-              </NuxtLink>
-            </div>
-          </div>
-
-          <div v-if="activeTab === 'units'" class="rounded-xl border border-line bg-card p-4">
-            <p v-if="units.length === 0" class="text-[12px] text-ink-soft">Пока не интересовался ни одним юнитом.</p>
-            <div v-else class="space-y-2">
-              <div
-                v-for="unit in units"
-                :key="unit.id"
-                class="flex items-center justify-between rounded-lg border px-3 py-2 text-[12px]"
-                :class="[STATUS_BORDER[unit.status], STATUS_BG_SOFT[unit.status]]"
-              >
-                <span class="font-semibold text-ink">{{ unit.section }}, {{ unit.label }}</span>
-                <span class="text-ink-soft">{{ STATUS_LABEL[unit.status] }}</span>
               </div>
-            </div>
-          </div>
+            </VCardText>
+          </VCard>
         </div>
 
-        <div class="flex min-h-0 flex-col border-t border-line bg-card sm:border-l sm:border-t-0">
-          <div class="flex gap-1 overflow-x-auto border-b border-line p-2">
-            <UButton
+        <div class="flex min-h-0 flex-col border-t border-surface-light bg-surface sm:border-l sm:border-t-0">
+          <div class="flex gap-1 overflow-x-auto border-b border-surface-light p-2">
+            <VBtn
               v-for="ch in CHAT_CHANNELS"
               :key="ch.value"
-              :color="activeChatChannel === ch.value ? 'primary' : 'neutral'"
-              :variant="activeChatChannel === ch.value ? 'solid' : 'ghost'"
-              size="sm"
-              class="rounded-full"
+              :color="activeChatChannel === ch.value ? 'primary' : 'default'"
+              :variant="activeChatChannel === ch.value ? 'tonal' : 'text'"
+              size="small"
+              rounded="pill"
               @click="activeChatChannel = ch.value"
             >
               {{ ch.label }}
-              <span
-                class="h-1.5 w-1.5 rounded-full"
-                :class="channels.includes(ch.value) ? 'bg-status-free' : 'bg-ink-soft/40'"
-              />
-            </UButton>
+              <VIcon :icon="channels.includes(ch.value) ? 'mdi-circle' : 'mdi-circle-outline'" size="8" class="ml-1.5" :color="channels.includes(ch.value) ? 'success' : undefined" />
+            </VBtn>
           </div>
 
           <div class="min-h-0 flex-1 overflow-y-auto p-4">
             <ClientTimeline :interactions="chatInteractions" />
-            <p v-if="chatInteractions.length === 0" class="text-[12px] text-ink-soft">Нет сообщений в этом канале.</p>
+            <p v-if="chatInteractions.length === 0" class="text-[12px] text-medium-emphasis">Нет сообщений в этом канале.</p>
           </div>
 
-          <!-- Real send-and-deliver compose box — only once the client has
-               a linked chat on this channel (they messaged first), which
-               all three platforms require. -->
-          <form v-if="hasActiveChannel" class="flex gap-2 border-t border-line p-3" @submit.prevent="sendChatMessage">
-            <UInput v-model="chatMessage" placeholder="Написать сообщение…" class="flex-1" />
-            <UButton type="submit" :loading="sendingChat" :disabled="chatMessage.trim() === ''">
+          <form v-if="hasActiveChannel" class="flex gap-2 border-t border-surface-light p-3" @submit.prevent="sendChatMessage">
+            <VTextField v-model="chatMessage" placeholder="Написать сообщение…" hide-details density="compact" class="flex-1" />
+            <VBtn type="submit" color="primary" :loading="sendingChat" :disabled="chatMessage.trim() === ''">
               Отправить
-            </UButton>
+            </VBtn>
           </form>
         </div>
       </div>
-    </div>
+    </VCard>
   </div>
 </template>

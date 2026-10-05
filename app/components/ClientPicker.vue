@@ -52,42 +52,44 @@ async function createClient() {
 
 <template>
   <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4" @click.self="emit('cancel')">
-    <div class="w-full max-w-sm space-y-4 rounded-2xl border border-line bg-card p-5">
-      <div class="flex items-center justify-between">
-        <h3 class="font-display text-sm font-bold text-ink">Клиент для брони</h3>
-        <UButton icon="i-lucide-x" color="neutral" variant="ghost" size="xs" @click="emit('cancel')" />
-      </div>
-
-      <UInput v-model="query" icon="i-lucide-search" autofocus placeholder="Телефон или имя" class="w-full" />
-
-      <div v-if="searching" class="text-[12px] text-ink-soft">Ищу…</div>
-
-      <div v-else-if="results.length > 0" class="max-h-48 space-y-1 overflow-y-auto">
-        <UButton
-          v-for="client in results"
-          :key="client.id"
-          color="neutral"
-          variant="outline"
-          block
-          :ui="{ base: 'flex-col items-start text-left' }"
-          @click="emit('select', client)"
-        >
-          <span class="text-[13px] font-semibold text-ink">{{ client.name }}</span>
-          <span class="text-[11px] text-ink-soft">{{ client.phone }}</span>
-        </UButton>
-      </div>
-
-      <div v-else-if="showCreateForm" class="space-y-2 rounded-lg bg-paper p-3">
-        <div class="flex items-center gap-1.5 text-[12px] font-medium text-ink-soft">
-          <UserPlus :size="13" /> Такого клиента ещё нет — создать нового
+    <VCard class="w-full max-w-sm">
+      <VCardText class="space-y-4">
+        <div class="flex items-center justify-between">
+          <h3 class="font-display text-sm font-bold">Клиент для брони</h3>
+          <VBtn icon="mdi-close" color="default" variant="text" size="small" @click="emit('cancel')" />
         </div>
-        <UInput v-model="newName" placeholder="Имя клиента" class="w-full" />
-        <UButton :loading="creating" :disabled="newName.trim() === ''" block @click="createClient">
-          Создать и выбрать
-        </UButton>
-      </div>
 
-      <p v-else-if="query.trim() !== ''" class="text-[12px] text-ink-soft">Введите телефон, чтобы найти или создать клиента.</p>
-    </div>
+        <VTextField v-model="query" prepend-inner-icon="mdi-magnify" autofocus placeholder="Телефон или имя" hide-details />
+
+        <div v-if="searching" class="text-[12px] text-medium-emphasis">Ищу…</div>
+
+        <div v-else-if="results.length > 0" class="max-h-48 space-y-1 overflow-y-auto">
+          <VBtn
+            v-for="client in results"
+            :key="client.id"
+            color="default"
+            variant="outlined"
+            block
+            class="flex-col items-start py-2"
+            @click="emit('select', client)"
+          >
+            <span class="w-full text-left text-[13px] font-semibold">{{ client.name }}</span>
+            <span class="w-full text-left text-[11px] text-medium-emphasis">{{ client.phone }}</span>
+          </VBtn>
+        </div>
+
+        <div v-else-if="showCreateForm" class="space-y-2 rounded-lg bg-surface-light p-3">
+          <div class="flex items-center gap-1.5 text-[12px] font-medium text-medium-emphasis">
+            <UserPlus :size="13" /> Такого клиента ещё нет — создать нового
+          </div>
+          <VTextField v-model="newName" placeholder="Имя клиента" hide-details />
+          <VBtn color="primary" :loading="creating" :disabled="newName.trim() === ''" block @click="createClient">
+            Создать и выбрать
+          </VBtn>
+        </div>
+
+        <p v-else-if="query.trim() !== ''" class="text-[12px] text-medium-emphasis">Введите телефон, чтобы найти или создать клиента.</p>
+      </VCardText>
+    </VCard>
   </div>
 </template>

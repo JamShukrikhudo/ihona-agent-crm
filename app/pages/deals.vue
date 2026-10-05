@@ -66,71 +66,63 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-paper">
-    <div class="border-b border-line bg-card px-6 py-4">
+  <div>
+    <div class="border-b border-surface-light bg-surface px-6 py-4">
       <div class="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <div class="text-[11px] font-medium text-ink-soft">Воронка сделок</div>
-          <h1 class="font-display text-xl font-bold text-ink">{{ store.leads.length }} сделок в работе</h1>
+          <div class="text-[11px] font-medium text-medium-emphasis">Воронка сделок</div>
+          <h1 class="font-display text-xl font-bold">{{ store.leads.length }} сделок в работе</h1>
         </div>
         <div class="flex items-center gap-4">
           <div class="w-36">
-            <div class="mb-1 flex items-center justify-between text-[11px] text-ink-soft">
+            <div class="mb-1 flex items-center justify-between text-[11px] text-medium-emphasis">
               <span>Конверсия в договор</span>
-              <b class="text-brand-dark">{{ conversion }}%</b>
+              <b class="text-primary">{{ conversion }}%</b>
             </div>
-            <div class="h-1.5 w-full overflow-hidden rounded-full bg-paper">
-              <div class="h-full rounded-full bg-brand-600" :style="{ width: `${conversion}%` }" />
-            </div>
+            <VProgressLinear :model-value="conversion" color="primary" height="6" rounded />
           </div>
-          <UButton icon="i-lucide-plus" @click="formOpen = !formOpen">Новый лид</UButton>
+          <VBtn prepend-icon="mdi-plus" color="primary" @click="formOpen = !formOpen">Новый лид</VBtn>
         </div>
       </div>
 
-      <form v-if="formOpen" class="mt-3 flex flex-wrap items-end gap-3 rounded-xl bg-paper p-3" @submit.prevent="submitLead">
-        <UFormField label="Имя контакта">
-          <UInput v-model="contactName" required class="w-48" />
-        </UFormField>
-        <UFormField label="Телефон">
-          <UInput v-model="contactPhone" class="w-40" />
-        </UFormField>
-        <UFormField label="Источник">
-          <USelect v-model="source" :items="LEAD_SOURCES.map((s) => ({ label: SOURCE_LABEL[s], value: s }))" class="w-40" />
-        </UFormField>
-        <UButton type="submit" :loading="submittingLead">Добавить</UButton>
+      <form v-if="formOpen" class="mt-3 flex flex-wrap items-end gap-3 rounded-xl bg-surface-light p-3" @submit.prevent="submitLead">
+        <VTextField v-model="contactName" label="Имя контакта" required hide-details density="compact" class="w-48" />
+        <VTextField v-model="contactPhone" label="Телефон" hide-details density="compact" class="w-40" />
+        <VSelect v-model="source" :items="LEAD_SOURCES.map((s) => ({ title: SOURCE_LABEL[s], value: s }))" label="Источник" hide-details density="compact" class="w-40" />
+        <VBtn type="submit" color="primary" :loading="submittingLead">Добавить</VBtn>
       </form>
     </div>
 
     <div class="px-6 pt-6">
-      <UPageGrid class="gap-4 sm:grid-cols-3 sm:gap-6 lg:gap-px">
-        <UPageCard
-          icon="i-lucide-wallet"
-          title="Сумма в работе"
-          variant="subtle"
-          :ui="{ container: 'gap-y-1.5', wrapper: 'items-start', leading: 'p-2.5 rounded-full bg-primary/10 ring ring-inset ring-primary/25 flex-col', title: 'font-normal text-muted text-xs uppercase' }"
-          class="sm:rounded-none first:rounded-l-lg last:rounded-r-lg hover:z-1"
-        >
-          <span class="text-2xl font-semibold text-highlighted">{{ formatTjs(pipelineValue) }}</span>
-        </UPageCard>
-        <UPageCard
-          icon="i-lucide-file-signature"
-          title="Договоров заключено"
-          variant="subtle"
-          :ui="{ container: 'gap-y-1.5', wrapper: 'items-start', leading: 'p-2.5 rounded-full bg-primary/10 ring ring-inset ring-primary/25 flex-col', title: 'font-normal text-muted text-xs uppercase' }"
-          class="sm:rounded-none first:rounded-l-lg last:rounded-r-lg hover:z-1"
-        >
-          <span class="text-2xl font-semibold text-highlighted">{{ contractedCount }}</span>
-        </UPageCard>
-        <UPageCard
-          icon="i-lucide-trending-up"
-          title="Средний чек"
-          variant="subtle"
-          :ui="{ container: 'gap-y-1.5', wrapper: 'items-start', leading: 'p-2.5 rounded-full bg-primary/10 ring ring-inset ring-primary/25 flex-col', title: 'font-normal text-muted text-xs uppercase' }"
-          class="sm:rounded-none first:rounded-l-lg last:rounded-r-lg hover:z-1"
-        >
-          <span class="text-2xl font-semibold text-highlighted">{{ formatTjs(avgDealSize) }}</span>
-        </UPageCard>
-      </UPageGrid>
+      <VRow dense>
+        <VCol cols="12" sm="4">
+          <VCard variant="tonal" color="primary">
+            <VCardText>
+              <VIcon icon="mdi-wallet-outline" class="mb-2" />
+              <div class="text-2xl font-semibold">{{ formatTjs(pipelineValue) }}</div>
+              <div class="mt-1 text-[12px] opacity-80">Сумма в работе</div>
+            </VCardText>
+          </VCard>
+        </VCol>
+        <VCol cols="12" sm="4">
+          <VCard variant="tonal" color="info">
+            <VCardText>
+              <VIcon icon="mdi-file-sign" class="mb-2" />
+              <div class="text-2xl font-semibold">{{ contractedCount }}</div>
+              <div class="mt-1 text-[12px] opacity-80">Договоров заключено</div>
+            </VCardText>
+          </VCard>
+        </VCol>
+        <VCol cols="12" sm="4">
+          <VCard variant="tonal" color="secondary">
+            <VCardText>
+              <VIcon icon="mdi-trending-up" class="mb-2" />
+              <div class="text-2xl font-semibold">{{ formatTjs(avgDealSize) }}</div>
+              <div class="mt-1 text-[12px] opacity-80">Средний чек</div>
+            </VCardText>
+          </VCard>
+        </VCol>
+      </VRow>
     </div>
 
     <div class="px-6 py-6">

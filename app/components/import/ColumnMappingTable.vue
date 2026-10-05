@@ -38,9 +38,11 @@ function previewValue(row: unknown[], key: (typeof SYSTEM_FIELDS)[number]['key']
           {{ field.label }}<span v-if="field.required" class="text-brand-600"> *</span>
         </div>
         <ChevronRight :size="14" class="shrink-0 text-ink-soft" />
-        <USelect
+        <VSelect
           :model-value="mapping[field.key] || 'unmapped'"
-          :items="[{ label: '— не сопоставлено —', value: 'unmapped' }, ...sheet.headers.map((h) => ({ label: h, value: h }))]"
+          :items="[{ title: '— не сопоставлено —', value: 'unmapped' }, ...sheet.headers.map((h) => ({ title: h, value: h }))]"
+          density="compact"
+          hide-details
           class="flex-1"
           @update:model-value="setMapping(field.key, $event === 'unmapped' ? '' : ($event as string))"
         />

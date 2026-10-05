@@ -19,8 +19,8 @@ defineEmits<{ select: [id: number] }>()
     />
     <span class="text-[11px] font-semibold text-ink">{{ unit.label }}</span>
     <span class="text-[10px] text-ink-soft">{{ unit.rooms === 0 ? 'студия' : `${unit.rooms}-комн` }} · {{ unit.area }} м²</span>
-    <UBadge :class="STATUS_BG[unit.status]" class="mt-1 text-white" size="sm" :ui="{ base: 'px-1.5 py-0.5 text-[9px] font-semibold' }">
+    <VChip :class="STATUS_BG[unit.status]" class="mt-1 text-white" size="x-small" label>
       {{ STATUS_LABEL[unit.status] }}
-    </UBadge>
+    </VChip>
   </button>
 </template>

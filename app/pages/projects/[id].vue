@@ -80,76 +80,66 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-paper">
-    <div class="border-b border-line bg-card px-6 py-4">
+  <div>
+    <div class="border-b border-surface-light bg-surface px-6 py-4">
       <div class="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <NuxtLink to="/" class="text-[11px] font-medium text-ink-soft hover:text-brand-600">← Все проекты</NuxtLink>
-          <h1 class="font-display text-xl font-bold text-ink">{{ projectName ?? `Проект #${projectId}` }}</h1>
+          <NuxtLink to="/" class="text-[11px] font-medium text-medium-emphasis hover:text-primary">← Все проекты</NuxtLink>
+          <h1 class="font-display text-xl font-bold">{{ projectName ?? `Проект #${projectId}` }}</h1>
         </div>
-        <div v-if="store.sections.length > 1" class="flex items-center gap-1 rounded-full bg-paper p-1">
-          <UButton
+        <div v-if="store.sections.length > 1" class="flex items-center gap-1 rounded-full bg-surface-light p-1">
+          <VBtn
             v-for="sec in store.sections"
             :key="sec"
-            :color="section === sec ? 'primary' : 'neutral'"
-            :variant="section === sec ? 'solid' : 'ghost'"
-            size="sm"
-            class="rounded-full"
+            :color="section === sec ? 'primary' : 'default'"
+            :variant="section === sec ? 'flat' : 'text'"
+            size="small"
+            rounded="pill"
             @click="section = sec"
           >
             {{ sec }}
-          </UButton>
+          </VBtn>
         </div>
       </div>
 
       <div class="mt-4 flex flex-wrap gap-2">
-        <UButton
+        <VBtn
           v-for="(label, key) in STATUS_LABEL"
           :key="key"
-          color="neutral"
-          variant="outline"
-          size="sm"
-          class="rounded-full"
+          color="default"
+          variant="outlined"
+          size="small"
+          rounded="pill"
           :class="statusFilter === key ? [STATUS_BORDER[key], STATUS_BG_SOFT[key]] : ''"
           @click="statusFilter = statusFilter === key ? null : (key as UnitStatus)"
         >
-          <span class="h-2 w-2 rounded-full" :class="STATUS_BG[key]" />
-          {{ label }} <b>{{ store.counts[key] }}</b>
-        </UButton>
+          <span class="mr-1.5 h-2 w-2 rounded-full" :class="STATUS_BG[key]" />
+          {{ label }} <b class="ml-1">{{ store.counts[key] }}</b>
+        </VBtn>
 
-        <UButton
-          icon="i-lucide-sliders-horizontal"
-          :color="filtersOpen ? 'warning' : 'neutral'"
-          :variant="filtersOpen ? 'subtle' : 'outline'"
-          size="sm"
-          class="rounded-full"
+        <VBtn
+          prepend-icon="mdi-tune-variant"
+          :color="filtersOpen ? 'warning' : 'default'"
+          :variant="filtersOpen ? 'tonal' : 'outlined'"
+          size="small"
+          rounded="pill"
           @click="filtersOpen = !filtersOpen"
         >
           Ещё фильтры
-        </UButton>
+        </VBtn>
 
-        <div class="ml-auto rounded-full bg-brand-dark px-3 py-1.5 text-[12px] font-medium text-white">
+        <div class="ml-auto rounded-full bg-secondary px-3 py-1.5 text-[12px] font-medium text-white">
           Продано на {{ store.revenue.toLocaleString('ru-RU') }} TJS
         </div>
       </div>
 
-      <div v-if="filtersOpen" class="mt-3 flex flex-wrap items-end gap-3 rounded-xl bg-paper p-3">
-        <UFormField label="Поиск по номеру">
-          <UInput v-model="searchQuery" placeholder="A-9C" class="w-32" />
-        </UFormField>
-        <UFormField label="Цена от">
-          <UInput v-model.number="priceMin" type="number" :min="0" class="w-28" />
-        </UFormField>
-        <UFormField label="Цена до">
-          <UInput v-model.number="priceMax" type="number" :min="0" class="w-28" />
-        </UFormField>
-        <UFormField label="Площадь от, м²">
-          <UInput v-model.number="areaMin" type="number" :min="0" class="w-24" />
-        </UFormField>
-        <UFormField label="Площадь до, м²">
-          <UInput v-model.number="areaMax" type="number" :min="0" class="w-24" />
-        </UFormField>
-        <UButton color="neutral" variant="outline" @click="resetRangeFilters">Сбросить</UButton>
+      <div v-if="filtersOpen" class="mt-3 flex flex-wrap items-end gap-3 rounded-xl bg-surface-light p-3">
+        <VTextField v-model="searchQuery" label="Поиск по номеру" placeholder="A-9C" hide-details density="compact" style="width: 128px" />
+        <VTextField v-model.number="priceMin" label="Цена от" type="number" :min="0" hide-details density="compact" style="width: 112px" />
+        <VTextField v-model.number="priceMax" label="Цена до" type="number" :min="0" hide-details density="compact" style="width: 112px" />
+        <VTextField v-model.number="areaMin" label="Площадь от, м²" type="number" :min="0" hide-details density="compact" style="width: 96px" />
+        <VTextField v-model.number="areaMax" label="Площадь до, м²" type="number" :min="0" hide-details density="compact" style="width: 96px" />
+        <VBtn variant="outlined" @click="resetRangeFilters">Сбросить</VBtn>
       </div>
     </div>
 

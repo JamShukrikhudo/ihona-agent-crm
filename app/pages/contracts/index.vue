@@ -9,39 +9,40 @@ onMounted(() => store.fetchAll())
 </script>
 
 <template>
-  <div class="min-h-screen bg-paper">
-    <div class="border-b border-line bg-card px-6 py-4">
-      <div class="text-[11px] font-medium text-ink-soft">Договоры и рассрочка</div>
-      <h1 class="font-display text-xl font-bold text-ink">
+  <div>
+    <div class="border-b border-surface-light bg-surface px-6 py-4">
+      <div class="text-[11px] font-medium text-medium-emphasis">Договоры и рассрочка</div>
+      <h1 class="font-display text-xl font-bold">
         {{ store.contracts.length }} договоров
-        <span v-if="store.overdueCount > 0" class="ml-2 text-[13px] font-semibold text-status-deposit">· {{ store.overdueCount }} с просрочкой</span>
+        <span v-if="store.overdueCount > 0" class="ml-2 text-[13px] font-semibold text-error">· {{ store.overdueCount }} с просрочкой</span>
       </h1>
     </div>
 
     <div class="mx-auto max-w-4xl px-6 py-6">
-      <div v-if="store.loading" class="text-sm text-ink-soft">Загрузка…</div>
-      <div v-else-if="store.contracts.length === 0" class="text-sm text-ink-soft">Договоров пока нет.</div>
+      <div v-if="store.loading" class="text-sm text-medium-emphasis">Загрузка…</div>
+      <div v-else-if="store.contracts.length === 0" class="text-sm text-medium-emphasis">Договоров пока нет.</div>
 
-      <UCard v-else :ui="{ body: 'p-0 sm:p-0' }">
-        <NuxtLink
-          v-for="contract in store.contracts"
-          :key="contract.id"
-          :to="`/contracts/${contract.id}`"
-          class="flex items-center justify-between border-b border-line px-4 py-3 last:border-b-0 hover:bg-paper"
-        >
-          <div>
-            <div class="flex items-center gap-2 text-[13px] font-semibold text-ink">
+      <VCard v-else>
+        <VList lines="two">
+          <VListItem
+            v-for="contract in store.contracts"
+            :key="contract.id"
+            :to="`/contracts/${contract.id}`"
+          >
+            <VListItemTitle class="flex items-center gap-2 text-[13px] font-semibold">
               {{ contract.unitLabel ?? `Юнит #${contract.unitId}` }}
-              <AlertTriangle v-if="contract.installments?.some((i) => i.overdue)" :size="13" class="text-status-deposit" />
-            </div>
-            <div class="text-[11px] text-ink-soft">{{ contract.clientName ?? 'Без клиента' }} · подписан {{ new Date(contract.signedAt).toLocaleDateString('ru-RU') }}</div>
-          </div>
-          <div class="text-right">
-            <div class="text-[13px] font-semibold text-ink">{{ contract.amount.toLocaleString('ru-RU') }} {{ contract.currency }}</div>
-            <div class="text-[11px] text-ink-soft">остаток {{ contract.outstandingBalance.toLocaleString('ru-RU') }}</div>
-          </div>
-        </NuxtLink>
-      </UCard>
+              <VIcon v-if="contract.installments?.some((i) => i.overdue)" icon="mdi-alert-outline" size="13" color="error" />
+            </VListItemTitle>
+            <VListItemSubtitle class="text-[11px]">{{ contract.clientName ?? 'Без клиента' }} · подписан {{ new Date(contract.signedAt).toLocaleDateString('ru-RU') }}</VListItemSubtitle>
+            <template #append>
+              <div class="text-right">
+                <div class="text-[13px] font-semibold">{{ contract.amount.toLocaleString('ru-RU') }} {{ contract.currency }}</div>
+                <div class="text-[11px] text-medium-emphasis">остаток {{ contract.outstandingBalance.toLocaleString('ru-RU') }}</div>
+              </div>
+            </template>
+          </VListItem>
+        </VList>
+      </VCard>
     </div>
   </div>
 </template>

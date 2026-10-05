@@ -57,50 +57,58 @@ async function remove(id: number) {
 </script>
 
 <template>
-  <div class="min-h-screen bg-paper">
-    <div class="border-b border-line bg-card px-6 py-4">
-      <div class="text-[11px] font-medium text-ink-soft">Платформа ihona</div>
-      <h1 class="font-display text-xl font-bold text-ink">Роли ({{ store.roles.length }})</h1>
+  <div>
+    <div class="border-b border-surface-light bg-surface px-6 py-4">
+      <div class="text-[11px] font-medium text-medium-emphasis">Платформа ihona</div>
+      <h1 class="font-display text-xl font-bold">Роли ({{ store.roles.length }})</h1>
     </div>
 
     <div class="mx-auto max-w-3xl px-6 py-6">
-      <UCard class="mb-4">
-        <UButton v-if="!showCreate" icon="i-lucide-plus" variant="link" @click="showCreate = true">Новая роль</UButton>
-        <div v-else class="space-y-3">
-          <UInput v-model="name" placeholder="Название роли" class="w-full" />
-          <div class="flex flex-wrap gap-3">
-            <UCheckbox
-              v-for="permission in store.availablePermissions"
-              :key="permission"
-              :model-value="permissions.includes(permission)"
-              :label="permission"
-              @update:model-value="permissions = togglePermission(permissions, permission)"
-            />
+      <VCard class="mb-4">
+        <VCardText>
+          <VBtn v-if="!showCreate" prepend-icon="mdi-plus" variant="text" color="primary" @click="showCreate = true">Новая роль</VBtn>
+          <div v-else class="space-y-3">
+            <VTextField v-model="name" label="Название роли" hide-details />
+            <div class="flex flex-wrap gap-3">
+              <VCheckbox
+                v-for="permission in store.availablePermissions"
+                :key="permission"
+                :model-value="permissions.includes(permission)"
+                :label="permission"
+                density="compact"
+                hide-details
+                @update:model-value="permissions = togglePermission(permissions, permission)"
+              />
+            </div>
+            <div class="flex gap-2">
+              <VBtn color="primary" :loading="saving" @click="create">Создать</VBtn>
+              <VBtn variant="outlined" @click="showCreate = false">Отмена</VBtn>
+            </div>
           </div>
-          <div class="flex gap-2">
-            <UButton :loading="saving" @click="create">Создать</UButton>
-            <UButton color="neutral" variant="outline" @click="showCreate = false">Отмена</UButton>
-          </div>
-        </div>
-      </UCard>
+        </VCardText>
+      </VCard>
 
-      <div v-if="store.loading" class="text-sm text-ink-soft">Загрузка…</div>
+      <div v-if="store.loading" class="text-sm text-medium-emphasis">Загрузка…</div>
       <div v-else class="space-y-3">
-        <UCard v-for="role in store.roles" :key="role.id">
-          <div class="mb-2 flex items-center justify-between">
-            <span class="font-display text-sm font-bold text-ink">{{ role.name }}</span>
-            <UButton icon="i-lucide-trash-2" color="error" variant="ghost" size="xs" @click="remove(role.id)" />
-          </div>
-          <div class="flex flex-wrap gap-3">
-            <UCheckbox
-              v-for="permission in store.availablePermissions"
-              :key="permission"
-              :model-value="role.permissions.includes(permission)"
-              :label="permission"
-              @update:model-value="togglePermissionOnRole(role.id, role.permissions, permission)"
-            />
-          </div>
-        </UCard>
+        <VCard v-for="role in store.roles" :key="role.id">
+          <VCardText>
+            <div class="mb-2 flex items-center justify-between">
+              <span class="font-display text-sm font-bold">{{ role.name }}</span>
+              <VBtn icon="mdi-trash-can-outline" color="error" variant="text" size="small" @click="remove(role.id)" />
+            </div>
+            <div class="flex flex-wrap gap-3">
+              <VCheckbox
+                v-for="permission in store.availablePermissions"
+                :key="permission"
+                :model-value="role.permissions.includes(permission)"
+                :label="permission"
+                density="compact"
+                hide-details
+                @update:model-value="togglePermissionOnRole(role.id, role.permissions, permission)"
+              />
+            </div>
+          </VCardText>
+        </VCard>
       </div>
     </div>
   </div>

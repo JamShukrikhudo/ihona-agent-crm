@@ -41,40 +41,40 @@ async function remove(id: number) {
 </script>
 
 <template>
-  <div class="min-h-screen bg-paper">
-    <div class="border-b border-line bg-card px-6 py-4">
-      <div class="text-[11px] font-medium text-ink-soft">Платформа ihona</div>
-      <h1 class="font-display text-xl font-bold text-ink">Команды ({{ store.teams.length }})</h1>
+  <div>
+    <div class="border-b border-surface-light bg-surface px-6 py-4">
+      <div class="text-[11px] font-medium text-medium-emphasis">Платформа ihona</div>
+      <h1 class="font-display text-xl font-bold">Команды ({{ store.teams.length }})</h1>
     </div>
 
     <div class="mx-auto max-w-3xl px-6 py-6">
-      <UCard class="mb-4">
-        <UButton v-if="!showCreate" icon="i-lucide-plus" variant="link" @click="showCreate = true">Новая команда</UButton>
-        <div v-else class="flex flex-wrap items-end gap-2">
-          <UFormField label="Название" class="flex-1">
-            <UInput v-model="name" class="w-full" />
-          </UFormField>
-          <UFormField label="ID владельца (user_id)" class="flex-1">
-            <UInput v-model.number="ownerId" type="number" class="w-full" />
-          </UFormField>
-          <UButton :loading="saving" @click="create">Создать</UButton>
-          <UButton color="neutral" variant="outline" @click="showCreate = false">Отмена</UButton>
-        </div>
-      </UCard>
-
-      <div v-if="store.loading" class="text-sm text-ink-soft">Загрузка…</div>
-      <UCard v-else :ui="{ body: 'p-0 sm:p-0' }">
-        <div v-for="team in store.teams" :key="team.id" class="flex items-center justify-between border-b border-line px-4 py-3 last:border-b-0">
-          <div>
-            <div class="flex items-center gap-2 text-[13px] font-semibold text-ink">
-              {{ team.name }}
-              <UBadge v-if="team.personal_team" color="neutral" variant="subtle" size="sm">личная</UBadge>
-            </div>
-            <div class="text-[11px] text-ink-soft">Владелец: {{ team.owner_name ?? `#${team.user_id}` }}</div>
+      <VCard class="mb-4">
+        <VCardText>
+          <VBtn v-if="!showCreate" prepend-icon="mdi-plus" variant="text" color="primary" @click="showCreate = true">Новая команда</VBtn>
+          <div v-else class="flex flex-wrap items-end gap-2">
+            <VTextField v-model="name" label="Название" hide-details class="flex-1" />
+            <VTextField v-model.number="ownerId" type="number" label="ID владельца (user_id)" hide-details class="flex-1" />
+            <VBtn color="primary" :loading="saving" @click="create">Создать</VBtn>
+            <VBtn variant="outlined" @click="showCreate = false">Отмена</VBtn>
           </div>
-          <UButton icon="i-lucide-trash-2" color="error" variant="ghost" size="xs" @click="remove(team.id)" />
-        </div>
-      </UCard>
+        </VCardText>
+      </VCard>
+
+      <div v-if="store.loading" class="text-sm text-medium-emphasis">Загрузка…</div>
+      <VCard v-else>
+        <VList>
+          <VListItem v-for="team in store.teams" :key="team.id">
+            <VListItemTitle class="flex items-center gap-2 text-[13px] font-semibold">
+              {{ team.name }}
+              <VChip v-if="team.personal_team" size="small" variant="tonal">личная</VChip>
+            </VListItemTitle>
+            <VListItemSubtitle class="text-[11px]">Владелец: {{ team.owner_name ?? `#${team.user_id}` }}</VListItemSubtitle>
+            <template #append>
+              <VBtn icon="mdi-trash-can-outline" color="error" variant="text" size="small" @click="remove(team.id)" />
+            </template>
+          </VListItem>
+        </VList>
+      </VCard>
     </div>
   </div>
 </template>

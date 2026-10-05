@@ -1,11 +1,16 @@
 <script setup lang="ts">
+import { useTheme } from 'vuetify'
 import { ACCENTS } from '~/composables/useUiPrefs'
 import type { AccentKey } from '~/composables/useUiPrefs'
 
 const { prefs, load, setTheme, setAccent, setSidebar } = useUiPrefs()
 const open = ref(false)
+const vuetifyTheme = useTheme()
 
 onMounted(load)
+watch(() => prefs.theme, (theme) => {
+  vuetifyTheme.global.name.value = theme === 'dark' ? 'ihonaDark' : 'ihonaLight'
+}, { immediate: true })
 
 const ACCENT_ORDER: AccentKey[] = ['emerald', 'blue', 'violet', 'teal', 'orange']
 </script>
@@ -14,77 +19,81 @@ const ACCENT_ORDER: AccentKey[] = ['emerald', 'blue', 'violet', 'teal', 'orange'
   <!-- Floating gear, same corner as the Spike Admin reference's
        customizer panel — each agent's own device preference, not team
        data. -->
-  <UButton
-    icon="i-lucide-settings"
-    size="lg"
-    class="fixed bottom-20 right-4 z-40 h-11 w-11 justify-center rounded-full shadow-xl sm:bottom-5 sm:right-5"
+  <VBtn
+    icon="mdi-cog-outline"
+    color="primary"
+    size="large"
+    class="fixed bottom-20 right-4 z-40 rounded-circle shadow-xl sm:bottom-5 sm:right-5"
     title="Настройки интерфейса"
     @click="open = true"
   />
 
-  <USlideover v-model:open="open" title="Настройки" :ui="{ content: 'max-w-[300px]' }">
-    <template #body>
+  <VNavigationDrawer v-model="open" location="end" temporary width="300">
+    <div class="pa-4">
+      <div class="mb-4 font-display text-base font-bold">Настройки</div>
+
       <div class="mb-5">
-        <div class="mb-2 text-[11px] font-bold uppercase tracking-wide text-ink-soft">Тема</div>
+        <div class="mb-2 text-[11px] font-bold uppercase tracking-wide text-medium-emphasis">Тема</div>
         <div class="flex gap-2">
-          <UButton
-            icon="i-lucide-sun"
-            :color="prefs.theme === 'light' ? 'primary' : 'neutral'"
-            :variant="prefs.theme === 'light' ? 'subtle' : 'outline'"
-            class="flex-1 justify-center"
+          <VBtn
+            prepend-icon="mdi-white-balance-sunny"
+            :color="prefs.theme === 'light' ? 'primary' : 'default'"
+            :variant="prefs.theme === 'light' ? 'tonal' : 'outlined'"
+            class="flex-1"
             @click="setTheme('light')"
           >
             Светлая
-          </UButton>
-          <UButton
-            icon="i-lucide-moon"
-            :color="prefs.theme === 'dark' ? 'primary' : 'neutral'"
-            :variant="prefs.theme === 'dark' ? 'subtle' : 'outline'"
-            class="flex-1 justify-center"
+          </VBtn>
+          <VBtn
+            prepend-icon="mdi-weather-night"
+            :color="prefs.theme === 'dark' ? 'primary' : 'default'"
+            :variant="prefs.theme === 'dark' ? 'tonal' : 'outlined'"
+            class="flex-1"
             @click="setTheme('dark')"
           >
             Тёмная
-          </UButton>
+          </VBtn>
         </div>
       </div>
 
       <div class="mb-5">
-        <div class="mb-2 text-[11px] font-bold uppercase tracking-wide text-ink-soft">Цвет темы</div>
+        <div class="mb-2 text-[11px] font-bold uppercase tracking-wide text-medium-emphasis">Цвет темы</div>
         <div class="grid grid-cols-5 gap-2">
-          <UButton
+          <VBtn
             v-for="key in ACCENT_ORDER"
             :key="key"
-            square
-            class="h-9 w-9 rounded-full"
+            icon
+            size="small"
             :style="{ backgroundColor: ACCENTS[key][600] }"
             :title="key"
-            :icon="prefs.accent === key ? 'i-lucide-check' : undefined"
             @click="setAccent(key)"
-          />
+          >
+            <VIcon v-if="prefs.accent === key" icon="mdi-check" color="white" size="16" />
+          </VBtn>
         </div>
       </div>
 
       <div>
-        <div class="mb-2 text-[11px] font-bold uppercase tracking-wide text-ink-soft">Боковая панель</div>
+        <div class="mb-2 text-[11px] font-bold uppercase tracking-wide text-medium-emphasis">Боковая панель</div>
         <div class="flex gap-2">
-          <UButton
-            :color="prefs.sidebar === 'full' ? 'primary' : 'neutral'"
-            :variant="prefs.sidebar === 'full' ? 'subtle' : 'outline'"
-            class="flex-1 justify-center"
+          <VBtn
+            :color="prefs.sidebar === 'full' ? 'primary' : 'default'"
+            :variant="prefs.sidebar === 'full' ? 'tonal' : 'outlined'"
+            class="flex-1"
             @click="setSidebar('full')"
           >
             Полная
-          </UButton>
-          <UButton
-            :color="prefs.sidebar === 'collapse' ? 'primary' : 'neutral'"
-            :variant="prefs.sidebar === 'collapse' ? 'subtle' : 'outline'"
-            class="flex-1 justify-center"
+          </VBtn>
+          <VBtn
+            :color="prefs.sidebar === 'collapse' ? 'primary' : 'default'"
+            :variant="prefs.sidebar === 'collapse' ? 'tonal' : 'outlined'"
+            class="flex-1"
             @click="setSidebar('collapse')"
           >
             Свёрнутая
-          </UButton>
+          </VBtn>
         </div>
       </div>
-    </template>
-  </USlideover>
+    </div>
+  </VNavigationDrawer>
 </template>

@@ -92,25 +92,24 @@ async function markDone(task: LeadTask) {
 
 <template>
   <div v-if="lead" class="fixed inset-0 z-40 flex justify-end bg-black/25" @click="emit('close')">
-    <aside class="h-full w-full max-w-sm overflow-y-auto bg-card shadow-2xl" @click.stop>
-      <div class="flex items-center justify-between border-b border-line px-5 py-4">
+    <aside class="h-full w-full max-w-sm overflow-y-auto bg-surface shadow-2xl" @click.stop>
+      <div class="flex items-center justify-between border-b border-surface-light px-5 py-4">
         <div>
-          <div class="text-[11px] text-ink-soft">Сделка №{{ lead.id }}</div>
-          <div class="font-display text-lg font-bold text-ink">{{ lead.contactName }}</div>
+          <div class="text-[11px] text-medium-emphasis">Сделка №{{ lead.id }}</div>
+          <div class="font-display text-lg font-bold">{{ lead.contactName }}</div>
         </div>
-        <UButton icon="i-lucide-x" color="neutral" variant="ghost" @click="emit('close')" />
+        <VBtn icon="mdi-close" color="default" variant="text" @click="emit('close')" />
       </div>
 
       <div class="px-5 py-4">
-        <UFormField label="Статус" class="mb-3">
-          <USelect
-            :model-value="lead.stage"
-            :disabled="changingStage || lead.stage === 'contracted' || lead.stage === 'lost'"
-            :items="(lead.stage === 'lost' ? [...LEAD_STAGES.filter((x) => x !== 'lost'), 'lost'] : LEAD_STAGES.filter((x) => x !== 'lost')).map((s) => ({ label: LEAD_STAGE_LABEL[s], value: s }))"
-            class="w-full"
-            @update:model-value="changeStage($event as LeadStage)"
-          />
-        </UFormField>
+        <VSelect
+          :model-value="lead.stage"
+          :disabled="changingStage || lead.stage === 'contracted' || lead.stage === 'lost'"
+          :items="(lead.stage === 'lost' ? [...LEAD_STAGES.filter((x) => x !== 'lost'), 'lost'] : LEAD_STAGES.filter((x) => x !== 'lost')).map((s) => ({ title: LEAD_STAGE_LABEL[s], value: s }))"
+          label="Статус"
+          class="mb-3"
+          @update:model-value="changeStage($event as LeadStage)"
+        />
         <div class="mb-3 flex flex-wrap items-center gap-2">
           <span
             v-if="source"
@@ -125,37 +124,43 @@ async function markDone(task: LeadTask) {
         </div>
 
         <div class="grid grid-cols-2 gap-2.5">
-          <div class="rounded-xl bg-paper p-3">
-            <div class="text-[10.5px] text-ink-soft">Телефон</div>
-            <div class="text-[13px] font-semibold text-ink">{{ lead.contactPhone ?? '—' }}</div>
-          </div>
-          <div class="rounded-xl bg-paper p-3">
-            <div class="text-[10.5px] text-ink-soft">Бюджет</div>
-            <div class="text-[13px] font-semibold text-ink">{{ lead.unitPrice ? `${lead.unitPrice.toLocaleString('ru-RU')} TJS` : '—' }}</div>
-          </div>
+          <VCard variant="tonal">
+            <VCardText class="p-3">
+              <div class="text-[10.5px] text-medium-emphasis">Телефон</div>
+              <div class="text-[13px] font-semibold">{{ lead.contactPhone ?? '—' }}</div>
+            </VCardText>
+          </VCard>
+          <VCard variant="tonal">
+            <VCardText class="p-3">
+              <div class="text-[10.5px] text-medium-emphasis">Бюджет</div>
+              <div class="text-[13px] font-semibold">{{ lead.unitPrice ? `${lead.unitPrice.toLocaleString('ru-RU')} TJS` : '—' }}</div>
+            </VCardText>
+          </VCard>
         </div>
 
-        <UButton
+        <VBtn
           v-if="lead.clientId"
-          color="neutral"
-          variant="soft"
-          trailing-icon="i-lucide-chevron-right"
+          color="default"
+          variant="tonal"
+          append-icon="mdi-chevron-right"
           block
-          class="mt-3 justify-between"
+          class="mt-3 justify-space-between"
           @click="openClientId = lead.clientId"
         >
           Полная история клиента
-        </UButton>
+        </VBtn>
 
         <div class="mt-5">
-          <div class="mb-2 text-[10.5px] font-bold uppercase tracking-wide text-ink-soft">Задачи</div>
-          <div v-if="loadingTasks" class="text-[12px] text-ink-soft">Загрузка…</div>
+          <div class="mb-2 text-[10.5px] font-bold uppercase tracking-wide text-medium-emphasis">Задачи</div>
+          <div v-if="loadingTasks" class="text-[12px] text-medium-emphasis">Загрузка…</div>
           <template v-else>
-            <p v-if="tasks.length === 0" class="text-[12px] text-ink-soft">Задач пока нет.</p>
-            <div v-for="task in tasks" :key="task.id" class="mb-1.5 flex items-center gap-2 text-[13px]" :class="task.doneAt ? 'text-ink-soft line-through' : 'text-ink'">
-              <UCheckbox
+            <p v-if="tasks.length === 0" class="text-[12px] text-medium-emphasis">Задач пока нет.</p>
+            <div v-for="task in tasks" :key="task.id" class="mb-1.5 flex items-center gap-2 text-[13px]" :class="task.doneAt ? 'text-medium-emphasis line-through' : ''">
+              <VCheckbox
                 :model-value="Boolean(task.doneAt)"
                 color="success"
+                density="compact"
+                hide-details
                 :disabled="Boolean(task.doneAt)"
                 @update:model-value="markDone(task)"
               />
@@ -164,14 +169,14 @@ async function markDone(task: LeadTask) {
           </template>
 
           <form class="mt-2 space-y-1.5" @submit.prevent="submitTask">
-            <div class="flex gap-1.5">
-              <UInput v-model="newTaskTitle" placeholder="Например: перезвонить" class="min-w-0 flex-1" />
-              <UButton type="submit" icon="i-lucide-plus" :loading="submittingTask" />
+            <div class="flex items-end gap-1.5">
+              <VTextField v-model="newTaskTitle" placeholder="Например: перезвонить" hide-details density="compact" class="min-w-0 flex-1" />
+              <VBtn type="submit" icon="mdi-plus" color="primary" :loading="submittingTask" />
             </div>
             <div class="flex items-center gap-1.5">
-              <UInput v-model="newTaskDue" type="date" size="sm" />
-              <UButton color="neutral" variant="outline" size="xs" @click="setDueQuick(0)">Сегодня</UButton>
-              <UButton color="neutral" variant="outline" size="xs" @click="setDueQuick(1)">Завтра</UButton>
+              <VTextField v-model="newTaskDue" type="date" hide-details density="compact" />
+              <VBtn color="default" variant="outlined" size="x-small" @click="setDueQuick(0)">Сегодня</VBtn>
+              <VBtn color="default" variant="outlined" size="x-small" @click="setDueQuick(1)">Завтра</VBtn>
             </div>
           </form>
         </div>

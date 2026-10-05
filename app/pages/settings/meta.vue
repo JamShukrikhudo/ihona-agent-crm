@@ -67,79 +67,80 @@ async function disconnect() {
 </script>
 
 <template>
-  <div class="min-h-screen bg-paper">
-    <div class="border-b border-line bg-card px-6 py-4">
-      <div class="text-[11px] font-medium text-ink-soft">Настройки</div>
-      <h1 class="font-display text-xl font-bold text-ink">WhatsApp / Instagram (Meta)</h1>
+  <div>
+    <div class="border-b border-surface-light bg-surface px-6 py-4">
+      <div class="text-[11px] font-medium text-medium-emphasis">Настройки</div>
+      <h1 class="font-display text-xl font-bold">WhatsApp / Instagram (Meta)</h1>
     </div>
 
     <div class="mx-auto max-w-lg space-y-4 px-6 py-8">
-      <div v-if="loading" class="h-48 animate-pulse rounded-2xl border border-line bg-card" />
+      <VSkeleton v-if="loading" type="card" height="192" />
 
       <template v-else>
-        <UCard>
-          <div class="mb-2 flex items-center gap-2">
-            <MessageCircle :size="16" class="text-brand-600" />
-            <Camera :size="16" class="text-brand-600" />
-            <span class="font-display text-sm font-bold text-ink">Meta для команды</span>
-          </div>
-          <p class="mb-4 text-[13px] text-ink-soft">
-            Один и тот же access token из вашего Meta-приложения (System User token с правами на WhatsApp Cloud API и/или Instagram Messaging).
-            Phone Number ID и Instagram Business Account ID берутся там же, в API Setup вашего приложения на
-            <span class="font-medium text-ink">developers.facebook.com</span>.
-          </p>
+        <VCard>
+          <VCardText>
+            <div class="mb-2 flex items-center gap-2">
+              <MessageCircle :size="16" class="text-primary" />
+              <Camera :size="16" class="text-primary" />
+              <span class="font-display text-sm font-bold">Meta для команды</span>
+            </div>
+            <p class="mb-4 text-[13px] text-medium-emphasis">
+              Один и тот же access token из вашего Meta-приложения (System User token с правами на WhatsApp Cloud API и/или Instagram Messaging).
+              Phone Number ID и Instagram Business Account ID берутся там же, в API Setup вашего приложения на
+              <span class="font-medium">developers.facebook.com</span>.
+            </p>
 
-          <div v-if="connected" class="mb-4 flex items-center justify-between rounded-xl bg-status-free-soft px-3.5 py-2.5">
-            <span class="text-[13px] font-semibold text-brand-dark">Подключено</span>
-            <UButton icon="i-lucide-unlink" color="error" variant="link" size="xs" :loading="saving" @click="disconnect">Отключить</UButton>
-          </div>
+            <VAlert v-if="connected" type="success" variant="tonal" class="mb-4">
+              <div class="flex items-center justify-between">
+                <span class="text-[13px] font-semibold">Подключено</span>
+                <VBtn icon="mdi-link-off" color="error" variant="text" size="small" :loading="saving" @click="disconnect" />
+              </div>
+            </VAlert>
 
-          <!-- type="password" here was tricking Chrome's credential
-               autofill into treating this as a real login form — it would
-               fill this field with a saved password AND silently pollute
-               the next text input (Phone Number ID/Instagram id) with a
-               saved username/email. autocomplete="new-password" plus a
-               name unrelated to "token"/"password" stops Chrome from
-               pattern-matching it as a login field. -->
-          <UFormField label="Access Token" class="mb-3">
-            <UInput
+            <!-- type="password" here was tricking Chrome's credential
+                 autofill into treating this as a real login form — it would
+                 fill this field with a saved password AND silently pollute
+                 the next text input (Phone Number ID/Instagram id) with a
+                 saved username/email. autocomplete="new-password" plus a
+                 name unrelated to "token"/"password" stops Chrome from
+                 pattern-matching it as a login field. -->
+            <VTextField
               v-model="accessTokenInput"
               type="password"
               name="meta-credential"
               autocomplete="new-password"
               data-lpignore="true"
               data-1p-ignore
+              label="Access Token"
               :placeholder="connected ? 'Оставьте пустым, чтобы не менять' : 'EAAG...'"
-              class="w-full"
+              class="mb-3"
             />
-          </UFormField>
 
-          <UFormField label="Phone Number ID (WhatsApp)" class="mb-3">
-            <UInput
+            <VTextField
               v-model="phoneNumberId"
               autocomplete="off"
               data-lpignore="true"
               data-1p-ignore
+              label="Phone Number ID (WhatsApp)"
               placeholder="Необязательно, если WhatsApp не используется"
-              class="w-full"
+              class="mb-3"
             />
-          </UFormField>
 
-          <UFormField label="Instagram Business Account ID" class="mb-3">
-            <UInput
+            <VTextField
               v-model="instagramId"
               autocomplete="off"
               data-lpignore="true"
               data-1p-ignore
+              label="Instagram Business Account ID"
               placeholder="Необязательно, если Instagram не используется"
-              class="w-full"
+              class="mb-3"
             />
-          </UFormField>
 
-          <UButton :loading="saving" block @click="save">
-            {{ connected ? 'Сохранить изменения' : 'Подключить' }}
-          </UButton>
-        </UCard>
+            <VBtn color="primary" :loading="saving" block @click="save">
+              {{ connected ? 'Сохранить изменения' : 'Подключить' }}
+            </VBtn>
+          </VCardText>
+        </VCard>
       </template>
     </div>
   </div>

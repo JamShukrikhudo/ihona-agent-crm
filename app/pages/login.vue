@@ -22,6 +22,7 @@ async function submit() {
 </script>
 
 <template>
+  <VApp>
   <div class="flex min-h-screen bg-card">
     <!-- Illustration side — hidden on narrow screens, same split-panel
          shape as the Spike Admin reference the user pointed at, themed to
@@ -91,21 +92,18 @@ async function submit() {
         <p class="mt-1 text-[13px] text-ink-soft">Кабинет агента ihona.tj</p>
 
         <form class="mt-8 space-y-5" @submit.prevent="submit">
-          <UFormField label="Email">
-            <UInput v-model="email" type="email" required autocomplete="username" class="w-full" />
-          </UFormField>
+          <VTextField v-model="email" type="email" label="Email" required autocomplete="username" />
 
-          <UFormField label="Пароль">
-            <UInput v-model="password" type="password" required autocomplete="current-password" class="w-full" />
-          </UFormField>
+          <VTextField v-model="password" type="password" label="Пароль" required autocomplete="current-password" />
 
-          <p v-if="error" class="rounded-lg bg-status-sold-soft px-3 py-2 text-[13px] text-status-sold">{{ error }}</p>
+          <VAlert v-if="error" type="error" variant="tonal" density="compact">{{ error }}</VAlert>
 
-          <UButton type="submit" :loading="loading" block size="lg" class="rounded-full">
+          <VBtn type="submit" color="primary" :loading="loading" block size="large" rounded="pill">
             Войти
-          </UButton>
+          </VBtn>
         </form>
       </div>
     </div>
   </div>
+  </VApp>
 </template>

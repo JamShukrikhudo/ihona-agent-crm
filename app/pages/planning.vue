@@ -51,9 +51,9 @@ function pct(fact: number, target: number | null | undefined): number {
 // (nothing planned yet) is a neutral state, not a false 100%.
 function pctClass(fact: number, target: number | null | undefined): string {
   if (!target) {
-    return 'text-ink-soft'
+    return 'text-medium-emphasis'
   }
-  return fact >= target ? 'text-status-free' : 'text-ink'
+  return fact >= target ? 'text-success' : ''
 }
 
 const saving = ref<number | null>(null)
@@ -84,65 +84,72 @@ const METRICS = [
 </script>
 
 <template>
-  <div class="min-h-screen bg-paper">
-    <div class="border-b border-line bg-card px-6 py-4">
+  <div>
+    <div class="border-b border-surface-light bg-surface px-6 py-4">
       <div class="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <div class="text-[11px] font-medium text-ink-soft">Планирование</div>
-          <h1 class="font-display text-xl font-bold capitalize text-ink">{{ periodLabel }}</h1>
+          <div class="text-[11px] font-medium text-medium-emphasis">Планирование</div>
+          <h1 class="font-display text-xl font-bold capitalize">{{ periodLabel }}</h1>
         </div>
         <div class="flex items-center gap-1">
-          <UButton icon="i-lucide-chevron-left" color="neutral" variant="outline" @click="shiftMonth(-1)" />
-          <UButton color="primary" variant="soft" @click="cursor = new Date()">Текущий месяц</UButton>
-          <UButton icon="i-lucide-chevron-right" color="neutral" variant="outline" @click="shiftMonth(1)" />
+          <VBtn icon="mdi-chevron-left" color="default" variant="outlined" @click="shiftMonth(-1)" />
+          <VBtn color="primary" variant="tonal" @click="cursor = new Date()">Текущий месяц</VBtn>
+          <VBtn icon="mdi-chevron-right" color="default" variant="outlined" @click="shiftMonth(1)" />
         </div>
       </div>
     </div>
 
     <div class="px-6 py-6">
-      <div v-if="loading" class="text-sm text-ink-soft">Загрузка…</div>
-      <div v-else-if="rows.length === 0" class="rounded-2xl border border-dashed border-line bg-card p-8 text-center text-sm text-ink-soft">
+      <div v-if="loading" class="text-sm text-medium-emphasis">Загрузка…</div>
+      <VCard v-else-if="rows.length === 0" variant="outlined" class="border-dashed p-8 text-center text-sm text-medium-emphasis">
         В команде пока нет ни одного агента.
-      </div>
+      </VCard>
 
       <div v-else class="space-y-3">
-        <UCard v-for="row in rows" :key="row.agentId">
-          <div class="mb-3 flex items-center justify-between gap-3">
-            <div class="flex items-center gap-2.5">
-              <AgentAvatar :name="row.agentName ?? '—'" :size="30" />
-              <span class="font-display text-[14px] font-bold text-ink">{{ row.agentName }}</span>
+        <VCard v-for="row in rows" :key="row.agentId">
+          <VCardText>
+            <div class="mb-3 flex items-center justify-between gap-3">
+              <div class="flex items-center gap-2.5">
+                <AgentAvatar :name="row.agentName ?? '—'" :size="30" />
+                <span class="font-display text-[14px] font-bold">{{ row.agentName }}</span>
+              </div>
+              <VSelect
+                :model-value="row.status"
+                :disabled="saving === row.agentId"
+                :items="[{ title: 'В работе', value: 'active' }, { title: 'Закрыт', value: 'closed' }]"
+                hide-details
+                density="compact"
+                style="max-width: 160px"
+                @update:model-value="saveTarget(row, 'status', $event as string)"
+              />
             </div>
-            <USelect
-              :model-value="row.status"
-              :disabled="saving === row.agentId"
-              :items="[{ label: 'В работе', value: 'active' }, { label: 'Закрыт', value: 'closed' }]"
-              size="sm"
-              @update:model-value="saveTarget(row, 'status', $event as string)"
-            />
-          </div>
 
-          <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <UCard v-for="m in METRICS" :key="m.key" :ui="{ body: 'p-3 sm:p-3' }">
-              <div class="text-[11px] text-ink-soft">{{ m.label }}</div>
-              <div class="mt-1 flex items-baseline gap-1.5">
-                <span class="text-[18px] font-bold text-ink">{{ row[`${m.key}Fact` as const] }}</span>
-                <span class="text-[12px] text-ink-soft">/</span>
-                <UInput
-                  type="number"
-                  :min="0"
-                  :model-value="row[m.targetField]"
-                  :disabled="saving === row.agentId"
-                  size="xs"
-                  class="w-16"
-                  @change="saveTarget(row, m.targetField, Number(($event.target as HTMLInputElement).value))"
-                />
-              </div>
-              <div class="mt-1 text-[11px] font-semibold" :class="pctClass(row[`${m.key}Fact` as const], row[m.targetField])">
-                {{ pct(row[`${m.key}Fact` as const], row[m.targetField]) }}%
-              </div>
-            </UCard>
-          </div>
-        </UCard>
+            <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <VCard v-for="m in METRICS" :key="m.key" variant="tonal">
+                <VCardText class="p-3">
+                  <div class="text-[11px] text-medium-emphasis">{{ m.label }}</div>
+                  <div class="mt-1 flex items-baseline gap-1.5">
+                    <span class="text-[18px] font-bold">{{ row[`${m.key}Fact` as const] }}</span>
+                    <span class="text-[12px] text-medium-emphasis">/</span>
+                    <VTextField
+                      type="number"
+                      :min="0"
+                      :model-value="row[m.targetField]"
+                      :disabled="saving === row.agentId"
+                      hide-details
+                      density="compact"
+                      style="width: 64px"
+                      @change="saveTarget(row, m.targetField, Number(($event.target as HTMLInputElement).value))"
+                    />
+                  </div>
+                  <div class="mt-1 text-[11px] font-semibold" :class="pctClass(row[`${m.key}Fact` as const], row[m.targetField])">
+                    {{ pct(row[`${m.key}Fact` as const], row[m.targetField]) }}%
+                  </div>
+                </VCardText>
+              </VCard>
+            </div>
+          </VCardText>
+        </VCard>
       </div>
     </div>
   </div>

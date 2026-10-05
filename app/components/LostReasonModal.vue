@@ -18,18 +18,20 @@ const selected = ref<LostReason>('price_disagreement')
 
 <template>
   <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4" @click.self="emit('cancel')">
-    <div class="w-full max-w-sm space-y-4 rounded-2xl border border-line bg-card p-5">
-      <div class="flex items-center justify-between">
-        <h3 class="font-display text-sm font-bold text-ink">Причина отказа</h3>
-        <UButton icon="i-lucide-x" color="neutral" variant="ghost" size="xs" @click="emit('cancel')" />
-      </div>
-
-      <URadioGroup v-model="selected" :items="REASON_ITEMS" />
-
-      <div class="flex justify-end gap-2">
-        <UButton color="neutral" variant="outline" @click="emit('cancel')">Отмена</UButton>
-        <UButton @click="emit('confirm', selected)">Подтвердить</UButton>
-      </div>
-    </div>
+    <VCard class="w-full max-w-sm" title="Причина отказа">
+      <template #append>
+        <VBtn icon="mdi-close" color="default" variant="text" size="small" @click="emit('cancel')" />
+      </template>
+      <VCardText>
+        <VRadioGroup v-model="selected" :items="REASON_ITEMS" hide-details>
+          <VRadio v-for="item in REASON_ITEMS" :key="item.value" :label="item.label" :value="item.value" />
+        </VRadioGroup>
+      </VCardText>
+      <VCardActions>
+        <VSpacer />
+        <VBtn variant="outlined" @click="emit('cancel')">Отмена</VBtn>
+        <VBtn color="primary" @click="emit('confirm', selected)">Подтвердить</VBtn>
+      </VCardActions>
+    </VCard>
   </div>
 </template>

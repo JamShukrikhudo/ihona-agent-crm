@@ -92,63 +92,65 @@ async function disconnectBot() {
 </script>
 
 <template>
-  <div class="min-h-screen bg-paper">
-    <div class="border-b border-line bg-card px-6 py-4">
-      <div class="text-[11px] font-medium text-ink-soft">Настройки</div>
-      <h1 class="font-display text-xl font-bold text-ink">Telegram</h1>
+  <div>
+    <div class="border-b border-surface-light bg-surface px-6 py-4">
+      <div class="text-[11px] font-medium text-medium-emphasis">Настройки</div>
+      <h1 class="font-display text-xl font-bold">Telegram</h1>
     </div>
 
     <div class="mx-auto max-w-lg space-y-4 px-6 py-8">
-      <div v-if="loading" class="h-32 animate-pulse rounded-2xl border border-line bg-card" />
+      <VSkeleton v-if="loading" type="card" height="128" />
 
       <template v-else>
-        <UCard>
-          <div class="mb-2 flex items-center gap-2">
-            <Bot :size="16" class="text-brand-600" />
-            <span class="font-display text-sm font-bold text-ink">Бот для чата с клиентами</span>
-          </div>
-          <p class="mb-4 text-[13px] text-ink-soft">
-            Ваш собственный бот (создаётся бесплатно через
-            <span class="font-medium text-ink">@BotFather</span> в Telegram). Сообщения клиентов будут появляться в карточке клиента, ответы отправляются
-            прямо оттуда.
-          </p>
-
-          <div v-if="botConnected" class="mb-4 flex items-center justify-between rounded-xl bg-status-free-soft px-3.5 py-2.5">
-            <span class="text-[13px] font-semibold text-brand-dark">Бот подключён и принимает сообщения</span>
-            <UButton icon="i-lucide-unlink" color="error" variant="link" size="xs" :loading="savingBot" @click="disconnectBot">Отключить</UButton>
-          </div>
-          <template v-else>
-            <UFormField label="Токен бота (от @BotFather)">
-              <div class="flex gap-2">
-                <UInput v-model="botTokenInput" placeholder="123456789:AA..." class="flex-1" />
-                <UButton :loading="savingBot" :disabled="botTokenInput.trim() === ''" @click="connectBot">Подключить</UButton>
-              </div>
-            </UFormField>
-          </template>
-        </UCard>
-
-        <UCard>
-          <div class="mb-2 flex items-center gap-2">
-            <MessageCircle :size="16" class="text-brand-600" />
-            <span class="font-display text-sm font-bold text-ink">Чат для оповещений</span>
-          </div>
-
-          <p class="mb-4 text-[13px] text-ink-soft">Изменения статуса юнита и лидов будут приходить в указанный чат. Отдельно от бота выше.</p>
-
-          <div v-if="chatId" class="mb-4 flex items-center justify-between rounded-xl bg-status-free-soft px-3.5 py-2.5">
-            <span class="text-[13px] font-semibold text-brand-dark">Подключён: {{ chatId }}</span>
-            <UButton icon="i-lucide-unlink" color="error" variant="link" size="xs" :loading="saving" @click="disconnect">Отключить</UButton>
-          </div>
-
-          <UFormField label="Chat ID">
-            <div class="flex gap-2">
-              <UInput v-model="chatInput" placeholder="-100123456789" class="flex-1" />
-              <UButton :loading="saving" :disabled="chatInput.trim() === ''" @click="save">
-                {{ chatId ? 'Изменить' : 'Подключить' }}
-              </UButton>
+        <VCard>
+          <VCardText>
+            <div class="mb-2 flex items-center gap-2">
+              <Bot :size="16" class="text-primary" />
+              <span class="font-display text-sm font-bold">Бот для чата с клиентами</span>
             </div>
-          </UFormField>
-        </UCard>
+            <p class="mb-4 text-[13px] text-medium-emphasis">
+              Ваш собственный бот (создаётся бесплатно через
+              <span class="font-medium">@BotFather</span> в Telegram). Сообщения клиентов будут появляться в карточке клиента, ответы отправляются
+              прямо оттуда.
+            </p>
+
+            <VAlert v-if="botConnected" type="success" variant="tonal" class="mb-4">
+              <div class="flex items-center justify-between">
+                <span class="text-[13px] font-semibold">Бот подключён и принимает сообщения</span>
+                <VBtn icon="mdi-link-off" color="error" variant="text" size="small" :loading="savingBot" @click="disconnectBot" />
+              </div>
+            </VAlert>
+            <div v-else class="flex gap-2">
+              <VTextField v-model="botTokenInput" label="Токен бота (от @BotFather)" placeholder="123456789:AA..." hide-details class="flex-1" />
+              <VBtn color="primary" :loading="savingBot" :disabled="botTokenInput.trim() === ''" @click="connectBot">Подключить</VBtn>
+            </div>
+          </VCardText>
+        </VCard>
+
+        <VCard>
+          <VCardText>
+            <div class="mb-2 flex items-center gap-2">
+              <MessageCircle :size="16" class="text-primary" />
+              <span class="font-display text-sm font-bold">Чат для оповещений</span>
+            </div>
+
+            <p class="mb-4 text-[13px] text-medium-emphasis">Изменения статуса юнита и лидов будут приходить в указанный чат. Отдельно от бота выше.</p>
+
+            <VAlert v-if="chatId" type="success" variant="tonal" class="mb-4">
+              <div class="flex items-center justify-between">
+                <span class="text-[13px] font-semibold">Подключён: {{ chatId }}</span>
+                <VBtn icon="mdi-link-off" color="error" variant="text" size="small" :loading="saving" @click="disconnect" />
+              </div>
+            </VAlert>
+
+            <div class="flex gap-2">
+              <VTextField v-model="chatInput" label="Chat ID" placeholder="-100123456789" hide-details class="flex-1" />
+              <VBtn color="primary" :loading="saving" :disabled="chatInput.trim() === ''" @click="save">
+                {{ chatId ? 'Изменить' : 'Подключить' }}
+              </VBtn>
+            </div>
+          </VCardText>
+        </VCard>
       </template>
     </div>
   </div>

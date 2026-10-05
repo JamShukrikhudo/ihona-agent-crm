@@ -133,90 +133,103 @@ watch(() => props.unitId, (id) => {
 </script>
 
 <template>
-  <USlideover :open="unit !== null" :ui="{ content: 'max-w-sm' }" @update:open="(v) => { if (!v) emit('close') }">
-    <template v-if="unit" #content>
-      <div class="flex items-center justify-between border-b border-line px-5 py-4">
+  <VNavigationDrawer
+    :model-value="unit !== null"
+    location="end"
+    temporary
+    width="384"
+    @update:model-value="(v: boolean) => { if (!v) emit('close') }"
+  >
+    <template v-if="unit">
+      <div class="flex items-center justify-between border-b border-surface-light px-5 py-4">
         <div>
-          <div class="text-[11px] text-ink-soft">Секция {{ unit.section }} · Этаж {{ unit.floor }}</div>
-          <div class="font-display text-lg font-bold text-ink">{{ unit.label }}</div>
+          <div class="text-[11px] text-medium-emphasis">Секция {{ unit.section }} · Этаж {{ unit.floor }}</div>
+          <div class="font-display text-lg font-bold">{{ unit.label }}</div>
         </div>
-        <UButton icon="i-lucide-x" color="neutral" variant="ghost" size="sm" @click="emit('close')" />
+        <VBtn icon="mdi-close" color="default" variant="text" size="small" @click="emit('close')" />
       </div>
 
       <div class="overflow-y-auto px-5 py-4">
-        <UBadge :class="STATUS_BG[unit.status]" class="text-white" :ui="{ base: 'px-2.5 py-1 text-xs font-semibold' }">
+        <VChip :class="STATUS_BG[unit.status]" class="text-white" size="small" label>
           {{ STATUS_LABEL[unit.status] }}
-        </UBadge>
+        </VChip>
 
         <div class="mt-4 grid grid-cols-2 gap-3">
-          <UCard variant="subtle" :ui="{ body: 'p-3' }">
-            <Ruler :size="15" class="text-brand-600" />
-            <div class="mt-1 text-sm font-semibold text-ink">{{ unit.area }} м²</div>
-            <div class="text-[11px] text-ink-soft">{{ unit.rooms === 0 ? 'Студия' : `${unit.rooms}-комнатная` }}</div>
-          </UCard>
-          <UCard variant="subtle" :ui="{ body: 'p-3' }">
-            <Layers :size="15" class="text-brand-600" />
-            <div class="mt-1 text-sm font-semibold text-ink">Этаж {{ unit.floor }}</div>
-            <div class="text-[11px] text-ink-soft">Секция {{ unit.section }}</div>
-          </UCard>
+          <VCard variant="tonal">
+            <VCardText class="p-3">
+              <Ruler :size="15" class="text-primary" />
+              <div class="mt-1 text-sm font-semibold">{{ unit.area }} м²</div>
+              <div class="text-[11px] text-medium-emphasis">{{ unit.rooms === 0 ? 'Студия' : `${unit.rooms}-комнатная` }}</div>
+            </VCardText>
+          </VCard>
+          <VCard variant="tonal">
+            <VCardText class="p-3">
+              <Layers :size="15" class="text-primary" />
+              <div class="mt-1 text-sm font-semibold">Этаж {{ unit.floor }}</div>
+              <div class="text-[11px] text-medium-emphasis">Секция {{ unit.section }}</div>
+            </VCardText>
+          </VCard>
         </div>
 
-        <UCard variant="subtle" class="mt-3" :ui="{ body: 'p-3' }">
-          <div class="text-[11px] text-ink-soft">Стоимость</div>
-          <div class="font-display text-xl font-bold text-brand-dark">{{ unit.price.toLocaleString('ru-RU') }} TJS</div>
-          <div v-if="pricePerSqm" class="text-[11px] text-ink-soft">~{{ pricePerSqm.toLocaleString('ru-RU') }} TJS / м²</div>
-        </UCard>
+        <VCard variant="tonal" class="mt-3">
+          <VCardText class="p-3">
+            <div class="text-[11px] text-medium-emphasis">Стоимость</div>
+            <div class="font-display text-xl font-bold text-primary">{{ unit.price.toLocaleString('ru-RU') }} TJS</div>
+            <div v-if="pricePerSqm" class="text-[11px] text-medium-emphasis">~{{ pricePerSqm.toLocaleString('ru-RU') }} TJS / м²</div>
+          </VCardText>
+        </VCard>
 
-        <UCard v-if="unit.agent" variant="subtle" class="mt-3" :ui="{ body: 'flex items-center gap-2 p-3' }">
-          <Users :size="15" class="text-brand-600" />
-          <div>
-            <div class="text-[11px] text-ink-soft">Закреплено за</div>
-            <div class="text-sm font-medium text-ink">{{ unit.agent }}</div>
-          </div>
-        </UCard>
+        <VCard v-if="unit.agent" variant="tonal" class="mt-3">
+          <VCardText class="flex items-center gap-2 p-3">
+            <Users :size="15" class="text-primary" />
+            <div>
+              <div class="text-[11px] text-medium-emphasis">Закреплено за</div>
+              <div class="text-sm font-medium">{{ unit.agent }}</div>
+            </div>
+          </VCardText>
+        </VCard>
 
         <NuxtLink
           v-if="unit.clientId"
           :to="`/clients/${unit.clientId}`"
-          class="mt-2 flex items-center gap-2 rounded-xl bg-paper p-3 transition-colors hover:bg-brand-50"
+          class="mt-2 flex items-center gap-2 rounded-xl bg-surface-light p-3 transition-colors hover:bg-primary/10"
         >
-          <Users :size="15" class="text-brand-600" />
+          <Users :size="15" class="text-primary" />
           <div>
-            <div class="text-[11px] text-ink-soft">Клиент</div>
-            <div class="text-sm font-medium text-ink">{{ unit.clientName }}</div>
+            <div class="text-[11px] text-medium-emphasis">Клиент</div>
+            <div class="text-sm font-medium">{{ unit.clientName }}</div>
           </div>
         </NuxtLink>
 
-        <div v-if="unit.status === 'reserved' && unit.expiresInHours !== null" class="mt-3 flex items-center gap-2 rounded-xl p-3 bg-status-reserved-soft">
-          <Clock :size="15" class="text-status-reserved" />
-          <div class="text-[12px] text-ink">
+        <VAlert v-if="unit.status === 'reserved' && unit.expiresInHours !== null" type="warning" variant="tonal" class="mt-3" density="compact">
+          <div class="text-[12px]">
             Бронь снимается автоматически через <b>{{ unit.expiresInHours }} ч</b>, если не внесён задаток
           </div>
-        </div>
+        </VAlert>
 
         <div class="mt-5 space-y-2">
           <CanAccess v-if="unit.status === 'free'" permission="units.reserve">
-            <UButton block :loading="busy" @click="startReserve">Забронировать</UButton>
+            <VBtn color="primary" block :loading="busy" @click="startReserve">Забронировать</VBtn>
           </CanAccess>
 
           <template v-else-if="unit.status === 'reserved'">
-            <UButton block :loading="busy" @click="markDeposit">Внести задаток</UButton>
+            <VBtn color="primary" block :loading="busy" @click="markDeposit">Внести задаток</VBtn>
             <CanAccess permission="units.release">
-              <UButton
+              <VBtn
                 v-if="!releasing"
-                icon="i-lucide-alert-triangle"
-                color="neutral"
-                variant="outline"
+                prepend-icon="mdi-alert-outline"
+                color="default"
+                variant="outlined"
                 block
                 :disabled="busy"
                 @click="releasing = true"
               >
                 Снять бронь
-              </UButton>
+              </VBtn>
               <div v-else class="space-y-2">
-                <UTextarea v-model="releaseReason" placeholder="Причина снятия брони" :rows="2" class="w-full" />
+                <VTextarea v-model="releaseReason" placeholder="Причина снятия брони" rows="2" />
                 <div class="flex gap-2">
-                  <UButton
+                  <VBtn
                     color="error"
                     class="flex-1 justify-center"
                     :loading="busy"
@@ -224,61 +237,55 @@ watch(() => props.unitId, (id) => {
                     @click="confirmRelease"
                   >
                     Подтвердить
-                  </UButton>
-                  <UButton color="neutral" variant="outline" @click="releasing = false">Отмена</UButton>
+                  </VBtn>
+                  <VBtn variant="outlined" @click="releasing = false">Отмена</VBtn>
                 </div>
               </div>
             </CanAccess>
           </template>
 
           <template v-else-if="unit.status === 'deposit'">
-            <UButton v-if="!creatingContract" block @click="creatingContract = true; contractAmount = unit.price">
+            <VBtn v-if="!creatingContract" color="primary" block @click="creatingContract = true; contractAmount = unit.price">
               Оформить договор
-            </UButton>
+            </VBtn>
             <div v-else class="space-y-2">
-              <UFormField label="Сумма договора">
-                <UInput v-model.number="contractAmount" type="number" :min="1" class="w-full" />
-              </UFormField>
-              <UFormField label="Рассрочка на, мес. (1 — единовременно)">
-                <UInput v-model.number="contractInstallments" type="number" :min="1" :max="60" class="w-full" />
-              </UFormField>
-              <UFormField v-if="contractInstallments > 1" label="Дата первого платежа">
-                <UInput v-model="contractFirstDueAt" type="date" class="w-full" />
-              </UFormField>
+              <VTextField v-model.number="contractAmount" type="number" :min="1" label="Сумма договора" />
+              <VTextField v-model.number="contractInstallments" type="number" :min="1" :max="60" label="Рассрочка на, мес. (1 — единовременно)" />
+              <VTextField v-if="contractInstallments > 1" v-model="contractFirstDueAt" type="date" label="Дата первого платежа" />
               <div class="flex gap-2">
-                <UButton class="flex-1 justify-center" :loading="savingContract" :disabled="!contractAmount" @click="submitContract">
+                <VBtn color="primary" class="flex-1 justify-center" :loading="savingContract" :disabled="!contractAmount" @click="submitContract">
                   Подтвердить
-                </UButton>
-                <UButton color="neutral" variant="outline" @click="creatingContract = false">Отмена</UButton>
+                </VBtn>
+                <VBtn variant="outlined" @click="creatingContract = false">Отмена</VBtn>
               </div>
             </div>
           </template>
 
-          <UButton
+          <VBtn
             v-else-if="unit.status === 'sold' && unit.contractId"
             :to="`/contracts/${unit.contractId}`"
-            color="neutral"
-            variant="outline"
+            color="default"
+            variant="outlined"
             block
           >
             Открыть договор
-          </UButton>
+          </VBtn>
 
-          <p v-else class="text-[12px] text-ink-soft">Действия для этого статуса появятся в следующих спринтах.</p>
+          <p v-else class="text-[12px] text-medium-emphasis">Действия для этого статуса появятся в следующих спринтах.</p>
         </div>
 
         <div v-if="history.length > 0" class="mt-6">
-          <div class="mb-2 text-[11px] font-semibold uppercase tracking-wide text-ink-soft">История</div>
+          <div class="mb-2 text-[11px] font-semibold uppercase tracking-wide text-medium-emphasis">История</div>
           <div class="space-y-2">
-            <div v-for="(h, i) in history" :key="i" class="flex justify-between border-b border-line pb-2 text-[12px]">
-              <span class="text-ink">{{ h.what }}</span>
-              <span class="text-ink-soft">{{ h.at }}</span>
+            <div v-for="(h, i) in history" :key="i" class="flex justify-between border-b border-surface-light pb-2 text-[12px]">
+              <span>{{ h.what }}</span>
+              <span class="text-medium-emphasis">{{ h.at }}</span>
             </div>
           </div>
         </div>
       </div>
     </template>
-  </USlideover>
+  </VNavigationDrawer>
 
   <ClientPicker v-if="pickingClient" @select="(client) => reserve(client.id)" @cancel="pickingClient = false" />
 </template>

@@ -65,77 +65,73 @@ onBeforeUnmount(() => {
 <template>
   <div class="flex h-screen min-h-0">
     <!-- Conversation list -->
-    <div class="flex w-full max-w-sm shrink-0 flex-col border-r border-line bg-card sm:w-80">
-      <div class="border-b border-line px-5 py-4">
-        <h1 class="font-display text-lg font-bold text-ink">Входящие</h1>
-        <p class="text-[12px] text-ink-soft">Telegram, WhatsApp и Instagram — в одном месте{{ totalUnread > 0 ? ` · ${totalUnread} непрочитано` : '' }}</p>
+    <div class="flex w-full max-w-sm shrink-0 flex-col border-r border-surface-light bg-surface sm:w-80">
+      <div class="border-b border-surface-light px-5 py-4">
+        <h1 class="font-display text-lg font-bold">Входящие</h1>
+        <p class="text-[12px] text-medium-emphasis">Telegram, WhatsApp и Instagram — в одном месте{{ totalUnread > 0 ? ` · ${totalUnread} непрочитано` : '' }}</p>
       </div>
 
       <div v-if="store.loading" class="space-y-2 p-3">
-        <div v-for="i in 5" :key="i" class="h-16 animate-pulse rounded-xl bg-paper" />
+        <VSkeleton v-for="i in 5" :key="i" type="list-item-avatar-two-line" />
       </div>
 
-      <div v-else-if="sortedConversations.length === 0" class="p-5 text-[13px] text-ink-soft">
+      <div v-else-if="sortedConversations.length === 0" class="p-5 text-[13px] text-medium-emphasis">
         Пока нет ни одного диалога — они появятся, как только клиент первым напишет в Telegram, WhatsApp или Instagram.
       </div>
 
-      <div v-else class="flex-1 overflow-y-auto">
-        <UButton
+      <VList v-else class="flex-1 overflow-y-auto py-0">
+        <VListItem
           v-for="c in sortedConversations"
           :key="`${c.clientId}:${c.channel}`"
-          color="neutral"
-          :variant="selected?.clientId === c.clientId && selected?.channel === c.channel ? 'soft' : 'ghost'"
-          block
-          :ui="{ base: 'items-start gap-3 rounded-none border-b border-line px-4 py-3 text-left' }"
+          :active="selected?.clientId === c.clientId && selected?.channel === c.channel"
+          lines="two"
           @click="openConversation(c)"
         >
-          <div class="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-paper text-brand-600">
-            <component :is="CHANNEL_ICON[c.channel]" :size="16" />
-          </div>
-          <div class="min-w-0 flex-1">
-            <div class="flex items-center justify-between gap-2">
-              <span class="truncate text-[13px] font-semibold text-ink">{{ c.clientName ?? c.displayName ?? c.clientPhone }}</span>
-              <span class="shrink-0 text-[10px] text-ink-soft">{{ c.lastAt ? new Date(c.lastAt).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '' }}</span>
-            </div>
-            <div class="flex items-center justify-between gap-2">
-              <span class="truncate text-[12px] text-ink-soft">
-                <span class="font-medium">{{ CHANNEL_LABEL[c.channel] }}:</span> {{ c.lastMessage ?? '—' }}
-              </span>
-              <UBadge v-if="c.unreadCount > 0" color="primary" size="sm" class="shrink-0 rounded-full">{{ c.unreadCount }}</UBadge>
-            </div>
-          </div>
-        </UButton>
-      </div>
+          <template #prepend>
+            <VAvatar color="primary" variant="tonal" size="36">
+              <component :is="CHANNEL_ICON[c.channel]" :size="16" />
+            </VAvatar>
+          </template>
+          <VListItemTitle class="flex items-center justify-between gap-2 text-[13px] font-semibold">
+            <span class="truncate">{{ c.clientName ?? c.displayName ?? c.clientPhone }}</span>
+            <span class="shrink-0 text-[10px] font-normal text-medium-emphasis">{{ c.lastAt ? new Date(c.lastAt).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '' }}</span>
+          </VListItemTitle>
+          <VListItemSubtitle class="flex items-center justify-between gap-2 text-[12px]">
+            <span class="truncate"><span class="font-medium">{{ CHANNEL_LABEL[c.channel] }}:</span> {{ c.lastMessage ?? '—' }}</span>
+            <VChip v-if="c.unreadCount > 0" color="primary" size="x-small" class="shrink-0">{{ c.unreadCount }}</VChip>
+          </VListItemSubtitle>
+        </VListItem>
+      </VList>
     </div>
 
     <!-- Thread -->
     <div class="flex min-w-0 flex-1 flex-col">
       <template v-if="selected">
-        <div class="flex items-center gap-2.5 border-b border-line bg-card px-5 py-3.5">
-          <component :is="CHANNEL_ICON[selected.channel]" :size="16" class="text-brand-600" />
-          <span class="font-display text-sm font-bold text-ink">
+        <div class="flex items-center gap-2.5 border-b border-surface-light bg-surface px-5 py-3.5">
+          <component :is="CHANNEL_ICON[selected.channel]" :size="16" class="text-primary" />
+          <span class="font-display text-sm font-bold">
             {{ store.conversations.find((c) => c.clientId === selected?.clientId && c.channel === selected?.channel)?.clientName ?? 'Клиент' }}
           </span>
-          <span class="text-[12px] text-ink-soft">· {{ CHANNEL_LABEL[selected.channel] }}</span>
-          <UButton :to="`/clients/${selected.clientId}`" variant="link" size="xs" class="ml-auto">
+          <span class="text-[12px] text-medium-emphasis">· {{ CHANNEL_LABEL[selected.channel] }}</span>
+          <VBtn :to="`/clients/${selected.clientId}`" variant="text" color="primary" size="x-small" class="ml-auto">
             Карточка клиента
-          </UButton>
+          </VBtn>
         </div>
 
-        <div class="flex-1 overflow-y-auto bg-paper/40 p-5">
-          <div v-if="store.threadLoading" class="h-full animate-pulse rounded-xl bg-paper" />
+        <div class="flex-1 overflow-y-auto bg-surface-light/40 p-5">
+          <VSkeleton v-if="store.threadLoading" type="article" />
           <ClientTimeline v-else :interactions="store.thread" />
         </div>
 
-        <form class="flex items-center gap-2 border-t border-line bg-card p-3" @submit.prevent="send">
-          <UInput v-model="message" placeholder="Сообщение…" class="flex-1" />
-          <UButton type="submit" :loading="sending" :disabled="message.trim() === ''">
+        <form class="flex items-center gap-2 border-t border-surface-light bg-surface p-3" @submit.prevent="send">
+          <VTextField v-model="message" placeholder="Сообщение…" hide-details density="compact" class="flex-1" />
+          <VBtn type="submit" color="primary" :loading="sending" :disabled="message.trim() === ''">
             Отправить
-          </UButton>
+          </VBtn>
         </form>
       </template>
 
-      <div v-else class="flex flex-1 items-center justify-center text-[13px] text-ink-soft">
+      <div v-else class="flex flex-1 items-center justify-center text-[13px] text-medium-emphasis">
         Выберите диалог слева
       </div>
     </div>
