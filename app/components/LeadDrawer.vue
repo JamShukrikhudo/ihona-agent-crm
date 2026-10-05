@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Building2, Check } from '@lucide/vue'
+import { Building2 } from '@lucide/vue'
 import { LEAD_STAGE_LABEL, LEAD_STAGES } from '~/stores/useLeadsStore'
 import type { Lead, LeadStage, LeadTask } from '~/stores/useLeadsStore'
 import { SOURCE_BG, SOURCE_ICON, SOURCE_TEXT, sourceLabel } from '~/utils/leadSources'
@@ -153,15 +153,12 @@ async function markDone(task: LeadTask) {
           <template v-else>
             <p v-if="tasks.length === 0" class="text-[12px] text-ink-soft">Задач пока нет.</p>
             <div v-for="task in tasks" :key="task.id" class="mb-1.5 flex items-center gap-2 text-[13px]" :class="task.doneAt ? 'text-ink-soft line-through' : 'text-ink'">
-              <button
-                type="button"
-                class="flex h-4 w-4 shrink-0 items-center justify-center rounded border"
-                :class="task.doneAt ? 'border-status-free bg-status-free text-white' : 'border-line'"
+              <UCheckbox
+                :model-value="Boolean(task.doneAt)"
+                color="success"
                 :disabled="Boolean(task.doneAt)"
-                @click="markDone(task)"
-              >
-                <Check v-if="task.doneAt" :size="10" />
-              </button>
+                @update:model-value="markDone(task)"
+              />
               {{ task.title }}
             </div>
           </template>

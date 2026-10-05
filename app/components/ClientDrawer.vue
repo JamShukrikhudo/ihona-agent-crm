@@ -202,31 +202,37 @@ function copyLink() {
       <div v-else-if="client" class="grid min-h-0 flex-1 grid-cols-1 gap-0 overflow-hidden sm:grid-cols-[1fr_1.1fr]">
         <div class="min-h-0 space-y-4 overflow-y-auto p-5">
           <div class="flex gap-1 rounded-xl border border-line bg-card p-1">
-            <button
+            <UButton
               v-for="t in TABS"
               :key="t.value"
-              type="button"
-              class="flex flex-1 items-center justify-center gap-1 rounded-lg py-1.5 text-[11.5px] font-semibold"
-              :class="activeTab === t.value ? 'bg-brand-600 text-white' : 'text-ink-soft hover:bg-paper'"
+              :color="activeTab === t.value ? 'primary' : 'neutral'"
+              :variant="activeTab === t.value ? 'solid' : 'ghost'"
+              size="sm"
+              block
+              class="flex-1 justify-center"
               @click="activeTab = t.value"
             >
               {{ t.label }}
-              <span
+              <UBadge
                 v-if="t.value === 'events' && eventInteractions.length > 0"
-                class="rounded-full px-1.5 text-[10px]"
-                :class="activeTab === t.value ? 'bg-white/20' : 'bg-paper'"
-              >{{ eventInteractions.length }}</span>
-              <span
+                :color="activeTab === t.value ? 'neutral' : 'neutral'"
+                :variant="activeTab === t.value ? 'solid' : 'soft'"
+                size="sm"
+                class="rounded-full"
+              >{{ eventInteractions.length }}</UBadge>
+              <UBadge
                 v-if="t.value === 'deals' && leads.length > 0"
-                class="rounded-full px-1.5 text-[10px]"
-                :class="activeTab === t.value ? 'bg-white/20' : 'bg-paper'"
-              >{{ leads.length }}</span>
-              <span
+                :variant="activeTab === t.value ? 'solid' : 'soft'"
+                size="sm"
+                class="rounded-full"
+              >{{ leads.length }}</UBadge>
+              <UBadge
                 v-if="t.value === 'units' && units.length > 0"
-                class="rounded-full px-1.5 text-[10px]"
-                :class="activeTab === t.value ? 'bg-white/20' : 'bg-paper'"
-              >{{ units.length }}</span>
-            </button>
+                :variant="activeTab === t.value ? 'solid' : 'soft'"
+                size="sm"
+                class="rounded-full"
+              >{{ units.length }}</UBadge>
+            </UButton>
           </div>
 
           <div v-if="activeTab === 'info'" class="rounded-xl border border-line bg-card p-4">
@@ -263,16 +269,16 @@ function copyLink() {
             <form class="space-y-2 rounded-xl border border-line bg-card p-4" @submit.prevent="submitNote">
               <div class="font-display text-sm font-bold text-ink">Записать контакт</div>
               <div class="flex flex-wrap gap-1.5">
-                <button
+                <UButton
                   v-for="t in NOTE_TYPES"
                   :key="t.value"
-                  type="button"
-                  class="flex items-center justify-center gap-1 rounded-lg border px-2.5 py-1.5 text-[11px] font-medium"
-                  :class="noteType === t.value ? 'border-brand-600 bg-brand-50 text-brand-600' : 'border-line text-ink-soft'"
+                  :color="noteType === t.value ? 'primary' : 'neutral'"
+                  :variant="noteType === t.value ? 'subtle' : 'outline'"
+                  size="xs"
                   @click="noteType = t.value"
                 >
                   <component :is="t.icon" :size="12" /> {{ t.label }}
-                </button>
+                </UButton>
               </div>
               <UTextarea v-model="noteMessage" :rows="3" placeholder="Что обсудили?" class="w-full" />
               <UButton type="submit" :loading="savingNote" :disabled="noteMessage.trim() === ''" block>
@@ -325,12 +331,13 @@ function copyLink() {
 
         <div class="flex min-h-0 flex-col border-t border-line bg-card sm:border-l sm:border-t-0">
           <div class="flex gap-1 overflow-x-auto border-b border-line p-2">
-            <button
+            <UButton
               v-for="ch in CHAT_CHANNELS"
               :key="ch.value"
-              type="button"
-              class="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] font-semibold"
-              :class="activeChatChannel === ch.value ? 'bg-brand-600 text-white' : 'text-ink-soft hover:bg-paper'"
+              :color="activeChatChannel === ch.value ? 'primary' : 'neutral'"
+              :variant="activeChatChannel === ch.value ? 'solid' : 'ghost'"
+              size="sm"
+              class="rounded-full"
               @click="activeChatChannel = ch.value"
             >
               {{ ch.label }}
@@ -338,7 +345,7 @@ function copyLink() {
                 class="h-1.5 w-1.5 rounded-full"
                 :class="channels.includes(ch.value) ? 'bg-status-free' : 'bg-ink-soft/40'"
               />
-            </button>
+            </UButton>
           </div>
 
           <div class="min-h-0 flex-1 overflow-y-auto p-4">

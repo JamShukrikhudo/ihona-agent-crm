@@ -119,14 +119,9 @@ async function confirmLost(reason: LostReason) {
 
       <div v-if="columns[stage].length === 0" class="mx-3 rounded-xl border border-dashed border-line px-3 py-4 text-center">
         <p class="text-[11px] text-ink-soft/70">Пусто</p>
-        <button
-          v-if="stage === 'new'"
-          type="button"
-          class="mt-1.5 text-[11px] font-semibold text-brand-600 hover:underline"
-          @click="$emit('add-lead')"
-        >
+        <UButton v-if="stage === 'new'" color="primary" variant="link" size="xs" class="mt-1.5 p-0" @click="$emit('add-lead')">
           + Добавить лид
-        </button>
+        </UButton>
       </div>
     </div>
 

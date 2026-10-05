@@ -87,32 +87,35 @@ onBeforeUnmount(() => {
           <NuxtLink to="/" class="text-[11px] font-medium text-ink-soft hover:text-brand-600">← Все проекты</NuxtLink>
           <h1 class="font-display text-xl font-bold text-ink">{{ projectName ?? `Проект #${projectId}` }}</h1>
         </div>
-        <div v-if="store.sections.length > 1" class="flex items-center gap-2 rounded-full bg-paper p-1">
-          <button
+        <div v-if="store.sections.length > 1" class="flex items-center gap-1 rounded-full bg-paper p-1">
+          <UButton
             v-for="sec in store.sections"
             :key="sec"
-            type="button"
-            class="rounded-full px-4 py-1.5 text-sm font-semibold transition-colors"
-            :class="section === sec ? 'bg-brand-600 text-white' : 'text-ink-soft'"
+            :color="section === sec ? 'primary' : 'neutral'"
+            :variant="section === sec ? 'solid' : 'ghost'"
+            size="sm"
+            class="rounded-full"
             @click="section = sec"
           >
             {{ sec }}
-          </button>
+          </UButton>
         </div>
       </div>
 
       <div class="mt-4 flex flex-wrap gap-2">
-        <button
+        <UButton
           v-for="(label, key) in STATUS_LABEL"
           :key="key"
-          type="button"
-          class="flex items-center gap-2 rounded-full border px-3 py-1.5 text-[12px] font-medium text-ink transition-colors"
-          :class="statusFilter === key ? [STATUS_BORDER[key], STATUS_BG_SOFT[key]] : 'border-line'"
+          color="neutral"
+          variant="outline"
+          size="sm"
+          class="rounded-full"
+          :class="statusFilter === key ? [STATUS_BORDER[key], STATUS_BG_SOFT[key]] : ''"
           @click="statusFilter = statusFilter === key ? null : (key as UnitStatus)"
         >
           <span class="h-2 w-2 rounded-full" :class="STATUS_BG[key]" />
           {{ label }} <b>{{ store.counts[key] }}</b>
-        </button>
+        </UButton>
 
         <UButton
           icon="i-lucide-sliders-horizontal"

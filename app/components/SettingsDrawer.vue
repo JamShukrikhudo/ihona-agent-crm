@@ -51,17 +51,16 @@ const ACCENT_ORDER: AccentKey[] = ['emerald', 'blue', 'violet', 'teal', 'orange'
       <div class="mb-5">
         <div class="mb-2 text-[11px] font-bold uppercase tracking-wide text-ink-soft">Цвет темы</div>
         <div class="grid grid-cols-5 gap-2">
-          <button
+          <UButton
             v-for="key in ACCENT_ORDER"
             :key="key"
-            type="button"
-            class="flex h-9 w-9 items-center justify-center rounded-full"
+            square
+            class="h-9 w-9 rounded-full"
             :style="{ backgroundColor: ACCENTS[key][600] }"
             :title="key"
+            :icon="prefs.accent === key ? 'i-lucide-check' : undefined"
             @click="setAccent(key)"
-          >
-            <UIcon v-if="prefs.accent === key" name="i-lucide-check" class="size-4 text-white" />
-          </button>
+          />
         </div>
       </div>
 

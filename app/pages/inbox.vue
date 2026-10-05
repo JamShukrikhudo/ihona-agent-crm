@@ -80,12 +80,13 @@ onBeforeUnmount(() => {
       </div>
 
       <div v-else class="flex-1 overflow-y-auto">
-        <button
+        <UButton
           v-for="c in sortedConversations"
           :key="`${c.clientId}:${c.channel}`"
-          type="button"
-          class="flex w-full items-start gap-3 border-b border-line px-4 py-3 text-left hover:bg-paper"
-          :class="selected?.clientId === c.clientId && selected?.channel === c.channel ? 'bg-brand-50' : ''"
+          color="neutral"
+          :variant="selected?.clientId === c.clientId && selected?.channel === c.channel ? 'soft' : 'ghost'"
+          block
+          :ui="{ base: 'items-start gap-3 rounded-none border-b border-line px-4 py-3 text-left' }"
           @click="openConversation(c)"
         >
           <div class="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-paper text-brand-600">
@@ -100,12 +101,10 @@ onBeforeUnmount(() => {
               <span class="truncate text-[12px] text-ink-soft">
                 <span class="font-medium">{{ CHANNEL_LABEL[c.channel] }}:</span> {{ c.lastMessage ?? '—' }}
               </span>
-              <span v-if="c.unreadCount > 0" class="flex h-4.5 min-w-[18px] shrink-0 items-center justify-center rounded-full bg-brand-600 px-1 text-[10px] font-bold text-white">
-                {{ c.unreadCount }}
-              </span>
+              <UBadge v-if="c.unreadCount > 0" color="primary" size="sm" class="shrink-0 rounded-full">{{ c.unreadCount }}</UBadge>
             </div>
           </div>
-        </button>
+        </UButton>
       </div>
     </div>
 

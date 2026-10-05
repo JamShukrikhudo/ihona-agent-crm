@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { AlertTriangle, ChevronDown, ChevronRight, CheckCircle2, RotateCcw } from '@lucide/vue'
+import { AlertTriangle, CheckCircle2 } from '@lucide/vue'
 import { STATUS_BG_SOFT, STATUS_BORDER } from '~/utils/statusStyles'
 import type { ImportRow, SkippedRow } from '~/utils/importFields'
 
@@ -37,10 +37,15 @@ const floors = computed(() => {
     </div>
 
     <div v-if="skipped.length > 0" class="mb-5">
-      <button type="button" class="mb-2 flex items-center gap-1.5 text-[12.5px] font-semibold text-brand-dark" @click="expanded = !expanded">
-        <component :is="expanded ? ChevronDown : ChevronRight" :size="14" />
+      <UButton
+        :icon="expanded ? 'i-lucide-chevron-down' : 'i-lucide-chevron-right'"
+        color="primary"
+        variant="link"
+        class="mb-2 p-0"
+        @click="expanded = !expanded"
+      >
         Почему пропущены строки
-      </button>
+      </UButton>
       <div v-if="expanded" class="overflow-hidden rounded-xl border border-line">
         <div
           v-for="(s, i) in skipped"
@@ -76,12 +81,8 @@ const floors = computed(() => {
       </div>
     </div>
 
-    <button
-      type="button"
-      class="mt-5 flex items-center gap-1.5 rounded-lg border border-line px-3.5 py-2 text-[12.5px] font-medium text-ink hover:bg-paper"
-      @click="$emit('reset')"
-    >
-      <RotateCcw :size="13" /> Импортировать другой файл
-    </button>
+    <UButton icon="i-lucide-rotate-ccw" color="neutral" variant="outline" class="mt-5" @click="$emit('reset')">
+      Импортировать другой файл
+    </UButton>
   </div>
 </template>

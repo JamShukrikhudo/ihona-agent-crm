@@ -38,14 +38,12 @@ function previewValue(row: unknown[], key: (typeof SYSTEM_FIELDS)[number]['key']
           {{ field.label }}<span v-if="field.required" class="text-brand-600"> *</span>
         </div>
         <ChevronRight :size="14" class="shrink-0 text-ink-soft" />
-        <select
-          :value="mapping[field.key]"
-          class="flex-1 rounded-lg border border-line bg-paper px-2.5 py-1.5 text-[13px] text-ink"
-          @change="setMapping(field.key, ($event.target as HTMLSelectElement).value)"
-        >
-          <option value="">— не сопоставлено —</option>
-          <option v-for="h in sheet.headers" :key="h" :value="h">{{ h }}</option>
-        </select>
+        <USelect
+          :model-value="mapping[field.key] || 'unmapped'"
+          :items="[{ label: '— не сопоставлено —', value: 'unmapped' }, ...sheet.headers.map((h) => ({ label: h, value: h }))]"
+          class="flex-1"
+          @update:model-value="setMapping(field.key, $event === 'unmapped' ? '' : ($event as string))"
+        />
       </div>
     </div>
 

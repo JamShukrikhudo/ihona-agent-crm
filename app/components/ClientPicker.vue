@@ -63,16 +63,18 @@ async function createClient() {
       <div v-if="searching" class="text-[12px] text-ink-soft">Ищу…</div>
 
       <div v-else-if="results.length > 0" class="max-h-48 space-y-1 overflow-y-auto">
-        <button
+        <UButton
           v-for="client in results"
           :key="client.id"
-          type="button"
-          class="flex w-full flex-col items-start rounded-lg border border-line px-3 py-2 text-left hover:border-brand-600 hover:bg-brand-50"
+          color="neutral"
+          variant="outline"
+          block
+          :ui="{ base: 'flex-col items-start text-left' }"
           @click="emit('select', client)"
         >
           <span class="text-[13px] font-semibold text-ink">{{ client.name }}</span>
           <span class="text-[11px] text-ink-soft">{{ client.phone }}</span>
-        </button>
+        </UButton>
       </div>
 
       <div v-else-if="showCreateForm" class="space-y-2 rounded-lg bg-paper p-3">
