@@ -150,45 +150,41 @@ onBeforeUnmount(() => disconnectEcho())
 
 <template>
   <div>
-    <div class="flex flex-wrap items-center justify-between gap-3 border-b border-surface-light bg-surface px-6 py-4">
-      <div>
-        <div class="text-[11px] font-medium text-medium-emphasis">Кабинет агента</div>
-        <h1 class="font-display text-xl font-bold">Здравствуйте, {{ auth.user?.name }}</h1>
-      </div>
-      <VChip :color="echoState === 'connected' ? 'success' : 'default'" variant="tonal" size="small">
-        <VIcon start size="8" icon="mdi-circle" />
-        Реалтайм: {{ echoState === 'connected' ? 'подключено' : echoState }}
-      </VChip>
-    </div>
-
     <div class="mx-auto max-w-5xl space-y-6 px-6 py-6">
-      <VCard v-if="isManager">
-        <VCardText class="flex flex-wrap items-start justify-between gap-6">
+      <VCard class="bg-brand-gradient overflow-hidden text-white" :elevation="2">
+        <VCardText class="flex flex-wrap items-start justify-between gap-6 py-6">
           <div>
-            <h2 class="font-display text-xl font-bold">Здравствуйте, {{ auth.user?.name }}</h2>
-            <p class="mt-1 max-w-sm text-[13px] text-medium-emphasis">Коротко о том, что сейчас происходит в воронке и задачах команды.</p>
+            <div class="flex items-center gap-2 text-[11px] font-medium opacity-80">
+              Кабинет агента
+              <VChip :color="echoState === 'connected' ? 'success' : 'default'" variant="flat" size="x-small" class="opacity-90">
+                <VIcon start size="7" icon="mdi-circle" />
+                {{ echoState === 'connected' ? 'реалтайм подключён' : echoState }}
+              </VChip>
+            </div>
+            <h1 class="mt-1 font-display text-2xl font-bold">Здравствуйте, {{ auth.user?.name }}!</h1>
+            <p class="mt-1 max-w-sm text-[13px] opacity-80">Коротко о том, что сейчас происходит в воронке и задачах команды.</p>
           </div>
 
-          <div class="flex flex-col gap-3">
+          <div v-if="isManager" class="flex flex-wrap gap-6">
             <div class="flex items-center gap-3">
-              <VAvatar color="primary" variant="tonal" size="36"><VIcon icon="mdi-clipboard-check-outline" size="18" /></VAvatar>
+              <VAvatar color="white" variant="flat" size="36" class="text-primary"><VIcon icon="mdi-clipboard-check-outline" size="18" /></VAvatar>
               <div>
-                <div class="font-display text-[15px] font-bold">{{ upcomingTasks.length }} задач</div>
-                <div class="text-[11px] text-medium-emphasis">В ближайшее время</div>
+                <div class="font-display text-[17px] font-bold">{{ upcomingTasks.length }}</div>
+                <div class="text-[11px] opacity-80">задач в ближайшее время</div>
               </div>
             </div>
             <div class="flex items-center gap-3">
-              <VAvatar color="info" variant="tonal" size="36"><VIcon icon="mdi-account-group-outline" size="18" /></VAvatar>
+              <VAvatar color="white" variant="flat" size="36" class="text-primary"><VIcon icon="mdi-account-group-outline" size="18" /></VAvatar>
               <div>
-                <div class="font-display text-[15px] font-bold">{{ leadSourceTotal }} лидов</div>
-                <div class="text-[11px] text-medium-emphasis">В работе</div>
+                <div class="font-display text-[17px] font-bold">{{ leadSourceTotal }}</div>
+                <div class="text-[11px] opacity-80">лидов в работе</div>
               </div>
             </div>
             <div class="flex items-center gap-3">
-              <VAvatar color="secondary" variant="tonal" size="36"><VIcon icon="mdi-file-check-outline" size="18" /></VAvatar>
+              <VAvatar color="white" variant="flat" size="36" class="text-primary"><VIcon icon="mdi-file-check-outline" size="18" /></VAvatar>
               <div>
-                <div class="font-display text-[15px] font-bold">{{ monthly.at(-1)?.contracts_signed ?? 0 }} договоров</div>
-                <div class="text-[11px] text-medium-emphasis">Подписано в этом месяце</div>
+                <div class="font-display text-[17px] font-bold">{{ monthly.at(-1)?.contracts_signed ?? 0 }}</div>
+                <div class="text-[11px] opacity-80">договоров в этом месяце</div>
               </div>
             </div>
           </div>
@@ -229,29 +225,37 @@ onBeforeUnmount(() => disconnectEcho())
 
       <VRow v-if="isManager && stats" dense>
         <VCol cols="12" sm="4">
-          <VCard variant="tonal" color="primary">
-            <VCardText>
-              <VIcon icon="mdi-wallet-outline" class="mb-2" />
-              <div class="text-2xl font-semibold">{{ stats.collected.toLocaleString('ru-RU') }} TJS</div>
-              <div class="mt-1 text-[12px] opacity-80">остаток {{ stats.remaining.toLocaleString('ru-RU') }}</div>
+          <VCard>
+            <VCardText class="flex items-center gap-4">
+              <VAvatar color="primary" variant="flat" size="46" rounded="lg"><VIcon icon="mdi-wallet-outline" size="22" color="white" /></VAvatar>
+              <div class="min-w-0">
+                <div class="font-display text-xl font-bold">{{ stats.collected.toLocaleString('ru-RU') }} TJS</div>
+                <div class="mt-0.5 text-[12px] text-medium-emphasis">остаток {{ stats.remaining.toLocaleString('ru-RU') }} TJS</div>
+              </div>
             </VCardText>
           </VCard>
         </VCol>
         <VCol cols="12" sm="4">
-          <VCard variant="tonal" color="info">
-            <VCardText>
-              <VIcon icon="mdi-trending-up" class="mb-2" />
-              <div class="text-2xl font-semibold">{{ stats.sold_units }} / {{ stats.total_units }}</div>
-              <div class="mt-1 text-[12px] opacity-80">Юнитов продано</div>
+          <VCard>
+            <VCardText class="flex items-center gap-4">
+              <VAvatar color="info" variant="flat" size="46" rounded="lg"><VIcon icon="mdi-trending-up" size="22" color="white" /></VAvatar>
+              <div class="min-w-0">
+                <div class="font-display text-xl font-bold">{{ stats.sold_units }} / {{ stats.total_units }}</div>
+                <div class="mt-0.5 text-[12px] text-medium-emphasis">Юнитов продано</div>
+              </div>
             </VCardText>
           </VCard>
         </VCol>
         <VCol cols="12" sm="4">
-          <VCard variant="tonal" :color="stats.overdue_installments_count > 0 ? 'error' : 'primary'">
-            <VCardText>
-              <VIcon icon="mdi-alert-outline" class="mb-2" />
-              <div class="text-2xl font-semibold">{{ stats.overdue_installments_count }}</div>
-              <div class="mt-1 text-[12px] opacity-80">Просрочено платежей</div>
+          <VCard>
+            <VCardText class="flex items-center gap-4">
+              <VAvatar :color="stats.overdue_installments_count > 0 ? 'error' : 'primary'" variant="flat" size="46" rounded="lg">
+                <VIcon icon="mdi-alert-outline" size="22" color="white" />
+              </VAvatar>
+              <div class="min-w-0">
+                <div class="font-display text-xl font-bold">{{ stats.overdue_installments_count }}</div>
+                <div class="mt-0.5 text-[12px] text-medium-emphasis">Просрочено платежей</div>
+              </div>
             </VCardText>
           </VCard>
         </VCol>

@@ -54,7 +54,7 @@ export default defineNuxtPlugin((nuxtApp) => {
     },
     defaults: {
       VBtn: { rounded: 'lg' },
-      VCard: { rounded: 'lg', elevation: 0 },
+      VCard: { rounded: 'lg', elevation: 1 },
       VTextField: { variant: 'outlined', density: 'comfortable' },
       VSelect: { variant: 'outlined', density: 'comfortable' },
       VTextarea: { variant: 'outlined', density: 'comfortable' },

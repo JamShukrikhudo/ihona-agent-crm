@@ -80,3 +80,31 @@ html.dark {
 html.dark body {
   @apply bg-slate-950 text-slate-100;
 }
+
+/* Fires an animationstart event on autofilled inputs so Vuetify text fields
+   (login.vue) can detect browser autofill and sync v-model — see the
+   handleAutofillAnimation comment there for why this is needed. */
+@keyframes autofill-detect {
+  from {}
+  to {}
+}
+input:-webkit-autofill {
+  animation-name: autofill-detect;
+  animation-duration: 0.001s;
+}
+
+/* Spike-admin-style soft card shadow, replacing Vuetify's default harsher
+   Material elevation shadow (set via VCard's global `elevation: 1` default
+   in plugins/vuetify.ts) — flat colored shadow, no umbra/penumbra layers. */
+.v-card.v-theme--ihonaLight {
+  box-shadow: 0 1px 20px 0 rgba(69, 90, 100, 0.08) !important;
+}
+.v-card.v-theme--ihonaDark {
+  box-shadow: 0 1px 20px 0 rgba(0, 0, 0, 0.35) !important;
+}
+
+/* Dashboard hero card gradient (Spike-admin "Congratulations" banner
+   pattern) — a diagonal brand-colored gradient behind the greeting. */
+.bg-brand-gradient {
+  background: linear-gradient(135deg, var(--color-brand-600), var(--color-brand-800));
+}

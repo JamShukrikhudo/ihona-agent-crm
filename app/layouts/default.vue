@@ -42,7 +42,7 @@ const NAV_SECTIONS: NavSection[] = [
     label: 'Каналы связи',
     entries: [
       { to: '/settings/telegram', label: 'Telegram', icon: 'mdi-send-outline', managerOnly: true },
-      { to: '/settings/meta', label: 'WhatsApp / Instagram', icon: 'mdi-camera-outline', managerOnly: true },
+      { to: '/settings/meta', label: 'WhatsApp / Instagram / Messenger', icon: 'mdi-camera-outline', managerOnly: true },
       { to: '/settings/broadcasts', label: 'Рассылки', icon: 'mdi-bullhorn-outline', managerOnly: true },
     ],
   },
@@ -89,12 +89,6 @@ const searchGroups = computed(() => [
 
       <VDivider />
 
-      <div class="px-3 py-2">
-        <VBtn variant="outlined" color="default" block class="justify-start" prepend-icon="mdi-magnify" @click="searchOpen = true">
-          <span v-if="!rail">Поиск…</span>
-        </VBtn>
-      </div>
-
       <template v-for="section in visibleSections" :key="section.label">
         <VListSubheader>{{ section.label }}</VListSubheader>
         <VList density="compact" nav>
@@ -134,7 +128,18 @@ const searchGroups = computed(() => [
 
     <VAppBar color="surface" elevation="0" border="b" density="comfortable">
       <VAppBarNavIcon @click="rail = !rail" />
+      <VBtn
+        variant="outlined"
+        color="default"
+        class="ml-2 justify-start text-medium-emphasis"
+        style="width: 100%; max-width: 320px"
+        prepend-icon="mdi-magnify"
+        @click="searchOpen = true"
+      >
+        Поиск…
+      </VBtn>
       <VSpacer />
+      <UserMenu inline />
     </VAppBar>
 
     <VMain>

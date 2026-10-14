@@ -7,6 +7,37 @@ const password = ref('')
 const error = ref<string | null>(null)
 const loading = ref(false)
 
+// Chrome sets autofilled input values directly in the DOM without firing a
+// native `input` event, so v-model never updates and Vuetify's floating
+// label stays collapsed, overlapping the autofilled text. The CSS
+// `autofill-detect` animation (assets/css/main.css) is what lets us detect
+// it, but a listener bound through Vue (`@animationstart` in the template)
+// only starts working once the JS bundle has loaded and hydrated — and
+// real-world autofill (unlike our earlier synthetic CDP test) often fires
+// before that point, so the event gets lost. server/plugins/
+// login-autofill-script.ts injects a native listener straight into <head>
+// as raw HTML, which runs before the Vuetify/Vue bundle even starts
+// downloading, and stashes any autofilled value on `window.__autofill`.
+// This just drains that stash once we're mounted, and keeps listening for
+// later autofill (e.g. the user picking a suggestion after page load).
+function syncAutofill() {
+  const stash = (window as any).__autofill as Record<string, string> | undefined
+  if (stash?.email) {
+    email.value = stash.email
+  }
+  if (stash?.password) {
+    password.value = stash.password
+  }
+}
+
+onMounted(() => {
+  syncAutofill()
+  window.addEventListener('autofill-sync', syncAutofill)
+})
+onBeforeUnmount(() => {
+  window.removeEventListener('autofill-sync', syncAutofill)
+})
+
 async function submit() {
   error.value = null
   loading.value = true

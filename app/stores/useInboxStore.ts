@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import type { ClientInteraction } from './useClientsStore'
 
-export type InboxChannel = 'telegram' | 'whatsapp' | 'instagram'
+export type InboxChannel = 'telegram' | 'whatsapp' | 'instagram' | 'messenger'
 
 export interface Conversation {
   clientId: number

@@ -1,15 +1,16 @@
 <script setup lang="ts">
-import { Camera, MessageCircle } from '@lucide/vue'
+import { Camera, MessageCircle, MessageSquare } from '@lucide/vue'
 
-// Connects the team's own WhatsApp number + Instagram account under the
-// platform's single Meta app (see MetaWebhookController's own comment —
-// one callback URL, configured once in the App Dashboard, not per team).
-// A team can set WhatsApp, Instagram, or both.
+// Connects the team's own WhatsApp number + Instagram account + Facebook
+// page under the platform's single Meta app (see MetaWebhookController's
+// own comment — one callback URL, configured once in the App Dashboard,
+// not per team). A team can set any subset of the three.
 definePageMeta({ middleware: 'sales-manager' })
 
 const connected = ref(false)
 const phoneNumberId = ref('')
 const instagramId = ref('')
+const pageId = ref('')
 const accessTokenInput = ref('')
 const loading = ref(true)
 const saving = ref(false)
@@ -17,10 +18,11 @@ const saving = ref(false)
 async function load() {
   loading.value = true
   try {
-    const res = await apiFetch<{ data: { connected: boolean; phoneNumberId: string | null; instagramBusinessAccountId: string | null } }>('/meta-setting')
+    const res = await apiFetch<{ data: { connected: boolean; phoneNumberId: string | null; instagramBusinessAccountId: string | null; pageId: string | null } }>('/meta-setting')
     connected.value = res.data.connected
     phoneNumberId.value = res.data.phoneNumberId ?? ''
     instagramId.value = res.data.instagramBusinessAccountId ?? ''
+    pageId.value = res.data.pageId ?? ''
   } finally {
     loading.value = false
   }
@@ -40,6 +42,7 @@ async function save() {
         access_token: accessTokenInput.value.trim() || undefined,
         phone_number_id: phoneNumberId.value.trim() || undefined,
         instagram_business_account_id: instagramId.value.trim() || undefined,
+        page_id: pageId.value.trim() || undefined,
       },
     })
     accessTokenInput.value = ''
@@ -59,6 +62,7 @@ async function disconnect() {
     connected.value = false
     phoneNumberId.value = ''
     instagramId.value = ''
+    pageId.value = ''
     useToastStore().push('Отключено', 'success')
   } finally {
     saving.value = false
@@ -70,7 +74,7 @@ async function disconnect() {
   <div>
     <div class="border-b border-surface-light bg-surface px-6 py-4">
       <div class="text-[11px] font-medium text-medium-emphasis">Настройки</div>
-      <h1 class="font-display text-xl font-bold">WhatsApp / Instagram (Meta)</h1>
+      <h1 class="font-display text-xl font-bold">WhatsApp / Instagram / Messenger (Meta)</h1>
     </div>
 
     <div class="mx-auto max-w-lg space-y-4 px-6 py-8">
@@ -82,11 +86,12 @@ async function disconnect() {
             <div class="mb-2 flex items-center gap-2">
               <MessageCircle :size="16" class="text-primary" />
               <Camera :size="16" class="text-primary" />
+              <MessageSquare :size="16" class="text-primary" />
               <span class="font-display text-sm font-bold">Meta для команды</span>
             </div>
             <p class="mb-4 text-[13px] text-medium-emphasis">
-              Один и тот же access token из вашего Meta-приложения (System User token с правами на WhatsApp Cloud API и/или Instagram Messaging).
-              Phone Number ID и Instagram Business Account ID берутся там же, в API Setup вашего приложения на
+              Один и тот же access token из вашего Meta-приложения (System User token с правами на WhatsApp Cloud API, Instagram Messaging и/или Messenger).
+              Phone Number ID, Instagram Business Account ID и Page ID берутся там же, в API Setup вашего приложения на
               <span class="font-medium">developers.facebook.com</span>.
             </p>
 
@@ -133,6 +138,16 @@ async function disconnect() {
               data-1p-ignore
               label="Instagram Business Account ID"
               placeholder="Необязательно, если Instagram не используется"
+              class="mb-3"
+            />
+
+            <VTextField
+              v-model="pageId"
+              autocomplete="off"
+              data-lpignore="true"
+              data-1p-ignore
+              label="Page ID (Facebook Messenger)"
+              placeholder="Необязательно, если Messenger не используется"
               class="mb-3"
             />
 

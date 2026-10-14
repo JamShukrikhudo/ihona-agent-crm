@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { Camera, MessageCircle, Send } from '@lucide/vue'
+import { Camera, MessageCircle, MessageSquare, Send } from '@lucide/vue'
 import type { InboxChannel } from '~/stores/useInboxStore'
 
 definePageMeta({ middleware: 'agent' })
 
-const CHANNEL_ICON = { telegram: Send, whatsapp: MessageCircle, instagram: Camera } as const
-const CHANNEL_LABEL = { telegram: 'Telegram', whatsapp: 'WhatsApp', instagram: 'Instagram' } as const
+const CHANNEL_ICON = { telegram: Send, whatsapp: MessageCircle, instagram: Camera, messenger: MessageSquare } as const
+const CHANNEL_LABEL = { telegram: 'Telegram', whatsapp: 'WhatsApp', instagram: 'Instagram', messenger: 'Messenger' } as const
 
 const store = useInboxStore()
 const toast = useToastStore()
@@ -68,7 +68,7 @@ onBeforeUnmount(() => {
     <div class="flex w-full max-w-sm shrink-0 flex-col border-r border-surface-light bg-surface sm:w-80">
       <div class="border-b border-surface-light px-5 py-4">
         <h1 class="font-display text-lg font-bold">Входящие</h1>
-        <p class="text-[12px] text-medium-emphasis">Telegram, WhatsApp и Instagram — в одном месте{{ totalUnread > 0 ? ` · ${totalUnread} непрочитано` : '' }}</p>
+        <p class="text-[12px] text-medium-emphasis">Telegram, WhatsApp, Instagram и Messenger — в одном месте{{ totalUnread > 0 ? ` · ${totalUnread} непрочитано` : '' }}</p>
       </div>
 
       <div v-if="store.loading" class="space-y-2 p-3">
@@ -76,7 +76,7 @@ onBeforeUnmount(() => {
       </div>
 
       <div v-else-if="sortedConversations.length === 0" class="p-5 text-[13px] text-medium-emphasis">
-        Пока нет ни одного диалога — они появятся, как только клиент первым напишет в Telegram, WhatsApp или Instagram.
+        Пока нет ни одного диалога — они появятся, как только клиент первым напишет в Telegram, WhatsApp, Instagram или Messenger.
       </div>
 
       <VList v-else class="flex-1 overflow-y-auto py-0">
